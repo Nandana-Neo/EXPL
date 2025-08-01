@@ -19,12 +19,12 @@
 
 %%
 
-start   :   expr '\n'   {printf("Complete\n"); exit(0);}
+start   :   expr '\n' '\n'  {printf("Complete\n"); exit(0);}
         ;
 
 expr    :   '(' expr ')'    {}
-        |   IF comp THEN expr ELSE expr { depth--; printf("Level:%d\n",$1);}
-        |   IF comp THEN expr   {depth--; printf("Level:%d\n",$1);}
+        |   IF comp THEN expr ELSE expr '\n' { depth--; printf("Level:%d\n",$1);}
+        |   IF comp THEN expr '\n'  {depth--; printf("Level:%d\n",$1);}
         |   var '+' var     {}
         |   var '*' var     {}
         |   expr expr       {}
