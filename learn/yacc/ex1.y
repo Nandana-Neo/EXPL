@@ -8,7 +8,6 @@
 %}
 
 %token IF
-%token THEN
 %token ELSE
 %token ID
 %token NUM
@@ -23,8 +22,8 @@ start   :   expr '\n' '\n'  {printf("Complete\n"); exit(0);}
         ;
 
 expr    :   '(' expr ')'    {}
-        |   IF comp THEN expr ELSE expr '\n' { depth--; printf("Level:%d\n",$1);}
-        |   IF comp THEN expr '\n'  {depth--; printf("Level:%d\n",$1);}
+        |   IF comp '{' expr '}' ELSE '{' expr '}' { depth--; printf("Level:%d\n",$1);}
+        |   IF comp '{' expr '}'  {depth--; printf("Level:%d\n",$1);}
         |   var '+' var     {}
         |   var '*' var     {}
         |   expr expr       {}
@@ -67,9 +66,6 @@ yylex() {
             yylval = depth;
             depth++;
             return IF;
-        }
-        else if(strcmp(buffer,"then") == 0){
-            return THEN;
         }
         else if(strcmp(buffer,"else") == 0){
             return ELSE;
