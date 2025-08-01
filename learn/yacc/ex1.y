@@ -1,6 +1,7 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
+    #include <string.h>
     char buffer[100];
     int depth = 0;
     char c;
@@ -18,14 +19,15 @@
 
 %%
 
-start   :   expr '\n'   {printf("Complete"); exit(1);}
+start   :   expr '\n'   {printf("Complete\n"); exit(0);}
         ;
 
 expr    :   '(' expr ')'    {}
-        |   IF comp THEN expr ELSE expr {print("Level:%d\n",$1);}
-        |   IF comp THEN expr   {print("Level:%d\n",$1);}
+        |   IF comp THEN expr ELSE expr { depth--; printf("Level:%d\n",$1);}
+        |   IF comp THEN expr   {depth--; printf("Level:%d\n",$1);}
         |   var '+' var     {}
         |   var '*' var     {}
+        |   expr expr       {}
         ;
 
 comp    :   var RELOP var   {}
@@ -89,6 +91,7 @@ yylex() {
 }
 
 int main() {
+    c = getchar();
     yyparse();
     return 1;
 }

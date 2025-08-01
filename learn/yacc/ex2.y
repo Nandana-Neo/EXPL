@@ -9,13 +9,13 @@
 %token DIGIT
 
 %%
-start : var '\n'    {printf("Valid"); exit(1);}
+start : var '\n'    {printf("Valid\n"); exit(0);}
         ;
 var     :   LETTER nvar {}  
         ;
 nvar    :   LETTER      {}
         |   DIGIT       {}
-        |   nvar        {}
+        |   nvar nvar   {}
         ;
 %%
 
