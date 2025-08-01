@@ -22,8 +22,8 @@ start   :   expr '\n' '\n'  {printf("Complete\n"); exit(0);}
         ;
 
 expr    :   '(' expr ')'    {}
-        |   IF comp '{' expr '}' ELSE '{' expr '}' { depth--; printf("Level:%d\n",$1);}
-        |   IF comp '{' expr '}'  {depth--; printf("Level:%d\n",$1);}
+        |   IF comp '{' expr '}' ELSE '{' expr '}' { printf("Level:%d\n",$1);}
+        |   IF comp '{' expr '}'  { printf("Level:%d\n",$1);}
         |   var '+' var     {}
         |   var '*' var     {}
         |   expr expr       {}
@@ -80,6 +80,8 @@ yylex() {
         return RELOP;
     }
     else{
+        if ( c == '}')
+            depth--;
         char l = c;
         c = getchar();
         return l;
