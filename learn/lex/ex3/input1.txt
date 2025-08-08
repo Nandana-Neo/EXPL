@@ -1,4 +1,0 @@
-this has
-lines: 4
-words: 8
-chars: 29
