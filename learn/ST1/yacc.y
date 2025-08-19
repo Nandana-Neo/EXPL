@@ -8,10 +8,30 @@
 %token NUM;
 %left '+';
 %%
-S   :   E '\n'      {   printf("Prefix:");
-                        prefix($1);
-                        printf("\nPostfix:");
-                        postfix($1);
+S   :   E '\n'      {   FILE * fp = fopen("exp.xsm","w");
+                        fprintf(fp,"0\n2056\n0\n0\n0\n0\n0\n0\n");
+
+                        codeGen($1, fp);
+
+                        fprintf(fp,"MOV [4096], R0\n");
+                        fprintf(fp,"MOV R1,\"Write\"\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"MOV R1, -2\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R0\n");
+                        fprintf(fp,"PUSH R0\n");
+                        fprintf(fp,"PUSH R0\n");
+                        fprintf(fp,"CALL 0\n");
+                        fprintf(fp,"POP R0\nPOP R0\nPOP R0\nPOP R0\nPOP R0\n");
+                        fprintf(fp,"MOV R1,\"Exit\"\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"CALL 0\n");
+                        
+                        fprintf(stdout,"Done\n");
                         exit(0);
                     }
     ;

@@ -1,6 +1,11 @@
 #ifndef HEADER_FILE
 #define HEADER_FILE
 
+#define reg_index int
+#include <stdlib.h>
+#include <stdio.h>
+
+
 typedef struct tnode{
     int val;
     char *op; //indicates the name of the operator for a non leaf node
@@ -21,5 +26,14 @@ void prefix(tnode* node);
 
 /*Get postfix form*/
 void postfix(tnode* node);
+
+/*Allocate a free register*/
+reg_index getReg();
+
+/*Free an allocated register*/
+int freeReg();
+
+/*Generate assembly code corresponding to AST node*/
+reg_index codeGen(tnode* node, FILE * fp);
 
 #endif

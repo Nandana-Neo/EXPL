@@ -1,6 +1,4 @@
 #include "exptree.h"
-#include <stdlib.h>
-#include <stdio.h>
 
 /*Make a leaf tnode and set the value of val field*/
 tnode* makeLeafNode(int n){
@@ -49,3 +47,37 @@ void prefix(tnode* node){
 }
 
 /*Allocate a free register*/
+reg_index regNum = 0;
+reg_index getReg(){
+    if(regNum==19){
+        fprintf(stderr, "\nOut of free registers\n");  //error
+        exit(1);
+    }
+    return regNum++;
+}
+
+/*Free an allocated register*/
+int freeReg(){
+    if(regNum == 0){
+        fprintf(stderr,"\nNo registers to be freed\n"); //error
+        exit(1);
+    }
+    regNum--;
+    return 0;
+}
+
+/*Generate assembly code corresponding to AST node*/
+/*Note: It will print newline at the end*/
+reg_index codeGen(tnode* node, FILE * fp){
+    if(node->op == NULL){
+        // leaf node
+        int i = getReg();
+        fprintf(fp,"MOV R%d, %d\n",i,node->val);
+        return i;
+    }
+    int i = codeGen(node->left, fp);
+    int j = codeGen(node->right, fp);
+    fprintf(fp, "ADD R%d, R%d\n",i,j);
+    freeReg();
+    return i;
+}

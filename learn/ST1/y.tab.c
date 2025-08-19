@@ -545,7 +545,7 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    11,    11,    18,    21,    24
+       0,    11,    11,    38,    41,    44
 };
 #endif
 
@@ -1106,41 +1106,61 @@ yyreduce:
     {
   case 2: /* S: E '\n'  */
 #line 11 "yacc.y"
-                    {   printf("Prefix:");
-                        prefix(yyvsp[-1]);
-                        printf("\nPostfix:");
-                        postfix(yyvsp[-1]);
+                    {   FILE * fp = fopen("exp.xsm","w");
+                        fprintf(fp,"0\n2056\n0\n0\n0\n0\n0\n0\n");
+
+                        codeGen(yyvsp[-1], fp);
+
+                        fprintf(fp,"MOV [4096], R0\n");
+                        fprintf(fp,"MOV R1,\"Write\"\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"MOV R1, -2\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R0\n");
+                        fprintf(fp,"PUSH R0\n");
+                        fprintf(fp,"PUSH R0\n");
+                        fprintf(fp,"CALL 0\n");
+                        fprintf(fp,"POP R0\nPOP R0\nPOP R0\nPOP R0\nPOP R0\n");
+                        fprintf(fp,"MOV R1,\"Exit\"\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"PUSH R1\n");
+                        fprintf(fp,"CALL 0\n");
+                        
+                        fprintf(stdout,"Done\n");
                         exit(0);
                     }
-#line 1116 "y.tab.c"
+#line 1136 "y.tab.c"
     break;
 
   case 3: /* E: E '+' E  */
-#line 18 "yacc.y"
+#line 38 "yacc.y"
                     {
                         yyval = makeOperatorNode('+',yyvsp[-2],yyvsp[0]);
                     }
-#line 1124 "y.tab.c"
+#line 1144 "y.tab.c"
     break;
 
   case 4: /* E: '(' E ')'  */
-#line 21 "yacc.y"
+#line 41 "yacc.y"
                     {
                         yyval = yyvsp[-1];
                     }
-#line 1132 "y.tab.c"
+#line 1152 "y.tab.c"
     break;
 
   case 5: /* E: NUM  */
-#line 24 "yacc.y"
+#line 44 "yacc.y"
                     {
                         yyval = yyvsp[0];
                     }
-#line 1140 "y.tab.c"
+#line 1160 "y.tab.c"
     break;
 
 
-#line 1144 "y.tab.c"
+#line 1164 "y.tab.c"
 
       default: break;
     }
@@ -1333,7 +1353,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 28 "yacc.y"
+#line 48 "yacc.y"
 
 int yyerror(){
     printf("Error\n");
