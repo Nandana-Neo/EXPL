@@ -77,7 +77,20 @@ reg_index codeGen(tnode* node, FILE * fp){
     }
     int i = codeGen(node->left, fp);
     int j = codeGen(node->right, fp);
-    fprintf(fp, "ADD R%d, R%d\n",i,j);
+    switch(*node->op){
+        case '+': 
+            fprintf(fp, "ADD R%d, R%d\n",i,j);
+            break;
+        case '-': 
+            fprintf(fp, "SUB R%d, R%d\n",i,j);
+            break;
+        case '*': 
+            fprintf(fp, "MUL R%d, R%d\n",i,j);
+            break;
+        case '/': 
+            fprintf(fp, "DIV R%d, R%d\n",i,j);
+            break;
+    }
     freeReg();
     return i;
 }

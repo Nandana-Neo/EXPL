@@ -6,7 +6,8 @@
     int yylex();
 %}
 %token NUM;
-%left '+';
+%left '+' '-';
+%left '*' '/';
 %%
 S   :   E '\n'      {   FILE * fp = fopen("exp.xsm","w");
                         fprintf(fp,"0\n2056\n0\n0\n0\n0\n0\n0\n");
@@ -37,6 +38,15 @@ S   :   E '\n'      {   FILE * fp = fopen("exp.xsm","w");
     ;
 E   :   E '+' E     {
                         $$ = makeOperatorNode('+',$1,$3);
+                    }
+    |   E '*' E     {
+                        $$ = makeOperatorNode('*',$1,$3);
+                    }
+    |   E '/' E     {
+                        $$ = makeOperatorNode('/',$1,$3);
+                    }
+    |   E '-' E     {
+                        $$ = makeOperatorNode('-',$1,$3);
                     }
     |   '(' E ')'   {
                         $$ = $2;

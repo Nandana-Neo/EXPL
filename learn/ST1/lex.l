@@ -13,7 +13,7 @@
     return NUM;
 }
 
-[()+\n] {
+[()+*/\n-] {
     return *yytext;
 }
 %%
