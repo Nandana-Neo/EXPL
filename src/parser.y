@@ -12,10 +12,7 @@
 %left '*' '/';
 %%
 Program     : P_BEGIN Slist P_END   {
-                                    FILE * fp = fopen("out.xsm","w");
-                                    code_gen_start(fp);
-                                    code_gen($2, fp);
-                                    code_gen_final(fp);
+                                    evaluate($2);
                                     exit(0);
                                 }
             | P_BEGIN P_END     {   

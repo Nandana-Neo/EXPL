@@ -162,3 +162,52 @@ void code_gen_final(FILE * fp){
     fprintf(fp,"PUSH R0\n");
     fprintf(fp,"CALL 0");
 }
+
+int storage[26];
+
+int evaluate(tnode* node){
+    int i,j;
+    switch(node->nodetype){
+        case NODE_LEAF:
+            if(node->varname == NULL)  // NUM
+                return node->val;
+            else    //ID
+                return storage[(*node->varname)-'a'];
+
+        case NODE_READ:
+            i = *(node->left->varname) - 'a';
+            scanf("%d",&storage[i]);
+            return storage[i];
+
+        case NODE_WRITE:
+            int val = evaluate(node->left);
+            printf("%d\n",val);
+            return val;
+        
+        case NODE_CONN:
+            evaluate(node->left);
+            evaluate(node->right);
+            return -1;
+        
+        case NODE_EQ:
+            i = *(node->left->varname) - 'a';   // left will be ID
+            j = evaluate(node->right);
+            storage[i] = j;
+            return j;
+        
+        default:
+            i = evaluate(node->left);
+            j = evaluate(node->right);
+            switch(node->nodetype){
+                case NODE_ADD:
+                    return i+j;
+                case NODE_SUB:
+                    return i-j;
+                case NODE_MUL:
+                    return i*j;
+                case NODE_DIV:
+                    return i/j;
+            }
+    }
+    return -1;
+}

@@ -72,4 +72,13 @@ tnode* make_operator_node(char c,tnode* l, tnode* r);
 /*Prints the prefix notation of the AST*/
 void prefix(tnode* node);
 
+/**
+ * Function: evaluate
+ * -------------------
+ * 
+ * Implements code directly skipping xsm conversion
+ * Acts as an interpreter
+ */
+int evaluate(tnode* node);
+
 #endif
