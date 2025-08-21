@@ -1,7 +1,7 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
-    #include "exptree.h"
+    #include "exptree/exptree.h"
     int yyerror();   
     int yylex();
     extern FILE* yyin;

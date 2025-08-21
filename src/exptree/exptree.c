@@ -1,9 +1,5 @@
 #include "exptree.h"
 
-tnode* makeLeafNode(int n, VarType type, char *varname){
-    tnode * curr = createTree(n,type,varname,NULL,NULL);
-    return curr;
-}
 
 NodeType nodeType(char* type){
     if(type == NULL)
@@ -40,30 +36,16 @@ tnode* createTree(int val, VarType type, char* c, tnode *l, tnode *r){
     return curr;
 }
 
+tnode* makeLeafNode(int n, VarType type, char *varname){
+    tnode * curr = createTree(n,type,varname,NULL,NULL);
+    return curr;
+}
+
 tnode* makeOperatorNode(char c,tnode* l, tnode* r){
     tnode* curr = createTree(0,TYPE_NONE,&c,l,r);
     return curr;
 }
 
-
-
-reg_index regNum = 0;
-reg_index getReg(){
-    if(regNum==19){
-        fprintf(stderr, "\nOut of free registers\n");  //error
-        exit(1);
-    }
-    return regNum++;
-}
-
-int freeReg(){
-    if(regNum == 0){
-        fprintf(stderr,"\nNo registers to be freed\n"); //error
-        exit(1);
-    }
-    regNum--;
-    return 0;
-}
 
 // reg_index codeGen(tnode* node, FILE * fp){
 //     if(node->op == NULL){

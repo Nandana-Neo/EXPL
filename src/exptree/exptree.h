@@ -1,7 +1,6 @@
-#ifndef HEADER_FILE
-#define HEADER_FILE
+#ifndef EXPTREE_HEADER_FILE
+#define EXPTREE_HEADER_FILE
 
-#define reg_index int
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -70,11 +69,6 @@ tnode* makeLeafNode(int n, VarType type, char* varname);
 /*Create operator node*/
 tnode* makeOperatorNode(char c,tnode* l, tnode* r);
 
-/*Allocate a free register*/
-reg_index getReg();
-
-/*Free an allocated register*/
-int freeReg();
 
 /**
  * Function : codeGen
@@ -82,7 +76,7 @@ int freeReg();
  * Generate assembly code corresponding to AST node
  * Note: It will print newline at the end
 */
-reg_index codeGen(tnode* node, FILE * fp);
+int codeGen(tnode* node, FILE * fp);
 
 void prefix(tnode* node);
 

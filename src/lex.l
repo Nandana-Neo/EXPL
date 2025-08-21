@@ -1,7 +1,7 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
-    #include "exptree.h"
+    #include "exptree/exptree.h"
     #include "y.tab.h"
     int yywrap();
 %}
