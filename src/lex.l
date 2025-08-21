@@ -9,13 +9,13 @@
 %%
 [0-9]+  {
     int val = atoi(yytext);
-    yylval = createTree(val, TYPE_INT, NULL, NULL, NULL);
+    yylval = create_tree(val, TYPE_INT, NULL, NULL, NULL);
     return NUM;
 }
 
 [a-z]   {
     char* variable = strdup(yytext);    // ** Value is assumed to be int
-    yylval = createTree(0, TYPE_INT, variable, NULL, NULL);
+    yylval = create_tree(0, TYPE_INT, variable, NULL, NULL);
     return ID;
 }
 

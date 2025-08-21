@@ -2,6 +2,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include "exptree/exptree.h"
+    #include "code_gen/code_gen.h"
     int yyerror();   
     int yylex();
     extern FILE* yyin;
@@ -11,16 +12,19 @@
 %left '*' '/';
 %%
 Program     : P_BEGIN Slist P_END   {
-                                    fprintf(stdout,"Done\n");
-                                    prefix($2);
+                                    FILE * fp = fopen("out.xsm","w");
+                                    code_gen_start(fp);
+                                    code_gen($2, fp);
+                                    code_gen_final(fp);
                                     exit(0);
                                 }
-            | P_BEGIN P_END     {   fprintf(stdout,"Emty program");
+            | P_BEGIN P_END     {   
+                                fprintf(stdout,"Emty program");
                                 exit(0);
                             }
             ;
 
-Slist       : Slist Stmt    {   $$ = makeOperatorNode('C',$1,$2);   }
+Slist       : Slist Stmt    {   $$ = make_operator_node('C',$1,$2);   }
             | Stmt          {   $$ = $1;    }
             ;
 
@@ -30,31 +34,31 @@ Stmt        : InputStmt     {   $$ = $1;    }
             ;
 
 InputStmt   : READ'('ID')'  {
-                                $$ = makeOperatorNode('R',$3,NULL);
+                                $$ = make_operator_node('R',$3,NULL);
                             }
             ;
 
 OutputStmt  : WRITE'('E')'  {  
-                                $$ = makeOperatorNode('W',$3,NULL);
+                                $$ = make_operator_node('W',$3,NULL);
                             }
             ;
 
 AsgStmt     : ID '=' E  {     
-                            $$ = makeOperatorNode('=', $1, $3);
+                            $$ = make_operator_node('=', $1, $3);
                         }
             ;
     
 E   :   E '+' E     {
-                        $$ = makeOperatorNode('+',$1,$3);
+                        $$ = make_operator_node('+',$1,$3);
                     }
     |   E '*' E     {
-                        $$ = makeOperatorNode('*',$1,$3);
+                        $$ = make_operator_node('*',$1,$3);
                     }
     |   E '/' E     {
-                        $$ = makeOperatorNode('/',$1,$3);
+                        $$ = make_operator_node('/',$1,$3);
                     }
     |   E '-' E     {
-                        $$ = makeOperatorNode('-',$1,$3);
+                        $$ = make_operator_node('-',$1,$3);
                     }
     |   '(' E ')'   {
                         $$ = $2;

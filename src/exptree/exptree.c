@@ -1,7 +1,7 @@
 #include "exptree.h"
 
 
-NodeType nodeType(char* type){
+NodeType node_type(char* type){
     if(type == NULL)
         return NODE_LEAF;
     switch(*type){
@@ -17,7 +17,7 @@ NodeType nodeType(char* type){
     return NODE_CONN;
 }
 
-tnode* createTree(int val, VarType type, char* c, tnode *l, tnode *r){
+tnode* create_tree(int val, VarType type, char* c, tnode *l, tnode *r){
     tnode * curr = (tnode*)malloc(sizeof(tnode));
     curr->val = val;
     curr->type = type;
@@ -32,47 +32,19 @@ tnode* createTree(int val, VarType type, char* c, tnode *l, tnode *r){
     curr->varname = NULL;
     curr->left = l;
     curr->right = r;
-    curr->nodetype = nodeType(c);
+    curr->nodetype = node_type(c);
     return curr;
 }
 
-tnode* makeLeafNode(int n, VarType type, char *varname){
-    tnode * curr = createTree(n,type,varname,NULL,NULL);
+tnode* make_leaf_node(int n, VarType type, char *varname){
+    tnode * curr = create_tree(n,type,varname,NULL,NULL);
     return curr;
 }
 
-tnode* makeOperatorNode(char c,tnode* l, tnode* r){
-    tnode* curr = createTree(0,TYPE_NONE,&c,l,r);
+tnode* make_operator_node(char c,tnode* l, tnode* r){
+    tnode* curr = create_tree(0,TYPE_NONE,&c,l,r);
     return curr;
 }
-
-
-// reg_index codeGen(tnode* node, FILE * fp){
-//     if(node->op == NULL){
-//         // leaf node
-//         int i = getReg();
-//         fprintf(fp,"MOV R%d, %d\n",i,node->val);
-//         return i;
-//     }
-//     int i = codeGen(node->left, fp);
-//     int j = codeGen(node->right, fp);
-//     switch(*node->op){
-//         case '+': 
-//             fprintf(fp, "ADD R%d, R%d\n",i,j);
-//             break;
-//         case '-': 
-//             fprintf(fp, "SUB R%d, R%d\n",i,j);
-//             break;
-//         case '*': 
-//             fprintf(fp, "MUL R%d, R%d\n",i,j);
-//             break;
-//         case '/': 
-//             fprintf(fp, "DIV R%d, R%d\n",i,j);
-//             break;
-//     }
-//     freeReg();
-//     return i;
-// }
 
 
 void prefix(tnode* node){

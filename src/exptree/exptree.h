@@ -34,7 +34,7 @@ typedef struct tnode{
 #define YYSTYPE tnode*
 
 /**
- * Function: nodeType
+ * Function: node_type
  * --------------------
  * Returns the enum for the node
  * 
@@ -44,10 +44,10 @@ typedef struct tnode{
  * Output:
  *  NodeType corresponding to the type
  */
-NodeType nodeType(char* type);
+NodeType node_type(char* type);
 
 /**
- * Funtion : createTree
+ * Funtion : create_tree
  * ---------------------
  * Create a node tnode
  * 
@@ -61,23 +61,15 @@ NodeType nodeType(char* type);
  * Output:
  *  tnode * pointer to node
 */
-tnode* createTree(int val, VarType type, char* c, tnode *l, tnode *r);
+tnode* create_tree(int val, VarType type, char* c, tnode *l, tnode *r);
 
 /*Make a leaf tnode, can be NUM node or ID node */
-tnode* makeLeafNode(int n, VarType type, char* varname);
+tnode* make_leaf_node(int n, VarType type, char* varname);
 
 /*Create operator node*/
-tnode* makeOperatorNode(char c,tnode* l, tnode* r);
+tnode* make_operator_node(char c,tnode* l, tnode* r);
 
-
-/**
- * Function : codeGen
- * --------------------
- * Generate assembly code corresponding to AST node
- * Note: It will print newline at the end
-*/
-int codeGen(tnode* node, FILE * fp);
-
+/*Prints the prefix notation of the AST*/
 void prefix(tnode* node);
 
 #endif
