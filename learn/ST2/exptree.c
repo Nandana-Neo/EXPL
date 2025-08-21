@@ -93,7 +93,6 @@ int freeReg(){
 // }
 
 
-/*Get prefix form */
 void prefix(tnode* node){
     if(node == NULL){
         return;
