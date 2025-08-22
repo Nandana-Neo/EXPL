@@ -24,7 +24,7 @@ Program     : P_BEGIN Slist P_END   {
                             }
             ;
 
-Slist       : Slist Stmt    {   $$ = make_operator_node('C',$1,$2);   }
+Slist       : Slist Stmt    {   $$ = make_operator_node('C',TYPE_NONE,$1,$2);   }
             | Stmt          {   $$ = $1;    }
             ;
 
@@ -34,31 +34,41 @@ Stmt        : InputStmt     {   $$ = $1;    }
             ;
 
 InputStmt   : READ'('ID')'  {
-                                $$ = make_operator_node('R',$3,NULL);
+                                $$ = make_operator_node(TYPE_NONE,'R',$3,NULL);
                             }
             ;
 
 OutputStmt  : WRITE'('E')'  {  
-                                $$ = make_operator_node('W',$3,NULL);
+                                $$ = make_operator_node(TYPE_NONE,'W',$3,NULL);
                             }
             ;
 
 AsgStmt     : ID '=' E  {     
-                            $$ = make_operator_node('=', $1, $3);
+                            $$ = make_operator_node(TYPE_NONE,'=', $1, $3);
                         }
             ;
     
-E   :   E '+' E     {
-                        $$ = make_operator_node('+',$1,$3);
+E   :   E '<' E 
+    |   E '>' E 
+    |   E '<''=' E 
+    |   E '>''=' E 
+    |   E != E | E == E;
+
+    |   E '+' E     {
+                        VarType type = TYPE_INT;
+                        $$ = make_operator_node(type,'+',$1,$3);
                     }
     |   E '*' E     {
-                        $$ = make_operator_node('*',$1,$3);
+                        VarType type = TYPE_INT;
+                        $$ = make_operator_node(type,'*',$1,$3);
                     }
     |   E '/' E     {
-                        $$ = make_operator_node('/',$1,$3);
+                        VarType type = TYPE_INT;
+                        $$ = make_operator_node(type,'/',$1,$3);
                     }
     |   E '-' E     {
-                        $$ = make_operator_node('-',$1,$3);
+                        VarType type = TYPE_INT;
+                        $$ = make_operator_node(type,'-',$1,$3);
                     }
     |   '(' E ')'   {
                         $$ = $2;
@@ -66,7 +76,8 @@ E   :   E '+' E     {
     |   NUM         {
                         $$ = $1;
                     } 
-    |   ID          {   $$ = $1;
+    |   ID          {
+                        $$ = $1;
                     }
     ;
 %%

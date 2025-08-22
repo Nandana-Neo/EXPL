@@ -52,7 +52,7 @@ int code_gen_OP(tnode* node, FILE* fp){
         case NODE_DIV: 
             fprintf(fp, "DIV R%d, R%d\n",i,j);
             break;
-        case NODE_EQ:
+        case NODE_ASGN:
             fprintf(fp, "MOV [%d], R%d\n",symbolTable[i],j);
             free_reg();  //extra free reg to free the LHS as well
             symbolTable[i] = -1;
