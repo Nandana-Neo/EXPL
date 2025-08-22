@@ -19,14 +19,23 @@
     return ID;
 }
 
-[()+*/=-<>!] {
+[()+*/=<>!;-] {
     return *yytext;
 }
+
+[ \n]       { }
 
 "begin"     {   return P_BEGIN;   }
 "end"       {   return P_END;     }
 "read"      {   return READ;    }
 "write"     {   return WRITE;   }
+"if"        {   return IF;      }
+"then"      {   return THEN;    }
+"else"      {   return ELSE;    }
+"endif"     {   return ENDIF;   }
+"while"     {   return WHILE;   }
+"endwhile"  {   return ENDWHILE;    }
+"do"        {   return DO;      }
 
 %%
 int yywrap(){

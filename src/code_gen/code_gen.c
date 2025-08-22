@@ -162,3 +162,88 @@ void code_gen_final(FILE * fp){
     fprintf(fp,"PUSH R0\n");
     fprintf(fp,"CALL 0");
 }
+
+
+int storage[26];
+
+
+int evaluate(tnode* node){
+    int i,j;
+    switch(node->nodetype){
+        case NODE_LEAF:
+            if(node->varname == NULL)  // NUM
+                return node->val;
+            else    //ID
+                return storage[(*node->varname)-'a'];
+
+        case NODE_READ:
+            i = *(node->left->varname) - 'a';
+            scanf("%d",&storage[i]);
+            return storage[i];
+
+        case NODE_WRITE:
+            int val = evaluate(node->left);
+            printf("%d\n",val);
+            return val;
+        
+        case NODE_CONN:
+            evaluate(node->left);
+            evaluate(node->right);
+            return -1;
+        
+        case NODE_ASGN:
+            i = *(node->left->varname) - 'a';   // left will be ID
+            j = evaluate(node->right);
+            storage[i] = j;
+            return j;
+
+        case NODE_IF:
+            i = evaluate(node->left);
+            if(i==1)
+                evaluate(node->right);
+            return -1;
+        
+        case NODE_IFELSE:
+            i = evaluate(node->left);
+            if(i==1)
+                evaluate(node->middle);
+            else
+                evaluate(node->right);
+            return -1;
+        
+        case NODE_WHILE:
+            i = evaluate(node->left);
+            while(i==1){
+                evaluate(node->right);
+                i = evaluate(node->left);
+            }
+            return -1;
+
+        default:
+            i = evaluate(node->left);
+            j = evaluate(node->right);
+            switch(node->nodetype){
+                case NODE_ADD:
+                    return i+j;
+                case NODE_SUB:
+                    return i-j;
+                case NODE_MUL:
+                    return i*j;
+                case NODE_DIV:
+                    return i/j;
+                case NODE_GT:
+                    return i>j;
+                case NODE_LT:
+                    return i<j;
+                case NODE_GE:
+                    return i>=j;
+                case NODE_LE:
+                    return i<=j;
+                case NODE_EQ:
+                    return i==j;
+                case NODE_NE:
+                    return i!=j;
+            }
+    }
+    return -1;
+}

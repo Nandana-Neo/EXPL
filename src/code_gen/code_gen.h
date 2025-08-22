@@ -97,4 +97,6 @@ void code_gen_final(FILE * fp);
 
 void code_gen_start(FILE * fp);
 
+int evaluate(tnode* node);
+
 #endif

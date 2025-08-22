@@ -17,7 +17,7 @@ NodeType node_type(char* type){
     return NODE_CONN;
 }
 
-tnode* create_tree(int val, VarType type, char* varname, NodeType nodetype, tnode *l, tnode *r){
+tnode* create_tree(int val, VarType type, char* varname, NodeType nodetype, tnode *l, tnode *m, tnode *r){
     tnode * curr = (tnode*)malloc(sizeof(tnode));
     curr->val = val;
     curr->type = type;
@@ -31,21 +31,29 @@ tnode* create_tree(int val, VarType type, char* varname, NodeType nodetype, tnod
     //else
     curr->varname = NULL;
     curr->left = l;
+    curr->middle = m;
     curr->right = r;
     curr->nodetype = nodetype;
     return curr;
 }
 
 tnode* make_leaf_node(int n, VarType type, char *varname){
-    tnode * curr = create_tree(n,type,varname,NODE_LEAF,NULL,NULL);
+    tnode* curr = create_tree(n,type,varname,NODE_LEAF,NULL,NULL,NULL);
     return curr;
 }
 
-tnode* make_operator_node(VarType type, char c,tnode* l, tnode* r){
-    tnode* curr = create_tree(0,type,NULL,node_type(&c),l,r);
+tnode* make_operator_node(VarType type, NodeType nodetype,tnode* l, tnode* r){
+    tnode* curr = create_tree(0,type,NULL,nodetype,l,NULL,r);
     return curr;
 }
 
+tnode* make_conditional_node(tnode* l, tnode* m, tnode* r){
+    NodeType nodetype = NODE_IFELSE;
+    if(m == NULL)
+        nodetype = NODE_IF;
+    tnode* curr = create_tree(0,TYPE_NONE,NULL,nodetype,l,m,r);
+    return curr;
+}
 
 void prefix(tnode* node){
     if(node == NULL){
