@@ -6,6 +6,7 @@
     int yyerror();   
     int yylex();
     extern FILE* yyin;
+    FILE * output_file;
 %}
 %token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE;
 %left '+' '-';
@@ -13,11 +14,11 @@
 %nonassoc '<' '>' '=' ';';
 %%
 Program     : P_BEGIN Slist P_END   {
-                                    FILE * fp = fopen("out.xsm","w");
-                                    // code_gen_start(fp);
-                                    // code_gen($2, fp);
-                                    // code_gen_final(fp);
-                                    evaluate($2);
+                                    FILE * fp = output_file;
+                                    code_gen_start(fp);
+                                    code_gen($2, fp);
+                                    code_gen_final(fp);
+                                    // evaluate($2);
                                     exit(0);
                                 }
             | P_BEGIN P_END     {   
@@ -59,7 +60,7 @@ Ifstmt  : IF '(' E ')' THEN Slist ELSE Slist ENDIF  {
                                                             fprintf(stderr,"Error: Type Mismatch\n");
                                                             exit(1);
                                                         }
-                                                        $$ = make_conditional_node($3,NULL,$6);  
+                                                        $$ = make_conditional_node($3, $6, NULL);  
                                                     }
         ;
 
@@ -167,12 +168,15 @@ int yyerror(){
     return 1;
 }
 int main(int argc, char* argv[]){
-    if(argc > 1){
-        yyin = fopen(argv[1],"r");
-        if(!yyin){
-            perror("fopen");
-            return 1;
-        }
+    yyin = fopen(argv[2],"r");
+    if(!yyin){
+        perror("fopen");
+        return 1;
+    }
+    output_file = fopen(argv[4],"w");
+    if(!output_file){
+        perror("fopen");
+        return 1;
     }
     yyparse();
     return 1;

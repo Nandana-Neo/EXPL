@@ -25,7 +25,7 @@ typedef enum {
     NODE_GE,    // ">="
     NODE_EQ,    // "=="
     NODE_NE,    // "!="
-    NODE_IF,        // if (l) then r
+    NODE_IF,        // if (l) then m
     NODE_IFELSE,    // if (l) then m else r ternary node
     NODE_WHILE,      // while
     NODE_WRITE, 

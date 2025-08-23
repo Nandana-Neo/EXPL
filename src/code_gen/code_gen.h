@@ -29,6 +29,17 @@ int get_reg();
 int free_reg();
 
 /**
+ * Function: get_label()
+ * ----------------------
+ * Input: None
+ * 
+ * Output: 
+ * - Returns an integer that represents the available label
+ */
+int get_label();
+
+
+/**
  * Function : code_gen
  * --------------------
  * Generate assembly code corresponding to AST node
@@ -92,6 +103,22 @@ int code_gen_READ(tnode* node, FILE *fp);
  * 
  */
 int code_gen_WRITE(tnode* node, FILE *fp);
+
+/**
+ * Function: code_gen_IF
+ * ----------------------
+ * Generates code for IF-THEN and IF-THEN-ELSE statements
+ * Returns -1 since it is a statement
+ */
+int code_gen_IF(tnode* node, FILE* fp);
+
+/**
+ * Function: code_gen_WHILE
+ * ------------------------
+ * Generates code for WHILE-DO statement
+ * Returns -1 since it is a statement
+ */
+int code_gen_WHILE(tnode* node, FILE* fp);
 
 void code_gen_final(FILE * fp);
 
