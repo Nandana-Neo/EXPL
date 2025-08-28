@@ -1,9 +1,10 @@
 begin
-    i = 10;
-    while(i!=12)
+    read(a);
+    s = 0;
+    while(a!=0) 
     do
-        write(i);
-        i = i + 1;
+        s = s + a;
+        read(a);
     endwhile;
-    write(i);
+    write(s);
 end
