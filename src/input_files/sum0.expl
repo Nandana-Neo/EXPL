@@ -1,0 +1,9 @@
+begin
+    i = 10;
+    while(i!=12)
+    do
+        write(i);
+        i = i + 1;
+    endwhile;
+    write(i);
+end

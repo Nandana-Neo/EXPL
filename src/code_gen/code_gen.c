@@ -84,10 +84,13 @@ int code_gen_OP(tnode* node, FILE* fp){
             i = -1;
             break;
         case NODE_CONN:
-            if(i!=-1 && j!=-1)
+            if(i!=-1)
                 free_reg(); //extra free reg to ensure that both the left and right statements' assigned regs are freed
+            if(j!=-1)
+                free_reg();
             i = -1;
-            break;
+            j = -1;
+            return i;
     }
     free_reg();
     return i;
@@ -129,6 +132,8 @@ int code_gen_READ(tnode* node, FILE* fp){
 int code_gen_WRITE(tnode* node, FILE* fp){
     // only left node will be there and that will have the value stored in reg
     int reg = code_gen(node->left,fp);
+    int j = get_reg();
+    fprintf(fp,"MOV R%d, R%d\n", j,reg);
 
     for(int i=0;i<reg;i++){
         fprintf(fp,"PUSH R%d\n",i);
@@ -139,16 +144,18 @@ int code_gen_WRITE(tnode* node, FILE* fp){
     fprintf(fp,"PUSH R0\n");
     fprintf(fp,"MOV R0, -2\n");
     fprintf(fp,"PUSH R0\n");
-    fprintf(fp,"PUSH R%d\n",reg);
+    fprintf(fp,"PUSH R%d\n",j);
     fprintf(fp,"PUSH R0\n");
     fprintf(fp,"PUSH R0\n");
     fprintf(fp,"CALL 0\n");
-    fprintf(fp,"POP R%d\n",reg);    //return value
+    fprintf(fp,"POP R%d\n",j);    //return value
     fprintf(fp,"POP R0\n");
     fprintf(fp,"POP R0\n");
     fprintf(fp,"POP R0\n");
     fprintf(fp,"POP R0\n");
-
+    fprintf(fp,"MOV R%d, R%d\n", reg, j);
+    free_reg();
+    
     for(int i=reg-1;i>=0;i--){
         fprintf(fp,"POP R%d\n",i);
     }
