@@ -1,0 +1,14 @@
+begin
+    read(a);
+    s = 0;
+    while(a!=0) 
+    do
+        s = s + a;
+        read(a);
+        if(a>5) then
+            continue;
+        endif;
+        break;
+    endwhile;
+    write(s);
+end
