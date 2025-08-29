@@ -185,6 +185,30 @@ int code_gen_IF(tnode* node, FILE* fp, int start_label, int end_label){
     return -1;
 }
 
+int code_gen_DO_WHILE(tnode* node, FILE* fp){
+    int l1 = get_label();   // start label
+    int l2 = get_label();   // end label
+    fprintf(fp,"_L%d:\n",l1);
+    code_gen(node->left,fp, l1, l2);   // code_gen(Slist)
+    int i = code_gen(node->right, fp, l1, l2);  // code_gen(E)
+    fprintf(fp,"JNZ R%d, _L%d\n",i,l1);
+    fprintf(fp, "_L%d:\n",l2);
+    free_reg(); // For the reg i used by E
+    return -1;
+}
+
+int code_gen_REPEAT(tnode* node, FILE* fp){
+    int l1 = get_label();   // start label
+    int l2 = get_label();   // end label
+    fprintf(fp,"_L%d:\n",l1);
+    code_gen(node->left,fp, l1, l2);   // code_gen(Slist)
+    int i = code_gen(node->right, fp, l1, l2);  // code_gen(E)
+    fprintf(fp,"JZ R%d, _L%d\n",i,l1);
+    fprintf(fp, "_L%d:\n",l2);
+    free_reg(); // For the reg i used by E
+    return -1;
+}
+
 int code_gen_WHILE(tnode* node, FILE* fp){
     int l1 = get_label();   // start label
     int l2 = get_label();   // end label
@@ -231,6 +255,12 @@ int code_gen(tnode* node, FILE* fp, int start_label, int end_label){
         
         case NODE_WHILE:
             return code_gen_WHILE(node, fp);
+        
+        case NODE_REPEAT:
+            return code_gen_REPEAT(node,fp);
+
+        case NODE_DOWHILE:
+            return code_gen_DO_WHILE(node,fp);
 
         case NODE_BREAK:
             return code_gen_BREAK(node, fp, end_label);

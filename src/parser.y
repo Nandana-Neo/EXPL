@@ -8,7 +8,7 @@
     extern FILE* yyin;
     FILE * output_file;
 %}
-%token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE;
+%token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL;
 %left '+' '-';
 %left '*' '/';
 %nonassoc '<' '>' '=' ';';
@@ -36,6 +36,8 @@ Stmt        : InputStmt ';'     {   $$ = $1;    }
             | AsgStmt ';'       {   $$ = $1;    }
             | Ifstmt ';'        {   $$ = $1;    }
             | Whilestmt ';'     {   $$ = $1;    }
+            | RepeatStmt ';'    {   $$ = $1;    }
+            | DoWhileStmt ';'   {   $$ = $1;    }
             | BreakStmt ';'     {   $$ = $1;    }
             | ContinueStmt ';'  {   $$ = $1;    }
             ;
@@ -80,6 +82,20 @@ Whilestmt   : WHILE '(' E ')' DO Slist ENDWHILE     {
                                                         $$ = create_tree(0,TYPE_NONE,NULL,NODE_WHILE,$3,NULL,$6);
                                                     }
             ;
+RepeatStmt  :  REPEAT Slist UNTIL '(' E ')'         {
+                                                        if($5->type != TYPE_BOOL){
+                                                            fprintf(stderr, "Error: Type Mismatch");
+                                                            exit(1);
+                                                        }
+                                                        $$ = create_tree(0,TYPE_NONE,NULL,NODE_REPEAT,$2,NULL,$5);
+                                                    }
+DoWhileStmt : DO Slist WHILE '(' E ')'              {
+                                                        if($5->type != TYPE_BOOL){
+                                                            fprintf(stderr, "Error: Type Mismatch");
+                                                            exit(1);
+                                                        }
+                                                        $$ = create_tree(0,TYPE_NONE,NULL,NODE_DOWHILE,$2,NULL,$5);
+                                                    }
 
 AsgStmt     : ID '=' E  {     
                             $$ = make_operator_node(TYPE_NONE, NODE_ASGN, $1, $3);

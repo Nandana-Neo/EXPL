@@ -28,6 +28,8 @@ typedef enum {
     NODE_IF,        // if (l) then m
     NODE_IFELSE,    // if (l) then m else r ternary node
     NODE_WHILE,      // while
+    NODE_REPEAT,     // repeat-until
+    NODE_DOWHILE,    // do-while
     NODE_WRITE, 
     NODE_READ,
     NODE_BREAK,

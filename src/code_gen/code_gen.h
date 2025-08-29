@@ -125,6 +125,22 @@ int code_gen_WRITE(tnode* node, FILE *fp);
 int code_gen_IF(tnode* node, FILE* fp, int start_label, int end_label);
 
 /**
+ * Function: code_gen_DO_WHILE
+ * ------------------------
+ * Generates code for DO-WHILE statement
+ * Returns -1 since it is a statement
+ */
+int code_gen_DO_WHILE(tnode* node, FILE* fp);
+
+/**
+ * Function: code_gen_REPEAT
+ * ------------------------
+ * Generates code for REPEAT-UNTIL statement
+ * Returns -1 since it is a statement
+ */
+int code_gen_REPEAT(tnode* node, FILE* fp);
+
+/**
  * Function: code_gen_WHILE
  * ------------------------
  * Generates code for WHILE-DO statement

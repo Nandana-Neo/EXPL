@@ -38,6 +38,8 @@
 "do"        {   return DO;      }
 "break"     {   return BREAK;   }
 "continue"  {   return CONTINUE;    }
+"repeat"    {   return REPEAT;  }
+"until"     {   return UNTIL;   }
 
 %%
 int yywrap(){
