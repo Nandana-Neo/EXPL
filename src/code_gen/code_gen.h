@@ -44,8 +44,14 @@ int get_label();
  * --------------------
  * Generate assembly code corresponding to AST node
  * Note: It will print newline at the end
+ * 
+ * Input:
+ * - node - node
+ * - fp - file pointer fp
+ * - start_label - start label of the loop containing this node (for continue)
+ * - end_label - end label of the loop containing this node (for break)
 */
-int code_gen(tnode* node, FILE * fp);
+int code_gen(tnode* node, FILE * fp, int start_label, int end_label);
 
 /**
  * Function : code_gen_ID
@@ -109,8 +115,14 @@ int code_gen_WRITE(tnode* node, FILE *fp);
  * ----------------------
  * Generates code for IF-THEN and IF-THEN-ELSE statements
  * Returns -1 since it is a statement
+ * 
+ * Input:
+ * - node - node
+ * - fp - file pointer fp
+ * - start_label - start label of the loop containing this node (for continue)
+ * - end_label - end label of the loop containing this node (for break)
  */
-int code_gen_IF(tnode* node, FILE* fp);
+int code_gen_IF(tnode* node, FILE* fp, int start_label, int end_label);
 
 /**
  * Function: code_gen_WHILE
@@ -119,6 +131,44 @@ int code_gen_IF(tnode* node, FILE* fp);
  * Returns -1 since it is a statement
  */
 int code_gen_WHILE(tnode* node, FILE* fp);
+
+/**
+ * Function: code_gen_BREAK
+ * ------------------------
+ * Code for jump to end_label
+ * 
+ * Inputs:
+ * - node
+ * - fp
+ * - end_label: if not in a loop and is to be ignored, -1. Else enter >= 0
+ */
+int code_gen_BREAK(tnode* node, FILE* fp, int end_label);
+
+/**
+ * Function: code_gen_CONTINUE
+ * ------------------------
+ * Code for jump to start_label
+ * 
+ * Inputs:
+ * - node
+ * - fp
+ * - end_label: if not in a loop and is to be ignored, -1. Else enter >= 0
+ */
+int code_gen_CONTINUE(tnode* node, FILE* fp, int start_label);
+
+/**
+ * Function : code_gen_CONN
+ * --------------------
+ * Generate assembly code corresponding to AST node
+ * Note: It will print newline at the end
+ * 
+ * Input:
+ * - node - node
+ * - fp - file pointer fp
+ * - start_label - start label of the loop containing this node (for continue)
+ * - end_label - end label of the loop containing this node (for break)
+*/
+int code_gen_CONN(tnode* node, FILE* fp, int start_label, int end_label);
 
 void code_gen_final(FILE * fp);
 

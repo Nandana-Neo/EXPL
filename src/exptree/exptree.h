@@ -29,7 +29,9 @@ typedef enum {
     NODE_IFELSE,    // if (l) then m else r ternary node
     NODE_WHILE,      // while
     NODE_WRITE, 
-    NODE_READ
+    NODE_READ,
+    NODE_BREAK,
+    NODE_CONTINUE
 } NodeType;
 
 typedef struct tnode{
@@ -86,5 +88,8 @@ tnode* make_conditional_node(tnode* l, tnode* m, tnode* r);
 
 /*Prints the prefix notation of the AST*/
 void prefix(tnode* node);
+
+tnode* make_break_node(void);
+tnode* make_continue_node(void);
 
 #endif

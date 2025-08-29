@@ -8,7 +8,7 @@
     extern FILE* yyin;
     FILE * output_file;
 %}
-%token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE;
+%token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE;
 %left '+' '-';
 %left '*' '/';
 %nonassoc '<' '>' '=' ';';
@@ -16,7 +16,7 @@
 Program     : P_BEGIN Slist P_END   {
                                     FILE * fp = output_file;
                                     code_gen_start(fp);
-                                    code_gen($2, fp);
+                                    code_gen($2, fp, -1, -1);
                                     code_gen_final(fp);
                                     // evaluate($2);
                                     exit(0);
@@ -36,7 +36,15 @@ Stmt        : InputStmt ';'     {   $$ = $1;    }
             | AsgStmt ';'       {   $$ = $1;    }
             | Ifstmt ';'        {   $$ = $1;    }
             | Whilestmt ';'     {   $$ = $1;    }
+            | BreakStmt ';'     {   $$ = $1;    }
+            | ContinueStmt ';'  {   $$ = $1;    }
             ;
+
+BreakStmt   : BREAK             {   $$ = make_break_node(); }
+            ;
+
+ContinueStmt    : CONTINUE      {   $$ = make_continue_node();  }  
+                ;
 
 InputStmt   : READ'('ID')'  {
                                 $$ = make_operator_node(TYPE_NONE,NODE_READ,$3,NULL);

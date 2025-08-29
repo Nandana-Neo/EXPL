@@ -47,6 +47,16 @@ tnode* make_operator_node(VarType type, NodeType nodetype,tnode* l, tnode* r){
     return curr;
 }
 
+tnode* make_break_node(void){
+    tnode* curr = create_tree(0, TYPE_NONE, NULL, NODE_BREAK, NULL, NULL, NULL);
+    return curr;
+}
+
+tnode* make_continue_node(void){
+    tnode* curr = create_tree(0, TYPE_NONE, NULL, NODE_CONTINUE, NULL, NULL, NULL);
+    return curr;
+}
+
 tnode* make_conditional_node(tnode* l, tnode* m, tnode* r){
     NodeType nodetype = NODE_IFELSE;
     if(m == NULL)
