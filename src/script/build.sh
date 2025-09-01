@@ -3,7 +3,7 @@
 cd ..
 yacc parser.y -d
 lex lex.l
-gcc -g y.tab.c lex.yy.c node/ast_node.c code_gen/code_gen.c -o output
+gcc -g y.tab.c lex.yy.c node/ast_node.c node/decl_node.c symbol_table/symbol_table.c code_gen/code_gen.c -o output
 
 rm lex.yy.c
 rm y.tab.c

@@ -5,34 +5,6 @@ static int regNum = 0;
 static int registerTable[20];   // used for assignment operator with ID = E
 static int label = 0;
 
-
-Gsymbol* add_variable(char* name, VarType type){
-    if(get_variable(name)!=NULL){
-        fprintf(stderr,"Variable redeclared:%s",name);
-        exit(1);
-    }
-    Gsymbol* node = (Gsymbol*)malloc(sizeof(Gsymbol));
-    node->name = strdup(name);
-    node->type = type;
-    node->size = 1;
-    node->binding = SP;
-    SP++;
-    node->next = symbol_table;
-    symbol_table = node;
-    return node;
-}
-
-Gsymbol* get_variable(char* name){
-    Gsymbol* node = symbol_table;
-    while(node!=NULL){
-        if(strcmp(node->name,name)==0){
-            return node;
-        }
-        node = node->next;
-    }
-    return NULL;
-}
-
 int get_reg(){
     if(regNum==19){
         fprintf(stderr, "\nOut of free registers\n");  //error
@@ -134,7 +106,12 @@ int code_gen_OP(tnode* node, FILE* fp){
 int code_gen_READ(tnode* node, FILE* fp){
     // only left node will be there and that will be variable name
     tnode* var_node = node->left;
-    int location = get_variable(var_node->varname)->binding;
+    Gsymbol * symbol_table_entry = get_variable(var_node->varname);
+    if(symbol_table_entry == NULL){
+        fprintf(stderr, "Variable not declared:%s",var_node->varname);
+        exit(1);
+    }
+    int location = symbol_table_entry->binding;
     int reg = get_reg();
     for(int i=0;i<reg;i++){
         fprintf(fp,"PUSH R%d\n",i);
