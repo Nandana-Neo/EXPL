@@ -30,7 +30,7 @@ int get_label(){
 int code_gen_ID(tnode* node, FILE* fp){
     Gsymbol * symbol_table_entry = get_variable(node->varname);
     if(symbol_table_entry == NULL){
-        fprintf(stderr, "Variable not declared:%s",node->varname);
+        fprintf(stderr, "Variable not declared:%s\n",node->varname);
         exit(1);
     }
     int location = symbol_table_entry->binding;
@@ -108,7 +108,7 @@ int code_gen_READ(tnode* node, FILE* fp){
     tnode* var_node = node->left;
     Gsymbol * symbol_table_entry = get_variable(var_node->varname);
     if(symbol_table_entry == NULL){
-        fprintf(stderr, "Variable not declared:%s",var_node->varname);
+        fprintf(stderr, "Variable not declared:%s\n",var_node->varname);
         exit(1);
     }
     int location = symbol_table_entry->binding;

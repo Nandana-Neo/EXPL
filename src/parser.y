@@ -24,9 +24,9 @@
 Program     : Declarations P_BEGIN Slist P_END   {
                                     FILE * fp = output_file;
                                     code_gen_start(fp);
-                                    code_gen($<ast_node>2, fp, -1, -1);
+                                    code_gen($<ast_node>3, fp, -1, -1);
                                     code_gen_final(fp);
-                                    // evaluate($<ast_node>2);
+                                    // evaluate($<ast_node>3);
                                     exit(0);
                                 }
             | P_BEGIN P_END     {   
@@ -79,7 +79,8 @@ ContinueStmt    : CONTINUE      {   $<ast_node>$ = make_continue_node();  }
                 ;
 
 InputStmt   : READ'('ID')'  {
-                                $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_READ,$<ast_node>3,NULL);
+                                tnode * node = make_leaf_node(0,TYPE_INT,$<id_name>3);
+                                $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_READ,node,NULL);
                             }
             ;
 
@@ -128,11 +129,12 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                     }
 
 AsgStmt     : ID '=' E  {    
-                            if($<ast_node>1->type != $<ast_node>3->type){
-                                fprintf(stderr,"Error: Type Mismatch\n");
-                                exit(1);
-                            } 
-                            $<ast_node>$ = make_operator_node(TYPE_NONE, NODE_ASGN, $<ast_node>1, $<ast_node>3);
+                            // if($<ast_node>1->type != $<ast_node>3->type){
+                            //     fprintf(stderr,"Error: Type Mismatch\n");
+                            //     exit(1);
+                            // } 
+                            tnode * node = make_leaf_node(0,TYPE_INT,$<id_name>1);
+                            $<ast_node>$ = make_operator_node(TYPE_NONE, NODE_ASGN, node, $<ast_node>3);
                         }
             ;
     
