@@ -1,4 +1,4 @@
-#include "exptree.h"
+#include "ast_node.h"
 
 
 NodeType node_type(char* type){

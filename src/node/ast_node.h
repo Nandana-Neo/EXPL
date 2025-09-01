@@ -1,5 +1,5 @@
-#ifndef EXPTREE_HEADER_FILE
-#define EXPTREE_HEADER_FILE
+#ifndef AST_NODE_HEADER_FILE
+#define AST_NODE_HEADER_FILE
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,7 +45,6 @@ typedef struct tnode{
 } tnode;
 
 
-#define YYSTYPE tnode*
 
 /**
  * Function: node_type

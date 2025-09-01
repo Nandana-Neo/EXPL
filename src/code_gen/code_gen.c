@@ -1,9 +1,37 @@
 #include "code_gen.h"
+#include <string.h>
 
 static int regNum = 0;
-static int symbolTable[20];
-
+static int registerTable[20];   // used for assignment operator with ID = E
 static int label = 0;
+
+
+Gsymbol* add_variable(char* name, VarType type){
+    if(get_variable(name)!=NULL){
+        fprintf(stderr,"Variable redeclared:%s",name);
+        exit(1);
+    }
+    Gsymbol* node = (Gsymbol*)malloc(sizeof(Gsymbol));
+    node->name = strdup(name);
+    node->type = type;
+    node->size = 1;
+    node->binding = SP;
+    SP++;
+    node->next = symbol_table;
+    symbol_table = node;
+    return node;
+}
+
+Gsymbol* get_variable(char* name){
+    Gsymbol* node = symbol_table;
+    while(node!=NULL){
+        if(strcmp(node->name,name)==0){
+            return node;
+        }
+        node = node->next;
+    }
+    return NULL;
+}
 
 int get_reg(){
     if(regNum==19){
@@ -28,11 +56,14 @@ int get_label(){
 }
 
 int code_gen_ID(tnode* node, FILE* fp){
-    //** Assuming varname is [a-z] only
-    char varname = *(node->varname);
-    int location = varname - 'a' + SP;
+    Gsymbol * symbol_table_entry = get_variable(node->varname);
+    if(symbol_table_entry == NULL){
+        fprintf(stderr, "Variable not declared:%s",node->varname);
+        exit(1);
+    }
+    int location = symbol_table_entry->binding;
     int reg = get_reg();
-    symbolTable[reg] = location;
+    registerTable[reg] = location;
     fprintf(fp,"MOV R%d, [%d]\n",reg,location);
     return reg;
 }
@@ -90,9 +121,9 @@ int code_gen_OP(tnode* node, FILE* fp){
             fprintf(fp, "NE R%d, R%d\n",i,j);
             break;
         case NODE_ASGN:
-            fprintf(fp, "MOV [%d], R%d\n",symbolTable[i],j);
+            fprintf(fp, "MOV [%d], R%d\n",registerTable[i],j);
             free_reg();  //extra free reg to free the LHS as well
-            symbolTable[i] = -1;
+            registerTable[i] = -1;
             i = -1;
             break;
     }
@@ -103,11 +134,14 @@ int code_gen_OP(tnode* node, FILE* fp){
 int code_gen_READ(tnode* node, FILE* fp){
     // only left node will be there and that will be variable name
     tnode* var_node = node->left;
-    char varname = *(var_node->varname);
-    int location = varname - 'a' + SP;
+    int location = get_variable(var_node->varname)->binding;
     int reg = get_reg();
     for(int i=0;i<reg;i++){
         fprintf(fp,"PUSH R%d\n",i);
+    }
+    int dupl = 0;
+    if(reg == 0){
+        dupl = 1;
     }
     // Use R0 after pushing all registers
     // Call get_reg() to use the variable to store return value
@@ -121,10 +155,10 @@ int code_gen_READ(tnode* node, FILE* fp){
     fprintf(fp,"PUSH R0\n");
     fprintf(fp,"CALL 0\n");
     fprintf(fp,"POP R%d\n",reg);    //return value
-    fprintf(fp,"POP R0\n");
-    fprintf(fp,"POP R0\n");
-    fprintf(fp,"POP R0\n");
-    fprintf(fp,"POP R0\n");
+    fprintf(fp,"POP R%d\n",dupl);
+    fprintf(fp,"POP R%d\n",dupl);
+    fprintf(fp,"POP R%d\n",dupl);
+    fprintf(fp,"POP R%d\n",dupl);
 
     for(int i=reg-1;i>=0;i--){
         fprintf(fp,"POP R%d\n",i);
@@ -278,7 +312,7 @@ int code_gen(tnode* node, FILE* fp, int start_label, int end_label){
 
 void code_gen_start(FILE * fp){
     fprintf(fp,"0\n2056\n0\n0\n0\n0\n0\n0\n");
-    fprintf(fp,"MOV SP, 4122\n");
+    fprintf(fp,"MOV SP, %d\n",SP);
 }
 
 void code_gen_final(FILE * fp){

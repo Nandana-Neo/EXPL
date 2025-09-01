@@ -1,7 +1,7 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
-    #include "exptree/exptree.h"
+    #include "node/ast_node.h"
     #include "y.tab.h"
     int yywrap();
 %}
@@ -9,17 +9,17 @@
 %%
 [0-9]+  {
     int val = atoi(yytext);
-    yylval = make_leaf_node(val, TYPE_INT, NULL);
+    yylval.ast_node = make_leaf_node(val, TYPE_INT, NULL);
     return NUM;
 }
 
 [a-z]   {
     char* variable = strdup(yytext);    // ** Value is assumed to be int
-    yylval = make_leaf_node(0, TYPE_INT, variable);
+    yylval.id_name = variable;
     return ID;
 }
 
-[()+*/=<>!;-] {
+[()+*/=<>!,;-] {
     return *yytext;
 }
 
@@ -40,7 +40,10 @@
 "continue"  {   return CONTINUE;    }
 "repeat"    {   return REPEAT;  }
 "until"     {   return UNTIL;   }
-
+"int"       {   return INT;     }
+"str"       {   return STR;     }
+"decl"      {   return DECL;    }
+"enddecl"   {   return ENDDECL; }
 %%
 int yywrap(){
     return 1;
