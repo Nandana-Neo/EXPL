@@ -4,7 +4,7 @@ int SP = 4096;
 
 Gsymbol* add_variable(char* name, VarType type){
     if(get_variable(name)!=NULL){
-        fprintf(stderr,"Variable redeclared:%s",name);
+        fprintf(stderr,"Variable redeclared:%s\n",name);
         exit(1);
     }
     Gsymbol* node = (Gsymbol*)malloc(sizeof(Gsymbol));

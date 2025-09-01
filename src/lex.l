@@ -13,18 +13,6 @@
     return NUM;
 }
 
-[a-z]   {
-    char* variable = strdup(yytext);    // ** Value is assumed to be int
-    yylval.id_name = variable;
-    return ID;
-}
-
-[()+*/=<>!,;-] {
-    return *yytext;
-}
-
-[ \n]       { }
-
 "begin"     {   return P_BEGIN;   }
 "end"       {   return P_END;     }
 "read"      {   return READ;    }
@@ -44,6 +32,19 @@
 "str"       {   return STR;     }
 "decl"      {   return DECL;    }
 "enddecl"   {   return ENDDECL; }
+
+[a-z]+   {
+    char* variable = strdup(yytext);    // ** Value is assumed to be int
+    yylval.id_name = variable;
+    return ID;
+}
+
+[()+*/=<>!,;-] {
+    return *yytext;
+}
+
+[ \n]       { }
+
 %%
 int yywrap(){
     return 1;
