@@ -1,14 +1,21 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
-    #include "exptree/exptree.h"
+    #include "node/ast_node.h"
     #include "code_gen/code_gen.h"
     int yyerror();   
     int yylex();
     extern FILE* yyin;
     FILE * output_file;
 %}
-%token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL;
+%union 
+{
+    tnode * ast_node;   // for creating the tree node for code gen
+    char * id_name;   // for getting the variable name for symbol tree creation
+    int decl_type;      // for getting the type of the variable while declaration
+
+}
+%token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
 %left '+' '-';
 %left '*' '/';
 %nonassoc '<' '>' '=' ';';
@@ -16,174 +23,197 @@
 Program     : P_BEGIN Slist P_END   {
                                     FILE * fp = output_file;
                                     code_gen_start(fp);
-                                    code_gen($2, fp, -1, -1);
+                                    code_gen($<ast_node>2, fp, -1, -1);
                                     code_gen_final(fp);
-                                    // evaluate($2);
+                                    // evaluate($<ast_node>2);
                                     exit(0);
                                 }
             | P_BEGIN P_END     {   
-                                fprintf(stdout,"Emty program");
+                                fprintf(stdout,"Empty program");
                                 exit(0);
                             }
             ;
 
-Slist       : Slist Stmt    {   $$ = make_operator_node(TYPE_NONE,NODE_CONN,$1,$2);   }
-            | Stmt          {   $$ = $1;    }
+Declarations    : DECL DeclList ENDDECL     {}
+                | DECL ENDDECL              {}
+                ;
+
+DeclList    : DeclList Decl 
+            | Decl 
             ;
 
-Stmt        : InputStmt ';'     {   $$ = $1;    }
-            | OutputStmt ';'    {   $$ = $1;    }
-            | AsgStmt ';'       {   $$ = $1;    }
-            | Ifstmt ';'        {   $$ = $1;    }
-            | Whilestmt ';'     {   $$ = $1;    }
-            | RepeatStmt ';'    {   $$ = $1;    }
-            | DoWhileStmt ';'   {   $$ = $1;    }
-            | BreakStmt ';'     {   $$ = $1;    }
-            | ContinueStmt ';'  {   $$ = $1;    }
+Decl        : Type VarList ';'
             ;
 
-BreakStmt   : BREAK             {   $$ = make_break_node(); }
+Type        : INT           {   $<decl_type>$ = TYPE_INT; }
+            | STR           {   $<decl_type>$ = TYPE_CHAR; }
             ;
 
-ContinueStmt    : CONTINUE      {   $$ = make_continue_node();  }  
+VarList     : VarList ',' ID 
+            | ID
+            ;
+
+Slist       : Slist Stmt    {   $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_CONN,$<ast_node>1,$<ast_node>2);   }
+            | Stmt          {   $<ast_node>$ = $<ast_node>1;    }
+            ;
+
+Stmt        : InputStmt ';'     {   $<ast_node>$ = $<ast_node>1;    }
+            | OutputStmt ';'    {   $<ast_node>$ = $<ast_node>1;    }
+            | AsgStmt ';'       {   $<ast_node>$ = $<ast_node>1;    }
+            | Ifstmt ';'        {   $<ast_node>$ = $<ast_node>1;    }
+            | Whilestmt ';'     {   $<ast_node>$ = $<ast_node>1;    }
+            | RepeatStmt ';'    {   $<ast_node>$ = $<ast_node>1;    }
+            | DoWhileStmt ';'   {   $<ast_node>$ = $<ast_node>1;    }
+            | BreakStmt ';'     {   $<ast_node>$ = $<ast_node>1;    }
+            | ContinueStmt ';'  {   $<ast_node>$ = $<ast_node>1;    }
+            ;
+
+BreakStmt   : BREAK             {   $<ast_node>$ = make_break_node(); }
+            ;
+
+ContinueStmt    : CONTINUE      {   $<ast_node>$ = make_continue_node();  }  
                 ;
 
 InputStmt   : READ'('ID')'  {
-                                $$ = make_operator_node(TYPE_NONE,NODE_READ,$3,NULL);
+                                $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_READ,$<ast_node>3,NULL);
                             }
             ;
 
 OutputStmt  : WRITE'('E')'  {  
-                                $$ = make_operator_node(TYPE_NONE,NODE_WRITE,$3,NULL);
+                                $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_WRITE,$<ast_node>3,NULL);
                             }
             ;
 
 Ifstmt  : IF '(' E ')' THEN Slist ELSE Slist ENDIF  {   
-                                                        if($3->type != TYPE_BOOL){
+                                                        if($<ast_node>3->type != TYPE_BOOL){
                                                             fprintf(stderr,"Error: Type Mismatch\n");
                                                             exit(1);
                                                         }
-                                                        $$ = make_conditional_node($3,$6,$8);   
+                                                        $<ast_node>$ = make_conditional_node($<ast_node>3,$<ast_node>6,$<ast_node>8);   
                                                     }
         | IF '(' E ')' THEN Slist ENDIF             {   
-                                                        if($3->type != TYPE_BOOL){
+                                                        if($<ast_node>3->type != TYPE_BOOL){
                                                             fprintf(stderr,"Error: Type Mismatch\n");
                                                             exit(1);
                                                         }
-                                                        $$ = make_conditional_node($3, $6, NULL);  
+                                                        $<ast_node>$ = make_conditional_node($<ast_node>3, $<ast_node>6, NULL);  
                                                     }
         ;
 
 Whilestmt   : WHILE '(' E ')' DO Slist ENDWHILE     {      
-                                                        if($3->type != TYPE_BOOL){
+                                                        if($<ast_node>3->type != TYPE_BOOL){
                                                             fprintf(stderr,"Error: Type Mismatch\n");
                                                             exit(1);
                                                         }
-                                                        $$ = create_tree(0,TYPE_NONE,NULL,NODE_WHILE,$3,NULL,$6);
+                                                        $<ast_node>$ = create_tree(0,TYPE_NONE,NULL,NODE_WHILE,$<ast_node>3,NULL,$<ast_node>6);
                                                     }
             ;
 RepeatStmt  :  REPEAT Slist UNTIL '(' E ')'         {
-                                                        if($5->type != TYPE_BOOL){
+                                                        if($<ast_node>5->type != TYPE_BOOL){
                                                             fprintf(stderr, "Error: Type Mismatch");
                                                             exit(1);
                                                         }
-                                                        $$ = create_tree(0,TYPE_NONE,NULL,NODE_REPEAT,$2,NULL,$5);
+                                                        $<ast_node>$ = create_tree(0,TYPE_NONE,NULL,NODE_REPEAT,$<ast_node>2,NULL,$<ast_node>5);
                                                     }
 DoWhileStmt : DO Slist WHILE '(' E ')'              {
-                                                        if($5->type != TYPE_BOOL){
+                                                        if($<ast_node>5->type != TYPE_BOOL){
                                                             fprintf(stderr, "Error: Type Mismatch");
                                                             exit(1);
                                                         }
-                                                        $$ = create_tree(0,TYPE_NONE,NULL,NODE_DOWHILE,$2,NULL,$5);
+                                                        $<ast_node>$ = create_tree(0,TYPE_NONE,NULL,NODE_DOWHILE,$<ast_node>2,NULL,$<ast_node>5);
                                                     }
 
-AsgStmt     : ID '=' E  {     
-                            $$ = make_operator_node(TYPE_NONE, NODE_ASGN, $1, $3);
+AsgStmt     : ID '=' E  {    
+                            if($<ast_node>1->type != $<ast_node>3->type){
+                                fprintf(stderr,"Error: Type Mismatch\n");
+                                exit(1);
+                            } 
+                            $<ast_node>$ = make_operator_node(TYPE_NONE, NODE_ASGN, $<ast_node>1, $<ast_node>3);
                         }
             ;
     
 E   :   E '<' E     {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
-                        $$ = make_operator_node(TYPE_BOOL,NODE_LT,$1,$3);
+                        $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_LT,$<ast_node>1,$<ast_node>3);
                     }
     |   E '>' E     {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
-                        $$ = make_operator_node(TYPE_BOOL,NODE_GT,$1,$3);
+                        $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_GT,$<ast_node>1,$<ast_node>3);
                     }
     |   E '<''=' E  {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
-                        $$ = make_operator_node(TYPE_BOOL,NODE_LE,$1,$4);
+                        $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_LE,$<ast_node>1,$<ast_node>4);
                     }
     |   E '>''=' E  {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
-                        $$ = make_operator_node(TYPE_BOOL,NODE_GE,$1,$4);
+                        $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_GE,$<ast_node>1,$<ast_node>4);
                     }
     |   E '!''=' E  {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
-                        $$ = make_operator_node(TYPE_BOOL,NODE_NE,$1,$4);
+                        $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_NE,$<ast_node>1,$<ast_node>4);
                     }
     |   E '=''=' E  {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
-                        $$ = make_operator_node(TYPE_BOOL,NODE_EQ,$1,$4);
+                        $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_EQ,$<ast_node>1,$<ast_node>4);
                     }
     |   E '+' E     {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;
-                        $$ = make_operator_node(type,NODE_ADD,$1,$3);
+                        $<ast_node>$ = make_operator_node(type,NODE_ADD,$<ast_node>1,$<ast_node>3);
                     }
     |   E '*' E     {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;
-                        $$ = make_operator_node(type,NODE_MUL,$1,$3);
+                        $<ast_node>$ = make_operator_node(type,NODE_MUL,$<ast_node>1,$<ast_node>3);
                     }
     |   E '/' E     {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;
-                        $$ = make_operator_node(type,NODE_DIV,$1,$3);
+                        $<ast_node>$ = make_operator_node(type,NODE_DIV,$<ast_node>1,$<ast_node>3);
                     }
     |   E '-' E     {
-                        if($1->type != TYPE_INT || $3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
                             fprintf(stderr,"Error: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;
-                        $$ = make_operator_node(type,NODE_SUB,$1,$3);
+                        $<ast_node>$ = make_operator_node(type,NODE_SUB,$<ast_node>1,$<ast_node>3);
                     }
     |   '(' E ')'   {
-                        $$ = $2;
+                        $<ast_node>$ = $<ast_node>2;
                     }
     |   NUM         {
-                        $$ = $1;
+                        $<ast_node>$ = $<ast_node>1;
                     } 
     |   ID          {
-                        $$ = $1;
+                        $<ast_node>$ = make_leaf_node(0,TYPE_INT,$<ast_node>1);
                     }
     ;
 %%
