@@ -8,7 +8,8 @@ typedef enum {
     TYPE_NONE = -1,   // not ID node
     TYPE_INT  = 0,
     TYPE_CHAR = 1,
-    TYPE_BOOL = 2
+    TYPE_BOOL = 2,
+    TYPE_STR = 3
 } VarType;
 
 typedef enum {
@@ -43,7 +44,6 @@ typedef struct tnode{
     NodeType nodetype;   // information about non-leaf nodes - read/write/connector/+/* etc.
     struct tnode *left, *middle, *right; //left and right branches
 } tnode;
-
 
 
 /**

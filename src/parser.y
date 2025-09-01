@@ -2,6 +2,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include "node/ast_node.h"
+    #include "node/decl_node.h"
     #include "code_gen/code_gen.h"
     int yyerror();   
     int yylex();
@@ -13,14 +14,14 @@
     tnode * ast_node;   // for creating the tree node for code gen
     char * id_name;   // for getting the variable name for symbol tree creation
     int decl_type;      // for getting the type of the variable while declaration
-
+    struct decl_node * decl_node;  // for declarations section to register variables to symbol table
 }
 %token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
 %left '+' '-';
 %left '*' '/';
 %nonassoc '<' '>' '=' ';';
 %%
-Program     : P_BEGIN Slist P_END   {
+Program     : Declarations P_BEGIN Slist P_END   {
                                     FILE * fp = output_file;
                                     code_gen_start(fp);
                                     code_gen($<ast_node>2, fp, -1, -1);
@@ -38,19 +39,22 @@ Declarations    : DECL DeclList ENDDECL     {}
                 | DECL ENDDECL              {}
                 ;
 
-DeclList    : DeclList Decl 
-            | Decl 
+DeclList    : DeclList Decl      {}
+            | Decl               {}
             ;
 
-Decl        : Type VarList ';'
+Decl        : Type VarList ';'  {   create_entries($<decl_node>2, $<decl_type>1); }
             ;
 
 Type        : INT           {   $<decl_type>$ = TYPE_INT; }
-            | STR           {   $<decl_type>$ = TYPE_CHAR; }
+            | STR           {   $<decl_type>$ = TYPE_STR; }
             ;
 
-VarList     : VarList ',' ID 
-            | ID
+VarList     : VarList ',' ID    {   
+                                    decl_node * id_node = create_decl_node($<id_name>3);
+                                    $<decl_node>$ = add_to_list($<decl_node>1, id_node); 
+                                }
+            | ID                {   $<decl_node>$ = create_decl_node($<id_name>1); }
             ;
 
 Slist       : Slist Stmt    {   $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_CONN,$<ast_node>1,$<ast_node>2);   }
@@ -213,7 +217,7 @@ E   :   E '<' E     {
                         $<ast_node>$ = $<ast_node>1;
                     } 
     |   ID          {
-                        $<ast_node>$ = make_leaf_node(0,TYPE_INT,$<ast_node>1);
+                        $<ast_node>$ = make_leaf_node(0,TYPE_INT,$<id_name>1);
                     }
     ;
 %%

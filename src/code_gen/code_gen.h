@@ -4,45 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../node/ast_node.h"
-
-static int SP = 4096;   // points to the free slot at top of stack
-
-typedef struct Gsymbol {
-    char* name;       // name of the variable
-    int type;         // type of the variable - INT or STR
-    int size;         // size of the type of the variable - default(1)
-    int binding;      // stores the static memory address allocated to the variable
-    struct Gsymbol *next;
-} Gsymbol;
-
-// Stores the address to the symbol 
-static Gsymbol * symbol_table = NULL;
-
-/**
- * Function: add_variable
- * ------------------------
- * 
- * Input: 
- * - name: char *    // name of the variable
- * - type: int       // type of the variable
- * 
- * Output:
- * - Gsymbol node   // symbol table entry of the variable assigned
- */
-Gsymbol* add_variable(char* name, VarType type);
-
-/**
- * Function: get_variable
- * ------------------------
- * 
- * Input:
- * - name : char*   // name of the variable
- * 
- * Output:
- * - Gsymbol node   // Symbol table entry of the variable
- * Returns NULL if variable is not in the table
- */
-Gsymbol* get_variable(char* name);
+#include "../symbol_table/symbol_table.h"
 
 /**
  * Function: get_reg
