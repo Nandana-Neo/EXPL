@@ -12,7 +12,15 @@
     node_val val;
     val.int_val = atoi(yytext);
     yylval.ast_node = make_leaf_node(val, TYPE_INT, NULL);
-    return NUM;
+    return NUM_VAL;
+}
+
+
+\"[^"\n]*\"       { //safe way to match a string (not include " and \n)
+    node_val val;
+    val.str_val = strdup(yytext);
+    yylval.ast_node = make_leaf_node(val, TYPE_STR, NULL);
+    return STR_VAL;
 }
 
 "begin"     {   return P_BEGIN;   }
@@ -35,7 +43,6 @@
 "decl"      {   return DECL;    }
 "enddecl"   {   return ENDDECL; }
 
-\"          {   return QUOTE_MARK;  }
 
 [a-zA-Z]+   {
     char* variable = strdup(yytext);    // ** Value is assumed to be int

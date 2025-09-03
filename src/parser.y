@@ -16,8 +16,8 @@
     int decl_type;      // for getting the type of the variable while declaration
     struct decl_node * decl_node;  // for declarations section to register variables to symbol table
 }
-%token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
-%token QUOTE_MARK
+%token ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
+%token <ast_node> NUM_VAL STR_VAL;
 %left '+' '-';
 %left '*' '/';
 %nonassoc '<' '>' '=' ';';
@@ -227,20 +227,18 @@ E   :   E '<' E     {
     |   '(' E ')'   {
                         $<ast_node>$ = $<ast_node>2;
                     }
-    |   NUM         {
-                        $<ast_node>$ = $<ast_node>1;
+    |   NUM_VAL     {
+                        $<ast_node>$ = $1;
                     } 
+    |   STR_VAL     {
+                        $<ast_node>$ = $1;
+                    }
     |   ID          {
 
                         node_val val;
                         val.int_val = 0;
                         $<ast_node>$ = make_leaf_node(val,TYPE_INT,$<id_name>1);
                     }
-    |   QUOTE_MARK ID QUOTE_MARK    {   //it is a string
-                                        node_val val;
-                                        val.str_val = $<id_name>2;
-                                        $<ast_node>$ = make_leaf_node(val,TYPE_STR,NULL);
-                                    } 
     ;
 %%
 int yyerror(){

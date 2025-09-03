@@ -46,7 +46,7 @@ int code_gen_VAL(tnode* node, FILE* fp){
         fprintf(fp,"MOV R%d, %d\n",i,node->val.int_val);
     else if(node->type == TYPE_STR)
         //store first 16 chars into the reg
-        fprintf(fp,"MOV R%d, \"%.16s\"\n",i,node->val.str_val);
+        fprintf(fp,"MOV R%d, %.18s\n",i,node->val.str_val);
     return i;
 }
 

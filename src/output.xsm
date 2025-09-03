@@ -52,7 +52,7 @@ POP R1
 POP R1
 POP R1
 MOV R0, [4099]
-MOV R1, "LargestNo"
+MOV R1, "Largest no is"
 MOV [4099], R1
 MOV R0, [4099]
 MOV R1, R0
