@@ -6,7 +6,7 @@ begin
     read(num);
     read(n);
     read(c);
-    msg = "LargestNo";
+    msg = "Largest no is";
     write(msg);
     if (num < n) then
         if (n < c) then write(c); else write(n); endif;
