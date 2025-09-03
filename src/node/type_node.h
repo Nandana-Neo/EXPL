@@ -44,7 +44,7 @@ typedef struct tnode{
     VarType type;   // type of variable
     char* varname;   // name of a variable for ID nodes
     NodeType nodetype;   // information about non-leaf nodes - read/write/connector/+/* etc.
-    struct Gsymbol *Gentry;     // pointer to GST entry for global variables and functions
+    struct Gsymbol* gst_entry;     // pointer to GST entry for global variables and functions
     struct tnode *left, *middle, *right; //left and right branches
 } tnode;
 

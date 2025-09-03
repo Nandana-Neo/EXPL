@@ -30,6 +30,7 @@ NodeType node_type(char* type);
  *  VarType type - type of ID node (TYPE_NONE for non leaf node)
  *  char  * c - ID name for ID node or 'READ','WRITE','CONN','+','-',etc
  * 
+ *  Gsymbol* gst_entry - pointer to GST entry in case of variables and functions
  *  tnode * l - left node in AST
  *  tnode * m - middle node in AST
  *  tnode * r - right node in AST
@@ -37,10 +38,10 @@ NodeType node_type(char* type);
  * Output:
  *  tnode * pointer to node
 */
-tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype, tnode *l, tnode *m, tnode *r);
+tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype, Gsymbol* gst_entry, tnode *l, tnode *m, tnode *r);
 
-/*Make a leaf tnode, can be NUM node or ID node */
-tnode* make_leaf_node(node_val n, VarType type, char* varname);
+/*Make a leaf tnode, can be NUM/STR node or ID node */
+tnode* make_leaf_node(node_val n, VarType type, char* varname, Gsymbol* gst_entry);
 
 /*Create operator node*/
 tnode* make_operator_node(VarType type, NodeType nodetype, tnode* l, tnode* r);
