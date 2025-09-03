@@ -66,15 +66,15 @@ int code_gen(tnode* node, FILE * fp, int start_label, int end_label);
 int code_gen_ID(tnode *node, FILE* fp);
 
 /**
- * Function : code_gen_NUM
+ * Function : code_gen_VAL
  * ----------------------
- * Generates code for NUM leaf node
+ * Generates code for NUM/STR leaf node
  * 
  * Output
- * - Returns reg no storing NUM
+ * - Returns reg no storing NUM or the STR
  * 
  */
-int code_gen_NUM(tnode *node, FILE* fp);
+int code_gen_VAL(tnode *node, FILE* fp);
 
 /**
  * Function : code_gen_OP

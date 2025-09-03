@@ -1,10 +1,13 @@
 decl
     int num,n,c;
+    str msg;
 enddecl
 begin
     read(num);
     read(n);
     read(c);
+    msg = "LargestNo";
+    write(msg);
     if (num < n) then
         if (n < c) then write(c); else write(n); endif;
     else

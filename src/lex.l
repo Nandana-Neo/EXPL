@@ -35,7 +35,9 @@
 "decl"      {   return DECL;    }
 "enddecl"   {   return ENDDECL; }
 
-[a-z]+   {
+\"          {   return QUOTE_MARK;  }
+
+[a-zA-Z]+   {
     char* variable = strdup(yytext);    // ** Value is assumed to be int
     yylval.id_name = variable;
     return ID;

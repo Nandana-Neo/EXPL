@@ -40,9 +40,13 @@ int code_gen_ID(tnode* node, FILE* fp){
     return reg;
 }
 
-int code_gen_NUM(tnode* node, FILE* fp){
+int code_gen_VAL(tnode* node, FILE* fp){
     int i = get_reg();
-    fprintf(fp,"MOV R%d, %d\n",i,node->val.int_val);
+    if(node->type   == TYPE_INT)
+        fprintf(fp,"MOV R%d, %d\n",i,node->val.int_val);
+    else if(node->type == TYPE_STR)
+        //store first 16 chars into the reg
+        fprintf(fp,"MOV R%d, \"%.16s\"\n",i,node->val.str_val);
     return i;
 }
 
@@ -250,7 +254,7 @@ int code_gen(tnode* node, FILE* fp, int start_label, int end_label){
     switch(node->nodetype){
         case NODE_LEAF:
             if(node->varname == NULL)  // NUM
-                return code_gen_NUM(node, fp);
+                return code_gen_VAL(node, fp);
             else    //ID
                 return code_gen_ID(node, fp);
 
