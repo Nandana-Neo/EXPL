@@ -50,7 +50,7 @@ typedef struct tnode{
 
 typedef struct Gsymbol {
     char* name;       // name of the variable
-    int type;         // type of the variable - INT or STR
+    VarType type;         // type of the variable - INT or STR
     int size;         // size of the type of the variable - default(1)
     int binding;      // stores the static memory address allocated to the variable
     struct Gsymbol *next;

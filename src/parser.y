@@ -17,6 +17,7 @@
     struct decl_node * decl_node;  // for declarations section to register variables to symbol table
 }
 %token NUM ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
+%token QUOTE_MARK
 %left '+' '-';
 %left '*' '/';
 %nonassoc '<' '>' '=' ';';
@@ -137,13 +138,14 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                     }
 
 AsgStmt     : ID '=' E  {    
-                            // if($<ast_node>1->type != $<ast_node>3->type){
-                            //     fprintf(stderr,"Error: Type Mismatch\n");
-                            //     exit(1);
-                            // } 
+                            Gsymbol* node_id = get_variable($<id_name>1);
+                            if(node_id->type != $<ast_node>3->type){
+                                fprintf(stderr,"Error: Type Mismatch\n");
+                                exit(1);
+                            } 
                             node_val val;
                             val.int_val = 0;
-                            tnode * node = make_leaf_node(val,TYPE_INT,$<id_name>1);
+                            tnode * node = make_leaf_node(val,node_id->type,$<id_name>1);
                             $<ast_node>$ = make_operator_node(TYPE_NONE, NODE_ASGN, node, $<ast_node>3);
                         }
             ;
@@ -234,6 +236,11 @@ E   :   E '<' E     {
                         val.int_val = 0;
                         $<ast_node>$ = make_leaf_node(val,TYPE_INT,$<id_name>1);
                     }
+    |   QUOTE_MARK ID QUOTE_MARK    {   //it is a string
+                                        node_val val;
+                                        val.str_val = $<id_name>2;
+                                        $<ast_node>$ = make_leaf_node(val,TYPE_STR,NULL);
+                                    } 
     ;
 %%
 int yyerror(){
