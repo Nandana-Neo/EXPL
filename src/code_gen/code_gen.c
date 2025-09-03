@@ -42,7 +42,7 @@ int code_gen_ID(tnode* node, FILE* fp){
 
 int code_gen_NUM(tnode* node, FILE* fp){
     int i = get_reg();
-    fprintf(fp,"MOV R%d, %d\n",i,node->val);
+    fprintf(fp,"MOV R%d, %d\n",i,node->val.int_val);
     return i;
 }
 
@@ -311,8 +311,12 @@ int evaluate(tnode* node){
     int i,j;
     switch(node->nodetype){
         case NODE_LEAF:
-            if(node->varname == NULL)  // NUM
-                return node->val;
+            if(node->varname == NULL){  // NUM/STR/CHAR
+                if(node->type == TYPE_INT)
+                    return node->val.int_val;   // NUM
+                else 
+                    return 0;
+            }
             else    //ID
                 return storage[(*node->varname)-'a'];
 

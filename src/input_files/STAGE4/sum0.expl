@@ -1,0 +1,13 @@
+decl
+    int a,sum;
+enddecl
+begin
+    read(a);
+    sum = 0;
+    while(a!=0) 
+    do
+        sum = sum + a;
+        read(a);
+    endwhile;
+    write(sum);
+end

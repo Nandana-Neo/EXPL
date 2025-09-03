@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "../node/type_node.h"
 #include "../node/ast_node.h"
 #include "../symbol_table/symbol_table.h"
 
