@@ -2,17 +2,10 @@
 #define SYMBOL_TABLE_HEADER_FILE
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
-#include "../node/ast_node.h"
 #include "../node/decl_node.h"
-
-typedef struct Gsymbol {
-    char* name;       // name of the variable
-    int type;         // type of the variable - INT or STR
-    int size;         // size of the type of the variable - default(1)
-    int binding;      // stores the static memory address allocated to the variable
-    struct Gsymbol *next;
-} Gsymbol;
+#include "../node/type_node.h"
 
 // Stores the address to the symbol 
 static Gsymbol * symbol_table = NULL;

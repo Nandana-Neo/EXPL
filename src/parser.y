@@ -79,7 +79,9 @@ ContinueStmt    : CONTINUE      {   $<ast_node>$ = make_continue_node();  }
                 ;
 
 InputStmt   : READ'('ID')'  {
-                                tnode * node = make_leaf_node(0,TYPE_INT,$<id_name>3);
+                                node_val val;
+                                val.int_val = 0;
+                                tnode * node = make_leaf_node(val,TYPE_INT,$<id_name>3);
                                 $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_READ,node,NULL);
                             }
             ;
@@ -110,7 +112,9 @@ Whilestmt   : WHILE '(' E ')' DO Slist ENDWHILE     {
                                                             fprintf(stderr,"Error: Type Mismatch\n");
                                                             exit(1);
                                                         }
-                                                        $<ast_node>$ = create_tree(0,TYPE_NONE,NULL,NODE_WHILE,$<ast_node>3,NULL,$<ast_node>6);
+                                                        node_val val;
+                                                        val.int_val = 0;
+                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_WHILE,$<ast_node>3,NULL,$<ast_node>6);
                                                     }
             ;
 RepeatStmt  :  REPEAT Slist UNTIL '(' E ')'         {
@@ -118,14 +122,18 @@ RepeatStmt  :  REPEAT Slist UNTIL '(' E ')'         {
                                                             fprintf(stderr, "Error: Type Mismatch");
                                                             exit(1);
                                                         }
-                                                        $<ast_node>$ = create_tree(0,TYPE_NONE,NULL,NODE_REPEAT,$<ast_node>2,NULL,$<ast_node>5);
+                                                        node_val val;
+                                                        val.int_val = 0;
+                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_REPEAT,$<ast_node>2,NULL,$<ast_node>5);
                                                     }
 DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                         if($<ast_node>5->type != TYPE_BOOL){
                                                             fprintf(stderr, "Error: Type Mismatch");
                                                             exit(1);
                                                         }
-                                                        $<ast_node>$ = create_tree(0,TYPE_NONE,NULL,NODE_DOWHILE,$<ast_node>2,NULL,$<ast_node>5);
+                                                        node_val val;
+                                                        val.int_val = 0;
+                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_DOWHILE,$<ast_node>2,NULL,$<ast_node>5);
                                                     }
 
 AsgStmt     : ID '=' E  {    
@@ -133,7 +141,9 @@ AsgStmt     : ID '=' E  {
                             //     fprintf(stderr,"Error: Type Mismatch\n");
                             //     exit(1);
                             // } 
-                            tnode * node = make_leaf_node(0,TYPE_INT,$<id_name>1);
+                            node_val val;
+                            val.int_val = 0;
+                            tnode * node = make_leaf_node(val,TYPE_INT,$<id_name>1);
                             $<ast_node>$ = make_operator_node(TYPE_NONE, NODE_ASGN, node, $<ast_node>3);
                         }
             ;
@@ -219,7 +229,10 @@ E   :   E '<' E     {
                         $<ast_node>$ = $<ast_node>1;
                     } 
     |   ID          {
-                        $<ast_node>$ = make_leaf_node(0,TYPE_INT,$<id_name>1);
+
+                        node_val val;
+                        val.int_val = 0;
+                        $<ast_node>$ = make_leaf_node(val,TYPE_INT,$<id_name>1);
                     }
     ;
 %%

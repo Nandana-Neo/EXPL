@@ -2,13 +2,15 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include "node/ast_node.h"
+    #include "node/type_node.h"
     #include "y.tab.h"
     int yywrap();
 %}
 
 %%
 [0-9]+  {
-    int val = atoi(yytext);
+    node_val val;
+    val.int_val = atoi(yytext);
     yylval.ast_node = make_leaf_node(val, TYPE_INT, NULL);
     return NUM;
 }
