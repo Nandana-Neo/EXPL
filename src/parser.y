@@ -82,7 +82,8 @@ ContinueStmt    : CONTINUE      {   $<ast_node>$ = make_continue_node();  }
 InputStmt   : READ'('ID')'  {
                                 node_val val;
                                 val.int_val = 0;
-                                tnode * node = make_leaf_node(val,TYPE_INT,$<id_name>3);
+                                Gsymbol* st_entry = get_variable($<id_name>3);
+                                tnode* node = make_leaf_node(val,st_entry->type,$<id_name>3,st_entry);
                                 $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_READ,node,NULL);
                             }
             ;
@@ -115,7 +116,7 @@ Whilestmt   : WHILE '(' E ')' DO Slist ENDWHILE     {
                                                         }
                                                         node_val val;
                                                         val.int_val = 0;
-                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_WHILE,$<ast_node>3,NULL,$<ast_node>6);
+                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_WHILE,NULL,$<ast_node>3,NULL,$<ast_node>6);
                                                     }
             ;
 RepeatStmt  :  REPEAT Slist UNTIL '(' E ')'         {
@@ -125,7 +126,7 @@ RepeatStmt  :  REPEAT Slist UNTIL '(' E ')'         {
                                                         }
                                                         node_val val;
                                                         val.int_val = 0;
-                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_REPEAT,$<ast_node>2,NULL,$<ast_node>5);
+                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_REPEAT,NULL,$<ast_node>2,NULL,$<ast_node>5);
                                                     }
 DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                         if($<ast_node>5->type != TYPE_BOOL){
@@ -134,7 +135,7 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                         }
                                                         node_val val;
                                                         val.int_val = 0;
-                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_DOWHILE,$<ast_node>2,NULL,$<ast_node>5);
+                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_DOWHILE,NULL,$<ast_node>2,NULL,$<ast_node>5);
                                                     }
 
 AsgStmt     : ID '=' E  {    
@@ -145,7 +146,7 @@ AsgStmt     : ID '=' E  {
                             } 
                             node_val val;
                             val.int_val = 0;
-                            tnode * node = make_leaf_node(val,node_id->type,$<id_name>1);
+                            tnode * node = make_leaf_node(val,node_id->type,$<id_name>1,node_id);
                             $<ast_node>$ = make_operator_node(TYPE_NONE, NODE_ASGN, node, $<ast_node>3);
                         }
             ;
@@ -233,11 +234,11 @@ E   :   E '<' E     {
     |   STR_VAL     {
                         $<ast_node>$ = $1;
                     }
-    |   ID          {
-
+    |   ID          {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
                         node_val val;
                         val.int_val = 0;
-                        $<ast_node>$ = make_leaf_node(val,TYPE_INT,$<id_name>1);
+                        Gsymbol * st_entry = get_variable($<id_name>1);
+                        $<ast_node>$ = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
                     }
     ;
 %%

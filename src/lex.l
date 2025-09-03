@@ -11,7 +11,7 @@
 [0-9]+  {
     node_val val;
     val.int_val = atoi(yytext);
-    yylval.ast_node = make_leaf_node(val, TYPE_INT, NULL);
+    yylval.ast_node = make_leaf_node(val, TYPE_INT, NULL, NULL);
     return NUM_VAL;
 }
 
@@ -19,7 +19,7 @@
 \"[^"\n]*\"       { //safe way to match a string (not include " and \n)
     node_val val;
     val.str_val = strdup(yytext);
-    yylval.ast_node = make_leaf_node(val, TYPE_STR, NULL);
+    yylval.ast_node = make_leaf_node(val, TYPE_STR, NULL, NULL);
     return STR_VAL;
 }
 

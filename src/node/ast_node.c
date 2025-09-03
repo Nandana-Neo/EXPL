@@ -17,9 +17,8 @@ NodeType node_type(char* type){
     return NODE_CONN;
 }
 
-tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype, tnode *l, tnode *m, tnode *r){
+tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype, Gsymbol *gst_entry, tnode *l, tnode *m, tnode *r){
     tnode * curr = (tnode*)malloc(sizeof(tnode));
-    // curr->val = val;
     curr->type = type;
     if(type == TYPE_INT)
         curr->val.int_val = val.int_val;
@@ -40,32 +39,33 @@ tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype,
     curr->middle = m;
     curr->right = r;
     curr->nodetype = nodetype;
+    curr->gst_entry = gst_entry;
     return curr;
 }
 
-tnode* make_leaf_node(node_val n, VarType type, char *varname){
-    tnode* curr = create_tree(n,type,varname,NODE_LEAF,NULL,NULL,NULL);
+tnode* make_leaf_node(node_val n, VarType type, char* varname, Gsymbol* gst_entry){
+    tnode* curr = create_tree(n,type,varname,NODE_LEAF,gst_entry,NULL,NULL,NULL);
     return curr;
 }
 
 tnode* make_operator_node(VarType type, NodeType nodetype,tnode* l, tnode* r){
     node_val val;
     val.int_val = 0;
-    tnode* curr = create_tree(val,type,NULL,nodetype,l,NULL,r);
+    tnode* curr = create_tree(val,type,NULL,nodetype,NULL,l,NULL,r);
     return curr;
 }
 
 tnode* make_break_node(void){
     node_val val;
     val.int_val = 0;
-    tnode* curr = create_tree(val, TYPE_NONE, NULL, NODE_BREAK, NULL, NULL, NULL);
+    tnode* curr = create_tree(val, TYPE_NONE, NULL, NODE_BREAK, NULL, NULL, NULL, NULL);
     return curr;
 }
 
 tnode* make_continue_node(void){
     node_val val;
     val.int_val = 0;
-    tnode* curr = create_tree(val, TYPE_NONE, NULL, NODE_CONTINUE, NULL, NULL, NULL);
+    tnode* curr = create_tree(val, TYPE_NONE, NULL, NODE_CONTINUE, NULL, NULL, NULL, NULL);
     return curr;
 }
 
@@ -75,7 +75,7 @@ tnode* make_conditional_node(tnode* l, tnode* m, tnode* r){
         nodetype = NODE_IF;
     node_val val;
     val.int_val = 0;
-    tnode* curr = create_tree(val,TYPE_NONE,NULL,nodetype,l,m,r);
+    tnode* curr = create_tree(val,TYPE_NONE,NULL,nodetype,NULL,l,m,r);
     return curr;
 }
 

@@ -9,5 +9,6 @@ begin
         sum = sum + a;
         read(a);
     endwhile;
+    write("Ans");
     write(sum);
 end
