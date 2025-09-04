@@ -8,6 +8,7 @@
  */
 typedef struct decl_node{
     char* varname;
+    int size;
     struct decl_node* next;
 } decl_node;
 
@@ -16,7 +17,7 @@ typedef struct decl_node{
  * --------------------------
  * Create a decl node with varname as value
  */
-decl_node* create_decl_node(char* varname);
+decl_node* create_decl_node(char* varname, int size);
 
 /**
  * Function: add_to_list

@@ -18,6 +18,7 @@
 }
 %token ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
 %token <ast_node> NUM_VAL STR_VAL;
+%type <ast_node> L_VAL;
 %left '+' '-';
 %left '*' '/';
 %nonassoc '<' '>' '=' ';';
@@ -36,28 +37,49 @@ Program     : Declarations P_BEGIN Slist P_END   {
                             }
             ;
 
-Declarations    : DECL DeclList ENDDECL     {}
+
+Declarations    : DECL DeclList ENDDECL     { print_st();}
                 | DECL ENDDECL              {}
                 ;
+
 
 DeclList    : DeclList Decl      {}
             | Decl               {}
             ;
 
+
 Decl        : Type VarList ';'  {   create_entries($<decl_node>2, $<decl_type>1); }
             ;
+
 
 Type        : INT           {   $<decl_type>$ = TYPE_INT; }
             | STR           {   $<decl_type>$ = TYPE_STR; }
             ;
 
-VarList     : VarList ',' ID    {   
-                                    decl_node * id_node = create_decl_node($<id_name>3);
+
+VarList     : VarList ',' ID '[' NUM_VAL ']'    {
+                                                    tnode* ast_node = $<ast_node>5;
+                                                    int sz = ast_node->val.int_val;
+                                                    free(ast_node);
+                                                    decl_node* array_node = create_decl_node($<id_name>3,sz);
+                                                    $<decl_node>$ = add_to_list($<decl_node>1,array_node);
+                                                }
+            | ID '[' NUM_VAL ']'                {
+                                                    tnode* ast_node = $<ast_node>3;
+                                                    int sz = ast_node->val.int_val;
+                                                    free(ast_node);
+                                                    $<decl_node>$ = create_decl_node($<id_name>1,sz);
+                                                }
+            | VarList ',' ID    {   
+                                    decl_node* id_node = create_decl_node($<id_name>3,1);
                                     $<decl_node>$ = add_to_list($<decl_node>1, id_node); 
                                 }
-            | ID                {   $<decl_node>$ = create_decl_node($<id_name>1); }
+
+            | ID                {   $<decl_node>$ = create_decl_node($<id_name>1,1); }
             ;
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 Slist       : Slist Stmt    {   $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_CONN,$<ast_node>1,$<ast_node>2);   }
             | Stmt          {   $<ast_node>$ = $<ast_node>1;    }
             ;
@@ -79,12 +101,8 @@ BreakStmt   : BREAK             {   $<ast_node>$ = make_break_node(); }
 ContinueStmt    : CONTINUE      {   $<ast_node>$ = make_continue_node();  }  
                 ;
 
-InputStmt   : READ'('ID')'  {
-                                node_val val;
-                                val.int_val = 0;
-                                Gsymbol* st_entry = get_variable($<id_name>3);
-                                tnode* node = make_leaf_node(val,st_entry->type,$<id_name>3,st_entry);
-                                $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_READ,node,NULL);
+InputStmt   : READ'('L_VAL')'  {
+                                $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_READ,$3,NULL);
                             }
             ;
 
@@ -138,16 +156,12 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                         $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_DOWHILE,NULL,$<ast_node>2,NULL,$<ast_node>5);
                                                     }
 
-AsgStmt     : ID '=' E  {    
-                            Gsymbol* node_id = get_variable($<id_name>1);
-                            if(node_id->type != $<ast_node>3->type){
+AsgStmt     : L_VAL '=' E  {    
+                            if($1->type != $<ast_node>3->type){
                                 fprintf(stderr,"Error: Type Mismatch\n");
                                 exit(1);
                             } 
-                            node_val val;
-                            val.int_val = 0;
-                            tnode * node = make_leaf_node(val,node_id->type,$<id_name>1,node_id);
-                            $<ast_node>$ = make_operator_node(TYPE_NONE, NODE_ASGN, node, $<ast_node>3);
+                            $<ast_node>$ = make_operator_node(TYPE_NONE, NODE_ASGN, $<ast_node>1, $<ast_node>3);
                         }
             ;
     
@@ -234,13 +248,37 @@ E   :   E '<' E     {
     |   STR_VAL     {
                         $<ast_node>$ = $1;
                     }
-    |   ID          {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
+    |   L_VAL       {   $<ast_node>$=$1;    }
+    ;
+
+L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
+                    node_val val;
+                    val.int_val = 0;
+                    Gsymbol * st_entry = get_variable($<id_name>1);
+                    if(st_entry==NULL){
+                        fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
+                        exit(1);
+                    }
+                    $$ = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
+                }
+        
+        |   ID '[' E ']'{   // array
                         node_val val;
                         val.int_val = 0;
                         Gsymbol * st_entry = get_variable($<id_name>1);
-                        $<ast_node>$ = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
+                        if(st_entry==NULL){
+                            fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
+                            exit(1);
+                        }
+                        tnode* id_node = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
+                        if(id_node->type == TYPE_NONE || $<ast_node>3->type != TYPE_INT){
+                            fprintf(stderr,"Error: Type Mismatch in array\n");
+                            exit(1);
+                        }
+                        // type of the node is the type of the ID node
+                        $$ = make_array_node(id_node->type, id_node, $<ast_node>3);
                     }
-    ;
+        ;
 %%
 int yyerror(){
     printf("Error\n");

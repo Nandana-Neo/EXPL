@@ -22,11 +22,12 @@ extern int SP;   // points to the free slot at top of stack
  * Input: 
  * - name: char *    // name of the variable
  * - type: int       // type of the variable
+ * - size: int       // size allocated to var
  * 
  * Output:
  * - Gsymbol node   // symbol table entry of the variable assigned
  */
-Gsymbol* add_variable(char* name, VarType type);
+Gsymbol* add_variable(char* name, int size, VarType type);
 
 /**
  * Function: get_variable
@@ -55,5 +56,7 @@ Gsymbol* get_variable(char* name);
  */
 
 void create_entries(decl_node * ls, VarType type);
+
+void print_st();
 
 #endif

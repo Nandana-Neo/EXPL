@@ -12,6 +12,7 @@ typedef enum {
 typedef enum {
     NODE_LEAF,
     NODE_CONN,
+    NODE_ARR,   // for array
     NODE_ADD,   // "+"
     NODE_SUB,   // "-"
     NODE_MUL,   // "*"

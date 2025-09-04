@@ -1,9 +1,10 @@
 #include "decl_node.h"
 
 
-decl_node* create_decl_node(char* varname){
+decl_node* create_decl_node(char* varname, int size){
     decl_node * node = (decl_node *)malloc(sizeof(decl_node));
     node->varname = varname;
+    node->size = size;
     node->next = NULL;
     return node;
 }

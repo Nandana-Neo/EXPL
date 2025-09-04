@@ -1,0 +1,14 @@
+decl
+    int a[3];
+    int num;
+    str msg;
+enddecl
+begin
+    read(a[0]);
+    a[1] = a[0] + 1;
+    a[2] = a[0] + a[1];
+    write("Array:");
+    write(a[0]);
+    write(a[1]);
+    write(a[2]);
+end

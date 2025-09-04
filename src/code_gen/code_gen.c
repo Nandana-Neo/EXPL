@@ -2,7 +2,7 @@
 #include <string.h>
 
 static int regNum = 0;
-static int registerTable[20];   // used for assignment operator with ID = E
+static int registerTable[20];   // used for assignment operator with ID = E and ID[NUM] = E
 static int label = 0;
 
 int get_reg(){
@@ -28,7 +28,7 @@ int get_label(){
 }
 
 int code_gen_ID(tnode* node, FILE* fp){
-    Gsymbol * symbol_table_entry = get_variable(node->varname);
+    Gsymbol * symbol_table_entry = node->gst_entry;
     if(symbol_table_entry == NULL){
         fprintf(stderr, "Variable not declared:%s\n",node->varname);
         exit(1);
@@ -46,7 +46,7 @@ int code_gen_VAL(tnode* node, FILE* fp){
         fprintf(fp,"MOV R%d, %d\n",i,node->val.int_val);
     else if(node->type == TYPE_STR)
         //store first 16 chars into the reg
-        fprintf(fp,"MOV R%d, %.18s\n",i,node->val.str_val);
+        fprintf(fp,"MOV R%d, %s\n",i,node->val.str_val);
     return i;
 }
 
@@ -60,6 +60,25 @@ int code_gen_CONN(tnode* node, FILE* fp, int start_label, int end_label){
     i = -1;
     j = -1;
     return i;
+}
+
+// id[num] format
+int code_gen_ARR(tnode* node, FILE* fp){
+    // We only need the location of the id mainly
+    if(node->left->gst_entry == NULL){
+        fprintf(stderr, "Variable not declared:%s\n",node->varname);
+        exit(1);
+    }
+    int id_loc = node->left->gst_entry->binding;        // starting loc
+    int id_reg = get_reg();
+    int num_reg = code_gen(node->right, fp, -1, -1);
+    fprintf(fp,"MOV R%d, %d\n",id_reg,id_loc);
+    fprintf(fp,"ADD R%d, R%d\n",num_reg,id_reg);
+    fprintf(fp,"MOV R%d, [R%d]\n",id_reg, num_reg);
+    free_reg();
+    registerTable[id_reg]=id_loc+node->right->val.int_val;
+    return id_reg;
+
 }
 
 int code_gen_OP(tnode* node, FILE* fp){
@@ -110,12 +129,20 @@ int code_gen_OP(tnode* node, FILE* fp){
 int code_gen_READ(tnode* node, FILE* fp){
     // only left node will be there and that will be variable name
     tnode* var_node = node->left;
-    Gsymbol * symbol_table_entry = get_variable(var_node->varname);
-    if(symbol_table_entry == NULL){
-        fprintf(stderr, "Variable not declared:%s\n",var_node->varname);
+    Gsymbol * symbol_table_entry = node->left->gst_entry;
+    if(symbol_table_entry == NULL && node->left->nodetype!=NODE_ARR){
+        fprintf(stderr, "READ: Variable not declared:%s\n",var_node->varname);
         exit(1);
     }
-    int location = symbol_table_entry->binding;
+    int location;
+    if(node->left->nodetype == NODE_ARR){
+        int lreg = code_gen(var_node, fp , -1, -1);
+        location = registerTable[lreg];
+        free_reg();
+    }
+    else{
+        location = symbol_table_entry->binding;
+    }
     int reg = get_reg();
     for(int i=0;i<reg;i++){
         fprintf(fp,"PUSH R%d\n",i);
@@ -285,6 +312,8 @@ int code_gen(tnode* node, FILE* fp, int start_label, int end_label){
 
         case NODE_CONN:
             return code_gen_CONN(node, fp, start_label, end_label);
+        case NODE_ARR:
+            return code_gen_ARR(node, fp);
         default:
             return code_gen_OP(node, fp);
     }

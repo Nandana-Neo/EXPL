@@ -187,6 +187,8 @@ int code_gen_CONTINUE(tnode* node, FILE* fp, int start_label);
 */
 int code_gen_CONN(tnode* node, FILE* fp, int start_label, int end_label);
 
+int code_gen_ARR(tnode* node, FILE* fp);
+
 void code_gen_final(FILE * fp);
 
 void code_gen_start(FILE * fp);
