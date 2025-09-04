@@ -26,6 +26,7 @@ tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype,
         curr->val.str_val = val.str_val;
     else
         curr->val.int_val = 0;
+    curr->gst_entry = gst_entry;
     if(nodetype == NODE_LEAF){
         // leaf node
         curr->varname = varname;
@@ -39,7 +40,6 @@ tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype,
     curr->middle = m;
     curr->right = r;
     curr->nodetype = nodetype;
-    curr->gst_entry = gst_entry;
     return curr;
 }
 
@@ -77,6 +77,12 @@ tnode* make_conditional_node(tnode* l, tnode* m, tnode* r){
     val.int_val = 0;
     tnode* curr = create_tree(val,TYPE_NONE,NULL,nodetype,NULL,l,m,r);
     return curr;
+}
+
+tnode* make_array_node(VarType type, tnode* l, tnode* r){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, type, NULL, NODE_ARR, NULL, l, NULL, r);
 }
 
 void prefix(tnode* node){

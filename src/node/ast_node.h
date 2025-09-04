@@ -54,5 +54,6 @@ void prefix(tnode* node);
 
 tnode* make_break_node(void);
 tnode* make_continue_node(void);
+tnode* make_array_node(VarType type, tnode* l, tnode* r);
 
 #endif
