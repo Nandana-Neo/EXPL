@@ -57,4 +57,10 @@ typedef struct Gsymbol {
     struct Gsymbol *next;
 } Gsymbol;
 
+// loc > val so that when called free_reg(), loc is freed first
+typedef struct loc_and_val{
+    int val;    // reg no holding the val -> -1 if no register
+    int loc;    // reg no holding the location -> -1 if no register
+} loc_and_val;
+
 #endif
