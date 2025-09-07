@@ -122,6 +122,9 @@ loc_and_val* code_gen_OP(tnode* node, FILE* fp){
         case NODE_DIV: 
             fprintf(fp, "DIV R%d, R%d\n",i->val,j->val);
             break;
+        case NODE_MOD: 
+            fprintf(fp, "MOD R%d, R%d\n",i->val,j->val);
+            break;
         case NODE_GT:
             fprintf(fp, "GT R%d, R%d\n",i->val,j->val);
             break;

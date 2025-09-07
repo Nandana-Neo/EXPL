@@ -44,13 +44,13 @@
 "enddecl"   {   return ENDDECL; }
 
 
-[a-zA-Z]+   {
-    char* variable = strdup(yytext);    // ** Value is assumed to be int
+[a-zA-Z]+[0-9a-zA-Z_]*   {
+    char* variable = strdup(yytext);
     yylval.id_name = variable;
     return ID;
 }
 
-[()+*/=<>!,;\[\]-] {
+[()+*/%=<>!,;\[\]-] {
     return *yytext;
 }
 
