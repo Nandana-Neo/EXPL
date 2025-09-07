@@ -17,6 +17,7 @@ typedef enum {
     NODE_SUB,   // "-"
     NODE_MUL,   // "*"
     NODE_DIV,   // "/"
+    NODE_MOD,   // "%"
     NODE_ASGN,  // "="
     NODE_LT,    // "<"
     NODE_GT,    // ">"

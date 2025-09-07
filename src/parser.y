@@ -18,9 +18,9 @@
 }
 %token ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
 %token NUM_VAL STR_VAL;
-%left '+' '-';
-%left '*' '/';
 %nonassoc '<' '>' '=' ';';
+%left '+' '-';
+%left '*' '/' '%';
 %%
 Program     : Declarations P_BEGIN Slist P_END   {
                                     FILE * fp = output_file;
@@ -37,7 +37,7 @@ Program     : Declarations P_BEGIN Slist P_END   {
             ;
 
 
-Declarations    : DECL DeclList ENDDECL     { print_st();}
+Declarations    : DECL DeclList ENDDECL     {}
                 | DECL ENDDECL              {}
                 ;
 
@@ -157,7 +157,7 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
 
 AsgStmt     : L_VAL '=' E  {    
                             if($<ast_node>1->type != $<ast_node>3->type){
-                                fprintf(stderr,"Error: Type Mismatch\n");
+                                fprintf(stderr,"Error[=]: Type Mismatch\n");
                                 exit(1);
                             } 
                             $<ast_node>$ = make_operator_node(TYPE_NONE, NODE_ASGN, $<ast_node>1, $<ast_node>3);
@@ -166,57 +166,65 @@ AsgStmt     : L_VAL '=' E  {
     
 E   :   E '<' E     {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[<]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_LT,$<ast_node>1,$<ast_node>3);
                     }
     |   E '>' E     {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[>]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_GT,$<ast_node>1,$<ast_node>3);
                     }
     |   E '<''=' E  {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[<=]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_LE,$<ast_node>1,$<ast_node>4);
                     }
     |   E '>''=' E  {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[>=]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_GE,$<ast_node>1,$<ast_node>4);
                     }
     |   E '!''=' E  {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[!=]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_NE,$<ast_node>1,$<ast_node>4);
                     }
     |   E '=''=' E  {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[==]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_EQ,$<ast_node>1,$<ast_node>4);
                     }
     |   E '+' E     {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[+]: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;
                         $<ast_node>$ = make_operator_node(type,NODE_ADD,$<ast_node>1,$<ast_node>3);
                     }
+    |   E '%' E     {
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
+                            fprintf(stderr,"Error[%]: Type Mismatch: T1: %d, T2: %d\n",$<ast_node>1->type, $<ast_node>3->type);
+                            exit(1);
+                        }
+                        VarType type = TYPE_INT;
+                        $<ast_node>$ = make_operator_node(type,NODE_MOD,$<ast_node>1,$<ast_node>3);
+                    }
     |   E '*' E     {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[*]: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;
@@ -224,7 +232,7 @@ E   :   E '<' E     {
                     }
     |   E '/' E     {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[/]: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;
@@ -232,7 +240,7 @@ E   :   E '<' E     {
                     }
     |   E '-' E     {
                         if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
-                            fprintf(stderr,"Error: Type Mismatch\n");
+                            fprintf(stderr,"Error[-]: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;

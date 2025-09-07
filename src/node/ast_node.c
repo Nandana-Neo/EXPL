@@ -9,6 +9,7 @@ NodeType node_type(char* type){
         case '-': return NODE_SUB;
         case '*': return NODE_MUL;
         case '/': return NODE_DIV;
+        case '%': return NODE_MOD;
         case '=': return NODE_ASGN;
         case 'R': return NODE_READ;
         case 'W': return NODE_WRITE;
