@@ -17,8 +17,7 @@
     struct decl_node * decl_node;  // for declarations section to register variables to symbol table
 }
 %token ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
-%token <ast_node> NUM_VAL STR_VAL;
-%type <ast_node> L_VAL;
+%token NUM_VAL STR_VAL;
 %left '+' '-';
 %left '*' '/';
 %nonassoc '<' '>' '=' ';';
@@ -102,7 +101,7 @@ ContinueStmt    : CONTINUE      {   $<ast_node>$ = make_continue_node();  }
                 ;
 
 InputStmt   : READ'('L_VAL')'  {
-                                $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_READ,$3,NULL);
+                                $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_READ,$<ast_node>3,NULL);
                             }
             ;
 
@@ -157,7 +156,7 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                     }
 
 AsgStmt     : L_VAL '=' E  {    
-                            if($1->type != $<ast_node>3->type){
+                            if($<ast_node>1->type != $<ast_node>3->type){
                                 fprintf(stderr,"Error: Type Mismatch\n");
                                 exit(1);
                             } 
@@ -243,12 +242,12 @@ E   :   E '<' E     {
                         $<ast_node>$ = $<ast_node>2;
                     }
     |   NUM_VAL     {
-                        $<ast_node>$ = $1;
+                        $<ast_node>$ = $<ast_node>1;
                     } 
     |   STR_VAL     {
-                        $<ast_node>$ = $1;
+                        $<ast_node>$ = $<ast_node>1;
                     }
-    |   L_VAL       {   $<ast_node>$=$1;    }
+    |   L_VAL       {   $<ast_node>$ = $<ast_node>1;    }
     ;
 
 L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
@@ -259,7 +258,7 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
                         fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
                         exit(1);
                     }
-                    $$ = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
+                    $<ast_node>$ = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
                 }
         
         |   ID '[' E ']'{   // array
@@ -276,7 +275,7 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
                             exit(1);
                         }
                         // type of the node is the type of the ID node
-                        $$ = make_array_node(id_node->type, id_node, $<ast_node>3);
+                        $<ast_node>$ = make_array_node(id_node->type, id_node, $<ast_node>3);
                     }
         ;
 %%

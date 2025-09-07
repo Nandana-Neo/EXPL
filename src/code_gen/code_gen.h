@@ -52,7 +52,7 @@ int get_label();
  * - start_label - start label of the loop containing this node (for continue)
  * - end_label - end label of the loop containing this node (for break)
 */
-int code_gen(tnode* node, FILE * fp, int start_label, int end_label);
+loc_and_val* code_gen(tnode* node, FILE * fp, int start_label, int end_label);
 
 /**
  * Function : code_gen_ID
@@ -63,7 +63,7 @@ int code_gen(tnode* node, FILE * fp, int start_label, int end_label);
  * - Returns reg no storing ID
  * 
  */
-int code_gen_ID(tnode *node, FILE* fp);
+loc_and_val* code_gen_ID(tnode *node, FILE* fp);
 
 /**
  * Function : code_gen_VAL
@@ -74,7 +74,7 @@ int code_gen_ID(tnode *node, FILE* fp);
  * - Returns reg no storing NUM or the STR
  * 
  */
-int code_gen_VAL(tnode *node, FILE* fp);
+loc_and_val* code_gen_VAL(tnode *node, FILE* fp);
 
 /**
  * Function : code_gen_OP
@@ -86,7 +86,7 @@ int code_gen_VAL(tnode *node, FILE* fp);
  * = and connector which will return -1 and free the left and right regs
  * 
  */
-int code_gen_OP(tnode* node, FILE* fp);
+loc_and_val* code_gen_OP(tnode* node, FILE* fp);
 
 
 /**
@@ -98,7 +98,7 @@ int code_gen_OP(tnode* node, FILE* fp);
  * - Returns reg no storing the output of read operation (SUCCESS / FAILURE)
  * 
  */
-int code_gen_READ(tnode* node, FILE *fp);
+loc_and_val* code_gen_READ(tnode* node, FILE *fp);
 
 /**
  * Function : code_gen_WRITE
@@ -109,7 +109,7 @@ int code_gen_READ(tnode* node, FILE *fp);
  * - Returns reg no storing the output of write operation (SUCCESS / FAILURE)
  * 
  */
-int code_gen_WRITE(tnode* node, FILE *fp);
+loc_and_val* code_gen_WRITE(tnode* node, FILE *fp);
 
 /**
  * Function: code_gen_IF
@@ -123,7 +123,7 @@ int code_gen_WRITE(tnode* node, FILE *fp);
  * - start_label - start label of the loop containing this node (for continue)
  * - end_label - end label of the loop containing this node (for break)
  */
-int code_gen_IF(tnode* node, FILE* fp, int start_label, int end_label);
+loc_and_val* code_gen_IF(tnode* node, FILE* fp, int start_label, int end_label);
 
 /**
  * Function: code_gen_DO_WHILE
@@ -131,7 +131,7 @@ int code_gen_IF(tnode* node, FILE* fp, int start_label, int end_label);
  * Generates code for DO-WHILE statement
  * Returns -1 since it is a statement
  */
-int code_gen_DO_WHILE(tnode* node, FILE* fp);
+loc_and_val* code_gen_DO_WHILE(tnode* node, FILE* fp);
 
 /**
  * Function: code_gen_REPEAT
@@ -139,7 +139,7 @@ int code_gen_DO_WHILE(tnode* node, FILE* fp);
  * Generates code for REPEAT-UNTIL statement
  * Returns -1 since it is a statement
  */
-int code_gen_REPEAT(tnode* node, FILE* fp);
+loc_and_val* code_gen_REPEAT(tnode* node, FILE* fp);
 
 /**
  * Function: code_gen_WHILE
@@ -147,7 +147,7 @@ int code_gen_REPEAT(tnode* node, FILE* fp);
  * Generates code for WHILE-DO statement
  * Returns -1 since it is a statement
  */
-int code_gen_WHILE(tnode* node, FILE* fp);
+loc_and_val* code_gen_WHILE(tnode* node, FILE* fp);
 
 /**
  * Function: code_gen_BREAK
@@ -159,7 +159,7 @@ int code_gen_WHILE(tnode* node, FILE* fp);
  * - fp
  * - end_label: if not in a loop and is to be ignored, -1. Else enter >= 0
  */
-int code_gen_BREAK(tnode* node, FILE* fp, int end_label);
+loc_and_val* code_gen_BREAK(tnode* node, FILE* fp, int end_label);
 
 /**
  * Function: code_gen_CONTINUE
@@ -171,7 +171,7 @@ int code_gen_BREAK(tnode* node, FILE* fp, int end_label);
  * - fp
  * - end_label: if not in a loop and is to be ignored, -1. Else enter >= 0
  */
-int code_gen_CONTINUE(tnode* node, FILE* fp, int start_label);
+loc_and_val* code_gen_CONTINUE(tnode* node, FILE* fp, int start_label);
 
 /**
  * Function : code_gen_CONN
@@ -185,14 +185,18 @@ int code_gen_CONTINUE(tnode* node, FILE* fp, int start_label);
  * - start_label - start label of the loop containing this node (for continue)
  * - end_label - end label of the loop containing this node (for break)
 */
-int code_gen_CONN(tnode* node, FILE* fp, int start_label, int end_label);
+loc_and_val* code_gen_CONN(tnode* node, FILE* fp, int start_label, int end_label);
 
-int code_gen_ARR(tnode* node, FILE* fp);
+loc_and_val* code_gen_ARR(tnode* node, FILE* fp);
 
 void code_gen_final(FILE * fp);
 
 void code_gen_start(FILE * fp);
 
 int evaluate(tnode* node);
+
+loc_and_val* create_gen_node(int loc, int val);
+
+void free_gen_node(loc_and_val* node);
 
 #endif
