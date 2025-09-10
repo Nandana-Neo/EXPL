@@ -56,23 +56,37 @@ Type        : INT           {   $<decl_type>$ = TYPE_INT; }
             ;
 
 
-VarList     : VarList ',' ID '[' NUM_VAL ']'    {
-                                                    tnode* ast_node = $<ast_node>5;
-                                                    int sz = ast_node->val.int_val;
-                                                    free(ast_node);
-                                                    decl_node* array_node = create_decl_node($<id_name>3,sz);
-                                                    $<decl_node>$ = add_to_list($<decl_node>1,array_node);
-                                                }
-            | ID '[' NUM_VAL ']'                {
+VarList     : VarList ',' IdDecl    {
+                                        $<decl_node>$ = add_to_list($<decl_node>1,$<decl_node>3);
+                                    }
+            | IdDecl                {
+                                        $<decl_node>$ = $<decl_node>1;
+                                    }
+            ;
+IdDecl      : ID '[' NUM_VAL ']'                {
                                                     tnode* ast_node = $<ast_node>3;
                                                     int sz = ast_node->val.int_val;
                                                     free(ast_node);
-                                                    $<decl_node>$ = create_decl_node($<id_name>1,sz);
+                                                    int len = snprintf(NULL, 0, "%s %d %d", $<id_name>1,1,sz); // to get length
+                                                    char * varname = (char*)malloc((len+1)*sizeof(char));
+                                                    snprintf(varname, len+1, "%s %d %d", $<id_name>1, 1, sz);
+                                                    $<decl_node>$ = create_decl_node(varname,sz);
                                                 }
-            | VarList ',' ID    {   
-                                    decl_node* id_node = create_decl_node($<id_name>3,1);
-                                    $<decl_node>$ = add_to_list($<decl_node>1, id_node); 
-                                }
+            | ID '[' NUM_VAL ']' '[' NUM_VAL ']'{
+                                                    tnode* ast_node_r = $<ast_node>3;
+                                                    int sz1 = ast_node_r->val.int_val;
+                                                    tnode* ast_node_c = $<ast_node>6;
+                                                    int sz2 = ast_node_c->val.int_val;
+                                                    int sz = sz1*sz2;
+                                                    free(ast_node_c);
+                                                    free(ast_node_r);
+
+                                                    int len = snprintf(NULL, 0, "%s %d %d,%d", $<id_name>1,2,sz1,sz2); // to get length
+                                                    char * varname = (char*)malloc((len+1)*sizeof(char));
+                                                    snprintf(varname, len+1, "%s %d %d,%d", $<id_name>1, 2, sz1,sz2);
+
+                                                    $<decl_node>$ = create_decl_node(varname, sz);
+                                                }
 
             | ID                {   $<decl_node>$ = create_decl_node($<id_name>1,1); }
             ;
