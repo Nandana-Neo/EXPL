@@ -50,11 +50,17 @@ typedef struct tnode{
     struct tnode *left, *middle, *right; //left and right branches
 } tnode;
 
+typedef struct array{
+    int val;
+    struct array* nxt;
+} array;
+
 typedef struct Gsymbol {
-    char* name;       // name of the variable
-    VarType type;         // type of the variable - INT or STR
-    int size;         // size of the type of the variable - default(1)
-    int binding;      // stores the static memory address allocated to the variable
+    char* name;             // name of the variable
+    VarType type;           // type of the variable - INT or STR
+    array* size_array;       // stores the length of multidim array
+    int size;               // size of the type of the variable - default(1)
+    int binding;            // stores the static memory address allocated to the variable
     struct Gsymbol *next;
 } Gsymbol;
 

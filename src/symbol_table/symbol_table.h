@@ -59,4 +59,6 @@ void create_entries(decl_node * ls, VarType type);
 
 void print_st();
 
+array* add_array_node(array* arr,int val);
+
 #endif
