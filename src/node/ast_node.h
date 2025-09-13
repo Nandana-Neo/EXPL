@@ -57,4 +57,9 @@ tnode* make_continue_node(void);
 tnode* make_array_node(VarType type, tnode* l, tnode* r);
 tnode* make_index_node(tnode* l, tnode* r);
 
+
+// unary operator
+tnode* make_address_of_node(tnode* e);
+tnode* make_value_at_node(tnode* e);
+
 #endif

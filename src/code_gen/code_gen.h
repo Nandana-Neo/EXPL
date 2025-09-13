@@ -191,9 +191,14 @@ loc_and_val* code_gen_INDEX(tnode* node, FILE* fp, array* size_array_ptr);
 
 loc_and_val* code_gen_ARR(tnode* node, FILE* fp);
 
+loc_and_val* code_gen_ADDR_OF(tnode* node, FILE* fp);
+
+loc_and_val* code_gen_VAL_AT(tnode* node, FILE* fp);
+
 void code_gen_final(FILE * fp);
 
 void code_gen_start(FILE * fp);
+void code_gen_SP_init(FILE* fp);
 
 int evaluate(tnode* node);
 

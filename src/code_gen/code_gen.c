@@ -113,19 +113,46 @@ loc_and_val* code_gen_ARR(tnode* node, FILE* fp){
         fprintf(stderr, "Variable not declared:%s\n",node->varname);
         exit(1);
     }
-    int id_loc = node->left->gst_entry->binding;        // starting loc
-    int id_reg = get_reg();
+    loc_and_val* id = code_gen(node->left, fp, -1, -1);        // starting loc
+    if(id->loc != -1)
+        free_reg();
+    id->loc = -1;
+    int id_loc_reg = id->val;
     loc_and_val* num_gen_node = code_gen_INDEX(node->right, fp, node->left->gst_entry->size_array);
+    //[TODO] If needed, we might need to multiply the index with the size of the type stored in the array AND assign space accordingly in the beginning while decl
     int num_reg = num_gen_node->val;
-    fprintf(fp,"MOV R%d, %d\n",id_reg,id_loc);
-    fprintf(fp,"ADD R%d, R%d\n",num_reg,id_reg);    // location is in num_reg
-    fprintf(fp,"MOV R%d, [R%d]\n",id_reg, num_reg);
-    loc_and_val* ans = create_gen_node(num_reg, id_reg);
+    fprintf(fp,"ADD R%d, R%d\n",num_reg,id_loc_reg);    // location is in num_reg
+    fprintf(fp,"MOV R%d, [R%d]\n",id_loc_reg, num_reg);
+    id->loc = num_reg;
+    id->val = id_loc_reg;
     if(num_gen_node->loc != -1)
         free_reg();
     free(num_gen_node);
-    return ans;
+    return id;
 
+}
+
+loc_and_val* code_gen_ADDR_OF(tnode* node, FILE* fp){
+    // left node should be a varaible ,i.e., ID
+    if(node->left->nodetype != NODE_LEAF || node->left->varname==NULL){
+        fprintf(stderr, "ERROR: Reference to unknown type\n");
+        exit(1);
+    }
+    int loc = node->left->gst_entry->binding;
+    int reg1 = get_reg();
+    fprintf(fp, "MOV R%d, %d\n",reg1,loc);
+    loc_and_val* ans = create_gen_node(-1, reg1);
+    return ans;
+}
+
+loc_and_val* code_gen_VAL_AT(tnode* node, FILE* fp){
+    loc_and_val* ptr = code_gen(node->left, fp, -1, -1);
+    if(ptr->loc != -1)
+        free_reg();
+    ptr->loc = get_reg();
+    fprintf(fp, "MOV R%d, R%d\n",ptr->loc, ptr->val);
+    fprintf(fp, "MOV R%d, [R%d]\n",ptr->val, ptr->loc);
+    return ptr;
 }
 
 loc_and_val* code_gen_OP(tnode* node, FILE* fp){
@@ -185,13 +212,13 @@ loc_and_val* code_gen_READ(tnode* node, FILE* fp){
     // only left node will be there and that will be variable name
     tnode* var_node = node->left;
     Gsymbol* symbol_table_entry = node->left->gst_entry;
-    if(symbol_table_entry == NULL && node->left->nodetype!=NODE_ARR){
+    if(symbol_table_entry == NULL && !(node->left->nodetype==NODE_ARR || node->left->nodetype==NODE_VAL_AT)){
         fprintf(stderr, "READ: Variable not declared:%s\n",var_node->varname);
         exit(1);
     }
     int location;
     loc_and_val* l_gen_node = NULL;
-    if(node->left->nodetype == NODE_ARR){
+    if(node->left->nodetype == NODE_ARR || node->left->nodetype==NODE_VAL_AT){
         l_gen_node = code_gen(var_node, fp , -1, -1);
         location = l_gen_node->loc; // register number storing the location
     }
@@ -403,6 +430,10 @@ loc_and_val* code_gen(tnode* node, FILE* fp, int start_label, int end_label){
             return code_gen_CONN(node, fp, start_label, end_label);
         case NODE_ARR:
             return code_gen_ARR(node, fp);
+        case NODE_ADDR_OF:
+            return code_gen_ADDR_OF(node, fp);
+        case NODE_VAL_AT:
+            return code_gen_VAL_AT(node, fp);
         default:
             return code_gen_OP(node, fp);
     }
@@ -410,6 +441,9 @@ loc_and_val* code_gen(tnode* node, FILE* fp, int start_label, int end_label){
 
 void code_gen_start(FILE* fp){
     fprintf(fp,"0\n2056\n0\n0\n0\n0\n0\n0\n");
+}
+
+void code_gen_SP_init(FILE* fp){
     fprintf(fp,"MOV SP, %d\n",SP);
 }
 

@@ -94,6 +94,20 @@ tnode* make_index_node(tnode* l, tnode* r){
     return node;
 }
 
+tnode* make_address_of_node(tnode* e){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, pointer_type(e->type), NULL, NODE_ADDR_OF, NULL, e, NULL, NULL);
+    return node;
+}
+
+tnode* make_value_at_node(tnode* e){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, variable_type(e->type), NULL, NODE_VAL_AT, NULL, e, NULL, NULL);
+    return node;
+}
+
 void prefix(tnode* node){
     if(node == NULL){
         return;

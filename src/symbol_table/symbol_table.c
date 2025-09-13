@@ -30,29 +30,41 @@ Gsymbol* get_variable(char* name){
     return NULL;
 }
 
+void add_array_to_symbol(FILE* fp, char* varname,char* lengths, VarType type, int sz){
+    type = pointer_type(type);
+    sz+=1;  // first mem stores the arr variable which points to the nxt location
+    char* token = strtok(lengths, ",");
+    int elem;
+    array* head = NULL;
+    while(token != NULL){
+        elem = atoi(token);
+        head = add_array_node(head, elem);
+        token = strtok(NULL,",");
+    }
+    Gsymbol* node = add_variable(varname, sz, type);
+    fprintf(fp,"MOV [%d],%d\n",node->binding,node->binding+1);
+    node->size_array = head;
+}
 
-void create_entries(decl_node * ls, VarType type){
+void create_entries(decl_node * ls, VarType type, FILE* fp){
     decl_node * curr = ls;
     while(curr != NULL){
         char* varname = strdup(curr->varname);
         char* lengths = strdup(curr->varname);
-        int dimension = 0;
+        int dimension = -1;
         sscanf(curr->varname,"%s %d %s",varname,&dimension,lengths);  //for arrays: "ID 2 10,10" for the case of ID[10][10]
-        Gsymbol* node = add_variable(varname, curr->size, type);
-        // printf("[DEBUG]VAR: %s", varname);
-        array* head = NULL;
-        if(dimension>=1){
-            //array
-            char* token = strtok(lengths, ",");
-            int elem;
-            while(token != NULL){
-                elem = atoi(token);
-                head = add_array_node(head, elem);
-                token = strtok(NULL,",");
-            }
+        // printf("[DEBUG]VAR: %s", lengths);
+        if(dimension>=1){    //array
+            add_array_to_symbol(fp, varname, lengths, type, curr->size);
         }
-        node->size_array = head;
-        decl_node * prev = curr;
+        else{
+            if(dimension == 0) // pointer
+                type = pointer_type(type);
+            // normal node
+            Gsymbol* node = add_variable(varname, curr->size, type);
+            node->size_array = NULL;
+        }
+        decl_node* prev = curr;
         curr = curr->next;
         free_decl_node(prev);
     }
