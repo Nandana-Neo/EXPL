@@ -39,7 +39,7 @@ void create_entries(decl_node * ls, VarType type){
         int dimension = 0;
         sscanf(curr->varname,"%s %d %s",varname,&dimension,lengths);  //for arrays: "ID 2 10,10" for the case of ID[10][10]
         Gsymbol* node = add_variable(varname, curr->size, type);
-        printf("[DEBUG]VAR: %s", varname);
+        // printf("[DEBUG]VAR: %s", varname);
         array* head = NULL;
         if(dimension>=1){
             //array
@@ -62,20 +62,24 @@ void print_st(){
     Gsymbol * curr = symbol_table;
     while(curr != NULL){
         printf("%s-%d-%d\n",curr->name,curr->size,curr->binding);
+        print_array_int(curr->size_array);
         curr = curr->next;
     }
+}
+
+void print_array_int(array * arr){
+    array* node = arr;
+    while(node!=NULL){
+        printf("%d->",node->val);
+        node = node->nxt;
+    }
+    printf("\n");
 }
 
 array* add_array_node(array* arr,int val){
     array* node = (array *)malloc(sizeof(array));
     node->val = val;
-    node->nxt = NULL;
-    array* hd = arr;
-    if(hd == NULL)
-        return node;
-    while(hd->nxt != NULL){
-        hd = hd->nxt;
-    }
-    hd->nxt = node;
-    return hd;
+    //insert at the beginning
+    node->nxt = arr;
+    return node;
 }

@@ -87,6 +87,13 @@ tnode* make_array_node(VarType type, tnode* l, tnode* r){
     return node;
 }
 
+tnode* make_index_node(tnode* l, tnode* r){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, TYPE_INT, NULL, NODE_INDEX, NULL, l, NULL, r);
+    return node;
+}
+
 void prefix(tnode* node){
     if(node == NULL){
         return;

@@ -187,6 +187,8 @@ loc_and_val* code_gen_CONTINUE(tnode* node, FILE* fp, int start_label);
 */
 loc_and_val* code_gen_CONN(tnode* node, FILE* fp, int start_label, int end_label);
 
+loc_and_val* code_gen_INDEX(tnode* node, FILE* fp, array* size_array_ptr);
+
 loc_and_val* code_gen_ARR(tnode* node, FILE* fp);
 
 void code_gen_final(FILE * fp);

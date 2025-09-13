@@ -283,7 +283,7 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
                     $<ast_node>$ = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
                 }
         
-        |   ID '[' E ']'{   // array
+        |   ID INDEX{   // array
                         node_val val;
                         val.int_val = 0;
                         Gsymbol * st_entry = get_variable($<id_name>1);
@@ -292,14 +292,31 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
                             exit(1);
                         }
                         tnode* id_node = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
-                        if(id_node->type == TYPE_NONE || $<ast_node>3->type != TYPE_INT){
+                        if(id_node->type == TYPE_NONE){
                             fprintf(stderr,"Error: Type Mismatch in array\n");
                             exit(1);
                         }
                         // type of the node is the type of the ID node
-                        $<ast_node>$ = make_array_node(id_node->type, id_node, $<ast_node>3);
+                        $<ast_node>$ = make_array_node(id_node->type, id_node, $<ast_node>2);
                     }
         ;
+
+INDEX   :   INDEX '[' E ']' {
+                                if($<ast_node>3->type != TYPE_INT){
+                                    fprintf(stderr,"Error: Array index should be integer\n");
+                                    exit(1);
+                                }
+                                $<ast_node>$ = make_index_node($<ast_node>3, $<ast_node>1);
+                                printf("DONE making ast node");
+
+                            }
+        |   '[' E ']'   {
+                            if($<ast_node>2->type != TYPE_INT){
+                                fprintf(stderr,"Error: Array index should be integer\n");
+                                exit(1);
+                            }
+                            $<ast_node>$ = make_index_node($<ast_node>2, NULL);
+                        }
 %%
 int yyerror(){
     printf("Error\n");

@@ -84,6 +84,28 @@ loc_and_val* code_gen_CONN(tnode* node, FILE* fp, int start_label, int end_label
     return ans;
 }
 
+// [num] format
+// ID[i][j][k] = i*(Y*Z) + j*Z + k
+loc_and_val* code_gen_INDEX(tnode* node, FILE* fp, array* size_array_ptr){
+    //mulltiply index with ptr pointing number
+    loc_and_val* num_gen_node = code_gen(node->left, fp, -1, -1);
+    if(num_gen_node->loc != -1)
+        free_reg();
+    num_gen_node->loc = -1;
+    
+    if(node->right != NULL){
+        loc_and_val* right_index_node = code_gen_INDEX(node->right, fp, size_array_ptr->nxt);
+        if(right_index_node->loc != -1)
+            free_reg();
+        right_index_node->loc = -1;
+        fprintf(fp,"MUL R%d, %d\n",right_index_node->val, size_array_ptr->val);
+        fprintf(fp,"ADD R%d, R%d\n", num_gen_node->val, right_index_node->val);
+        free_gen_node(right_index_node);
+    }
+    return num_gen_node;
+       
+}
+
 // id[num] format
 loc_and_val* code_gen_ARR(tnode* node, FILE* fp){
     // We only need the location of the id mainly
@@ -93,7 +115,7 @@ loc_and_val* code_gen_ARR(tnode* node, FILE* fp){
     }
     int id_loc = node->left->gst_entry->binding;        // starting loc
     int id_reg = get_reg();
-    loc_and_val* num_gen_node = code_gen(node->right, fp, -1, -1);
+    loc_and_val* num_gen_node = code_gen_INDEX(node->right, fp, node->left->gst_entry->size_array);
     int num_reg = num_gen_node->val;
     fprintf(fp,"MOV R%d, %d\n",id_reg,id_loc);
     fprintf(fp,"ADD R%d, R%d\n",num_reg,id_reg);    // location is in num_reg
