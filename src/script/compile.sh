@@ -1,5 +1,4 @@
-cd ..
-
+# Input file should be of format: input_files/*
 input="inp.expl"
 temp="temp.xsm"
 output="out.xsm"
@@ -24,8 +23,10 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
+cd ..
 ./output -i $input -o $temp
 ./label_translator -i $temp -o $output
+cd script
 # rm temp.xsm
+# rm output
 # Run `./xsm -l library.lib -e src/output` in console in parent folder xsm_expl
