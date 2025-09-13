@@ -1,6 +1,7 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
+    #include "node/type_node.h"
     #include "node/ast_node.h"
     #include "node/decl_node.h"
     #include "code_gen/code_gen.h"
@@ -18,13 +19,13 @@
 }
 %token ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
 %token NUM_VAL STR_VAL;
-%nonassoc '<' '>' '=' ';';
+%nonassoc '<' '>' '=' ';' '&';
 %left '+' '-';
 %left '*' '/' '%';
 %%
 Program     : Declarations P_BEGIN Slist P_END   {
                                     FILE * fp = output_file;
-                                    code_gen_start(fp);
+                                    code_gen_SP_init(fp);
                                     code_gen($<ast_node>3, fp, -1, -1);
                                     code_gen_final(fp);
                                     // evaluate($<ast_node>3);
@@ -47,7 +48,7 @@ DeclList    : DeclList Decl      {}
             ;
 
 
-Decl        : Type VarList ';'  {   create_entries($<decl_node>2, $<decl_type>1); }
+Decl        : Type VarList ';'  {   create_entries($<decl_node>2, $<decl_type>1,output_file); }
             ;
 
 
@@ -71,6 +72,7 @@ IdDecl      : ID '[' NUM_VAL ']'                {
                                                     char * varname = (char*)malloc((len+1)*sizeof(char));
                                                     snprintf(varname, len+1, "%s %d %d", $<id_name>1, 1, sz);
                                                     $<decl_node>$ = create_decl_node(varname,sz);
+                                                    free($<id_name>1);
                                                 }
             | ID '[' NUM_VAL ']' '[' NUM_VAL ']'{
                                                     tnode* ast_node_r = $<ast_node>3;
@@ -86,9 +88,17 @@ IdDecl      : ID '[' NUM_VAL ']'                {
                                                     snprintf(varname, len+1, "%s %d %d,%d", $<id_name>1, 2, sz1,sz2);
 
                                                     $<decl_node>$ = create_decl_node(varname, sz);
+                                                    free($<id_name>1);
                                                 }
 
             | ID                {   $<decl_node>$ = create_decl_node($<id_name>1,1); }
+            | '*' ID            {   
+                                    int len = snprintf(NULL, 0, "%s 0", $<id_name>2); // to define pointer node
+                                    char * varname = (char*)malloc((len+1)*sizeof(char));
+                                    snprintf(varname, len+1, "%s 0", $<id_name>2);
+                                    $<decl_node>$ = create_decl_node(varname,1);
+                                    free($<id_name>2);
+                                }
             ;
 
 
@@ -221,11 +231,15 @@ E   :   E '<' E     {
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_EQ,$<ast_node>1,$<ast_node>4);
                     }
     |   E '+' E     {
-                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
+                        if((!is_pointer_type($<ast_node>1->type) && $<ast_node>1->type != TYPE_INT) || (!is_pointer_type($<ast_node>3->type) && $<ast_node>3->type != TYPE_INT )){
                             fprintf(stderr,"Error[+]: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;
+                        if(is_pointer_type($<ast_node>1->type))
+                            type = $<ast_node>1->type;
+                        else if(is_pointer_type($<ast_node>3->type))
+                            type = $<ast_node>3->type;
                         $<ast_node>$ = make_operator_node(type,NODE_ADD,$<ast_node>1,$<ast_node>3);
                     }
     |   E '%' E     {
@@ -269,7 +283,11 @@ E   :   E '<' E     {
     |   STR_VAL     {
                         $<ast_node>$ = $<ast_node>1;
                     }
-    |   L_VAL       {   $<ast_node>$ = $<ast_node>1;    }
+    |   L_VAL       {   $<ast_node>$ = $<ast_node>1;    
+                    }
+    |   '&' E       {
+                        $<ast_node>$ = make_address_of_node($<ast_node>2);
+                    }
     ;
 
 L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
@@ -292,12 +310,17 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
                             exit(1);
                         }
                         tnode* id_node = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
-                        if(id_node->type == TYPE_NONE){
+                        if(id_node->type != TYPE_INT_PTR && id_node->type != TYPE_CHAR_PTR){
                             fprintf(stderr,"Error: Type Mismatch in array\n");
                             exit(1);
                         }
+
                         // type of the node is the type of the ID node
-                        $<ast_node>$ = make_array_node(id_node->type, id_node, $<ast_node>2);
+                        $<ast_node>$ = make_array_node(variable_type(id_node->type), id_node, $<ast_node>2);
+                    }
+        
+        |   '*' E   {
+                        $<ast_node>$ = make_value_at_node($<ast_node>2);
                     }
         ;
 
@@ -307,7 +330,6 @@ INDEX   :   INDEX '[' E ']' {
                                     exit(1);
                                 }
                                 $<ast_node>$ = make_index_node($<ast_node>3, $<ast_node>1);
-                                printf("DONE making ast node");
 
                             }
         |   '[' E ']'   {
@@ -333,6 +355,7 @@ int main(int argc, char* argv[]){
         perror("fopen");
         return 1;
     }
+    code_gen_start(output_file);
     yyparse();
     return 1;
 }

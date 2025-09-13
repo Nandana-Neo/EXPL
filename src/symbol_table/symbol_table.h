@@ -55,7 +55,14 @@ Gsymbol* get_variable(char* name);
  * void
  */
 
-void create_entries(decl_node * ls, VarType type);
+void create_entries(decl_node * ls, VarType type, FILE* fp);
+
+/**
+ * Function: add_array_to_symbol
+ * 
+ * Adds the array node to the symbol tree along with moving the location to the array node
+ */
+void add_array_to_symbol(FILE* fp, char* varname,char* lengths, VarType type, int sz);
 
 void print_st();
 
