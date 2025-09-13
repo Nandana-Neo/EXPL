@@ -1,0 +1,53 @@
+decl
+    int l, m, n, a[10][10], b[10][10], res[10][10], i, j, k, dup;
+enddecl
+begin
+    read(l);
+    read(m);
+    read(n);
+    i = 0;
+    while(i<l) do
+        j = 0;
+        while(j<m) do
+            read(a[i][j]);
+            j = j+1;
+        endwhile;
+        i = i+1;
+    endwhile;
+    i = 0;
+    write("A done");
+    while(i<m) do
+        j = 0;
+        while(j<n) do
+            read(b[i][j]);
+            j = j+1;
+        endwhile;
+        i = i+1;
+    endwhile;
+    write("B done");
+    i = 0;
+    while(i<l) do
+        j = 0;
+        while(j<n) do
+            k = 0;
+            res[i][j]=0;
+            while(k<m) do
+                dup = a[i][k] * b[k][j];
+                res[i][j] = res[i][j] + dup;
+                k = k+1;
+            endwhile;
+            j = j+1;
+        endwhile;
+        i = i+1;
+    endwhile;
+    i = 0;
+    while(i<l) do
+        j = 0;
+        write("ROW");
+        while(j<n) do
+            write(res[i][j]);
+            j = j+1;
+        endwhile;
+        i = i+1;
+    endwhile;
+end
