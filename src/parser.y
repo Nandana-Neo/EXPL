@@ -60,7 +60,7 @@ GidList     :   GidList ',' Gid     {}
             ;
 
 Gid         :   IdDecl                  {   $<decl_node>$ = $<decl_node>1; }
-            |   ID '(' ParamList ')'    {   $<decl_node>$ = create_decl_node($<id_name>1,1);}
+            |   ID '(' ParamList ')'    {   }
             ;
 ///////////////////////////////////////////////////////////////////////////////////////
 FDefBlock   :   FDefBlock FDef  {}
@@ -95,7 +95,7 @@ DeclList    : DeclList Decl      {}
             ;
 
 
-Decl        : Type VarList ';'  {   create_entries($<decl_node>2, $<decl_type>1,output_file); }
+Decl        : Type VarList ';'  {   update_type_symbol_tb($<decl_node>2, $<decl_type>1); }
             ;
 
 
@@ -115,10 +115,8 @@ IdDecl      : ID '[' NUM_VAL ']'                {
                                                     tnode* ast_node = $<ast_node>3;
                                                     int sz = ast_node->val.int_val;
                                                     free(ast_node);
-                                                    int len = snprintf(NULL, 0, "%s %d %d", $<id_name>1,1,sz); // to get length
-                                                    char * varname = (char*)malloc((len+1)*sizeof(char));
-                                                    snprintf(varname, len+1, "%s %d %d", $<id_name>1, 1, sz);
-                                                    $<decl_node>$ = create_decl_node(varname,sz);
+                                                    array* arr_sz = add_array_node(NULL, sz);
+                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, TYPE_INT, arr_sz, output_file);
                                                     free($<id_name>1);
                                                 }
             | ID '[' NUM_VAL ']' '[' NUM_VAL ']'{
@@ -129,21 +127,18 @@ IdDecl      : ID '[' NUM_VAL ']'                {
                                                     int sz = sz1*sz2;
                                                     free(ast_node_c);
                                                     free(ast_node_r);
-
-                                                    int len = snprintf(NULL, 0, "%s %d %d,%d", $<id_name>1,2,sz1,sz2); // to get length
-                                                    char * varname = (char*)malloc((len+1)*sizeof(char));
-                                                    snprintf(varname, len+1, "%s %d %d,%d", $<id_name>1, 2, sz1,sz2);
-
-                                                    $<decl_node>$ = create_decl_node(varname, sz);
+                                                    array* arr_sz = add_array_node(NULL, sz1);
+                                                    arr_sz = add_array_node(arr_sz, sz2);
+                                                    
+                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, TYPE_INT, arr_sz, output_file);
                                                     free($<id_name>1);
                                                 }
 
-            | ID                {   $<decl_node>$ = create_decl_node($<id_name>1,1); }
+            | ID                {   $<decl_node>$ = create_decl_node($<id_name>1,1,TYPE_INT);
+                                    free($<id_name>1);                      
+                                }
             | '*' ID            {   
-                                    int len = snprintf(NULL, 0, "%s 0", $<id_name>2); // to define pointer node
-                                    char * varname = (char*)malloc((len+1)*sizeof(char));
-                                    snprintf(varname, len+1, "%s 0", $<id_name>2);
-                                    $<decl_node>$ = create_decl_node(varname,1);
+                                    $<decl_node>$ = create_decl_node($<id_name>2,1,TYPE_INT_PTR);
                                     free($<id_name>2);
                                 }
             ;

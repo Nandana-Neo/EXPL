@@ -2,13 +2,14 @@
 #define DECL_NODE_HEADER_FILE
 
 #include <stdlib.h>
+#include "../symbol_table/symbol_table.h"
+#include "type_node.h"
 
 /**
  * Node used in declarations section to eventually store into symbol table
  */
 typedef struct decl_node{
-    char* varname;
-    int size;
+    Gsymbol* symbol_table_entry;
     struct decl_node* next;
 } decl_node;
 
@@ -17,7 +18,9 @@ typedef struct decl_node{
  * --------------------------
  * Create a decl node with varname as value
  */
-decl_node* create_decl_node(char* varname, int size);
+decl_node* create_decl_node(char* varname, int size, VarType type);
+
+decl_node* create_decl_node_arr(char* varname, int size, VarType type, array* arr_sz, FILE* fp);
 
 /**
  * Function: add_to_list
@@ -34,4 +37,6 @@ decl_node* add_to_list(decl_node* ls,decl_node* node);
  */
 void free_decl_node(decl_node * node);
 
+
+void update_type_symbol_tb(decl_node* node, VarType type);
 #endif
