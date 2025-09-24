@@ -19,11 +19,17 @@
 }
 %token ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
 %token NUM_VAL STR_VAL;
+%token MAIN_DEF;
 %nonassoc '<' '>' '=' ';' '&';
 %left '+' '-';
 %left '*' '/' '%';
 %%
-Program     : Declarations P_BEGIN Slist P_END   {
+/* Program     :   GDeclBlock FDefBlock MainBlock  {}
+            |   GDeclBlock MainBlock            {}
+            |   MainBlock                       {}
+            ; */
+
+Program     : LDeclBlock P_BEGIN Slist P_END   {
                                     FILE * fp = output_file;
                                     code_gen_SP_init(fp);
                                     code_gen($<ast_node>3, fp, -1, -1);
@@ -38,7 +44,48 @@ Program     : Declarations P_BEGIN Slist P_END   {
             ;
 
 
-Declarations    : DECL DeclList ENDDECL     {}
+GDeclBlock  :   DECL GDeclList ENDDECL  {}
+            |   DECL ENDDECL            {}
+            ;
+
+GDeclList   :   GDeclList GDecl {}
+            |   GDecl           {}
+            ;
+
+GDecl       :   Type GidList ';'    {}
+            ;
+
+GidList     :   GidList ',' Gid     {}
+            |   Gid                 {}
+            ;
+
+Gid         :   IdDecl                  {   $<decl_node>$ = $<decl_node>1; }
+            |   ID '(' ParamList ')'    {   $<decl_node>$ = create_decl_node($<id_name>1,1);}
+            ;
+///////////////////////////////////////////////////////////////////////////////////////
+FDefBlock   :   FDefBlock FDef  {}
+            |   FDef            {}
+            ;
+
+FDef        :   Type ID '(' ParamList ')' '{' LDeclBlock Body '}'   {}
+            ;
+
+ParamList   :   ParamList ',' Param {}
+            |   Param               {}
+            |   /* empty */         {}
+            ;
+
+Param       :   Type ID     {}
+            ;
+
+Body        :   Slist       {}
+            |   /* empty */ {}
+            ;
+///////////////////////////////////////////////////////////////////////////////////////
+MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {}
+            ;
+
+LDeclBlock      : DECL DeclList ENDDECL     {}
                 | DECL ENDDECL              {}
                 ;
 
@@ -288,7 +335,13 @@ E   :   E '<' E     {
     |   '&' E       {
                         $<ast_node>$ = make_address_of_node($<ast_node>2);
                     }
+    |   ID '(' ArgList ')'  {}
     ;
+
+ArgList :   ArgList ',' E   {}
+        |   E               {}
+        |   /* empty */     {}
+        ;
 
 L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
                     node_val val;

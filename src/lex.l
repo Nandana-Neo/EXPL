@@ -42,6 +42,7 @@
 "str"       {   return STR;     }
 "decl"      {   return DECL;    }
 "enddecl"   {   return ENDDECL; }
+"int main"  {   return MAIN_DEF;}
 
 
 [a-zA-Z]+[0-9a-zA-Z_]*   {

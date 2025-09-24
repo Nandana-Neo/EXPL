@@ -43,11 +43,24 @@ typedef enum {
     NODE_CONTINUE
 } NodeType;
 
+typedef enum {
+    SYMBOL_FN,
+    SYMBOL_ARR,
+    SYMBOL_VAR
+} SymbolType;
+
+/**
+ * Value of a variable
+ * Can be char* or int
+ */
 typedef union node_val {
     int int_val;
     char * str_val;
 } node_val;
 
+/**
+ * AST tree node
+ */
 typedef struct tnode{
     node_val val;    // value of a number for NUM nodes
     VarType type;   // type of variable
@@ -57,17 +70,32 @@ typedef struct tnode{
     struct tnode *left, *middle, *right; //left and right branches
 } tnode;
 
+/**
+ * To store the array size of multi dimensional arrays
+ */
 typedef struct array{
     int val;
     struct array* nxt;
 } array;
 
+typedef struct Param{
+    char* name;
+    VarType type;
+    struct Param* next;
+} parameter;    
+
+/**
+ * Global Symbol Table
+ */
 typedef struct Gsymbol {
     char* name;             // name of the variable
     VarType type;           // type of the variable - INT or STR
+    SymbolType symbol_type; // type of the entity - ARR or FN or VARIABLE
     array* size_array;       // stores the length of multidim array
     int size;               // size of the type of the variable - default(1)
     int binding;            // stores the static memory address allocated to the variable
+    parameter* param_list;  // stores the type and name of the parameters of the function
+    int f_label;            // the label for identifying the start address of fn code -1 for non fn node
     struct Gsymbol *next;
 } Gsymbol;
 

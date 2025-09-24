@@ -4,6 +4,7 @@
 # Tests if the compilation will return any error
 ./build.sh
 set -e
+set -o pipefail
 for file in ../input_files/STAGE$1/*; do
     echo "Testing: ${file#*/STAGE*/}"
     ./compile.sh -i ${file#../}

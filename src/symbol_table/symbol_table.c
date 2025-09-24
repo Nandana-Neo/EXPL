@@ -1,6 +1,11 @@
 #include "symbol_table.h"
 
 int SP = 4096;
+static int f_label = 0;
+
+int get_f_label(){
+    return f_label++;
+}
 
 Gsymbol* add_variable(char* name, int size, VarType type){
     if(get_variable(name)!=NULL){
@@ -13,8 +18,30 @@ Gsymbol* add_variable(char* name, int size, VarType type){
     node->size = size;
     node->binding = SP;
     SP+=size;
+    node->symbol_type = SYMBOL_VAR;
     node->next = symbol_table;
     node->size_array = NULL;
+    node->f_label = -1;
+    node->param_list = NULL;
+    symbol_table = node;
+    return node;
+}
+
+Gsymbol* add_fn(char* name, VarType return_type, parameter* param_list){
+    if(get_variable(name)!=NULL){
+        fprintf(stderr,"Variable redeclared:%s\n",name);
+        exit(1);
+    }
+    Gsymbol* node = (Gsymbol*)malloc(sizeof(Gsymbol));
+    node->name = strdup(name);
+    node->symbol_type = SYMBOL_FN;
+    node->param_list = param_list;
+    node->type = return_type;
+    node->f_label = get_f_label();
+    node->binding = -1;
+    node->size_array = NULL;
+    node->size = 0;
+    node->next = symbol_table;
     symbol_table = node;
     return node;
 }
@@ -44,6 +71,9 @@ void add_array_to_symbol(FILE* fp, char* varname,char* lengths, VarType type, in
     Gsymbol* node = add_variable(varname, sz, type);
     fprintf(fp,"MOV [%d],%d\n",node->binding,node->binding+1);
     node->size_array = head;
+    node->symbol_type = SYMBOL_ARR;
+    free(lengths);
+    free(varname);
 }
 
 void create_entries(decl_node * ls, VarType type, FILE* fp){
@@ -62,6 +92,7 @@ void create_entries(decl_node * ls, VarType type, FILE* fp){
                 type = pointer_type(type);
             // normal node
             Gsymbol* node = add_variable(varname, curr->size, type);
+            free(varname);
             node->size_array = NULL;
         }
         decl_node* prev = curr;
