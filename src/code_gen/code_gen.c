@@ -394,6 +394,9 @@ loc_and_val* code_gen_CONTINUE(tnode* node, FILE* fp, int start_label){
 
 
 loc_and_val* code_gen(tnode* node, FILE* fp, int start_label, int end_label){
+    if(node == NULL){
+        return NULL;
+    }
     switch(node->nodetype){
         case NODE_LEAF:
             if(node->varname == NULL)  // NUM
@@ -444,7 +447,7 @@ void code_gen_start(FILE* fp){
 }
 
 void code_gen_SP_init(FILE* fp){
-    fprintf(fp,"MOV SP, %d\n",SP);
+    fprintf(fp,"MOV SP, %d\n",SP-1);
 }
 
 void code_gen_final(FILE* fp){

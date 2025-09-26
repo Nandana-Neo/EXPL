@@ -78,6 +78,9 @@ typedef struct array{
     struct array* nxt;
 } array;
 
+/**
+ * To store the parameter list for a function definition
+ */
 typedef struct Param{
     char* name;
     VarType type;

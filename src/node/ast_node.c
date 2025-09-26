@@ -129,3 +129,8 @@ void prefix(tnode* node){
     prefix(node->left);
     prefix(node->right);
 }
+
+
+void free_tree(tnode* n){
+    
+}

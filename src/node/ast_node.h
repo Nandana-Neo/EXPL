@@ -62,4 +62,5 @@ tnode* make_index_node(tnode* l, tnode* r);
 tnode* make_address_of_node(tnode* e);
 tnode* make_value_at_node(tnode* e);
 
+void free_tree(tnode* n);
 #endif

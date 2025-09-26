@@ -16,10 +16,14 @@
     char * id_name;   // for getting the variable name for symbol tree creation
     int decl_type;      // for getting the type of the variable while declaration
     struct decl_node * decl_node;  // for declarations section to register variables to symbol table
+    Lsymbol* lsymbol_entry;   // local symbol table entry
+    parameter* param_list;  // list of parameters for the fns
 }
 %token ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
 %token NUM_VAL STR_VAL;
 %token MAIN_DEF;
+%type<decl_type> Type;
+%type<param_list> Param ParamList;
 %nonassoc '<' '>' '=' ';' '&';
 %left '+' '-';
 %left '*' '/' '%';
@@ -29,7 +33,7 @@
             |   MainBlock                       {}
             ; */
 
-Program     : LDeclBlock P_BEGIN Slist P_END   {
+Program     : GDeclBlock P_BEGIN Slist P_END   {
                                     FILE * fp = output_file;
                                     code_gen_SP_init(fp);
                                     code_gen($<ast_node>3, fp, -1, -1);
@@ -52,66 +56,15 @@ GDeclList   :   GDeclList GDecl {}
             |   GDecl           {}
             ;
 
-GDecl       :   Type GidList ';'    {}
+GDecl       :   Type GIdList ';'    {   update_type_decl($<decl_node>2, $1);   }
             ;
 
-GidList     :   GidList ',' Gid     {}
-            |   Gid                 {}
-            ;
-
-Gid         :   IdDecl                  {   $<decl_node>$ = $<decl_node>1; }
-            |   ID '(' ParamList ')'    {   }
-            ;
-///////////////////////////////////////////////////////////////////////////////////////
-FDefBlock   :   FDefBlock FDef  {}
-            |   FDef            {}
-            ;
-
-FDef        :   Type ID '(' ParamList ')' '{' LDeclBlock Body '}'   {}
-            ;
-
-ParamList   :   ParamList ',' Param {}
-            |   Param               {}
-            |   /* empty */         {}
-            ;
-
-Param       :   Type ID     {}
-            ;
-
-Body        :   Slist       {}
-            |   /* empty */ {}
-            ;
-///////////////////////////////////////////////////////////////////////////////////////
-MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {}
-            ;
-
-LDeclBlock      : DECL DeclList ENDDECL     {}
-                | DECL ENDDECL              {}
-                ;
-
-
-DeclList    : DeclList Decl      {}
-            | Decl               {}
+GIdList     :   GIdList ',' GIdDecl     {   $<decl_node>$ = add_to_list($<decl_node>1, $<decl_node>3); }
+            |   GIdDecl                 {   $<decl_node>$ = $<decl_node>1; }
             ;
 
 
-Decl        : Type VarList ';'  {   update_type_symbol_tb($<decl_node>2, $<decl_type>1); }
-            ;
-
-
-Type        : INT           {   $<decl_type>$ = TYPE_INT; }
-            | STR           {   $<decl_type>$ = TYPE_STR; }
-            ;
-
-
-VarList     : VarList ',' IdDecl    {
-                                        $<decl_node>$ = add_to_list($<decl_node>1,$<decl_node>3);
-                                    }
-            | IdDecl                {
-                                        $<decl_node>$ = $<decl_node>1;
-                                    }
-            ;
-IdDecl      : ID '[' NUM_VAL ']'                {
+GIdDecl      : ID '[' NUM_VAL ']'                {
                                                     tnode* ast_node = $<ast_node>3;
                                                     int sz = ast_node->val.int_val;
                                                     free(ast_node);
@@ -141,10 +94,82 @@ IdDecl      : ID '[' NUM_VAL ']'                {
                                     $<decl_node>$ = create_decl_node($<id_name>2,1,TYPE_INT_PTR);
                                     free($<id_name>2);
                                 }
+            |   ID '(' ParamList ')'    {   
+                                            $<decl_node>$ = create_decl_node_fn($<id_name>1, TYPE_INT, $3);
+                                            free($<id_name>1);
+                                        }
+            ;
+///////////////////////////////////////////////////////////////////////////////////////
+LDeclBlock      : DECL LDeclList ENDDECL    {   $<lsymbol_entry>$ = $<lsymbol_entry>2; }
+                | DECL ENDDECL              {   $<lsymbol_entry>$ = NULL; }
+                ;
+
+LDeclList   : LDeclList LDecl     {     $<lsymbol_entry>$ = connect_lsymbol($<lsymbol_entry>1,$<lsymbol_entry>2);   }
+            | LDecl               {     $<lsymbol_entry>$ = $<lsymbol_entry>1;  }
             ;
 
+LDecl       : Type LIdList ';'  {   $<lsymbol_entry>$ = update_type_lsymbol_tb($<lsymbol_entry>2, $1); }
+            ;
 
+Type        : INT           {   $$ = TYPE_INT; }
+            | STR           {   $$ = TYPE_STR; }
+            ;
+
+LIdList     : LIdList ',' LIdDecl   {
+                                        $<lsymbol_entry>$ = connect_lsymbol($<lsymbol_entry>1,$<lsymbol_entry>3);
+                                    }
+            | LIdDecl               {
+                                        $<lsymbol_entry>$ = $<lsymbol_entry>1;
+                                    }
+            ;
+
+LIdDecl     : ID                {   
+                                    $<lsymbol_entry>$ = create_lsymbol($<id_name>1,TYPE_INT,-1,NULL);
+                                    free($<id_name>1);                      
+                                }
+            | '*' ID            {   
+                                    $<lsymbol_entry>$ = create_lsymbol($<id_name>2,TYPE_INT_PTR,-1,NULL);
+                                    free($<id_name>2);
+                                }
+            ;
 ///////////////////////////////////////////////////////////////////////////////////////////////
+FDefBlock   :   FDefBlock FDef  {}
+            |   FDef            {}
+            ;
+
+FDef        :   Type ID '(' ParamList ')' '{' LDeclBlock Body '}'   {
+                                                                        Gsymbol* fn_decl = get_variable($<id_name>2);
+                                                                        if(fn_decl->type != $1){
+                                                                            fprintf(stderr,"Mismatching function definition:%s",$<id_name>2);
+                                                                            exit(1);
+                                                                        }
+                                                                        if(same_parameter_list(fn_decl->param_list,$4)!=1){
+                                                                            fprintf(stderr,"Mismatching function definition:%s",$<id_name>2);
+                                                                            exit(1);
+                                                                        }
+                                                                        Lsymbol* lsymbol_table_entry = $<lsymbol_entry>7;
+                                                                        fprintf(output_file,"_F%d:\n",fn_decl->flabel);
+
+                                                                        code_gen($<ast_node>8, fp, -1, -1);
+                                                                        fprintf("RET\n");
+                                                                    }
+            ;
+
+ParamList   :   ParamList ',' Param {   $$ = add_parameter_to_list($1, $3); }
+            |   Param               {   $$ = $1;    }
+            |   /* empty */         {   $$ = NULL;  }
+            ;
+
+Param       :   Type ID     { $$ = create_parameter($<id_name>2, $1); }
+            ;
+
+Body        :   Slist       {   $<ast_node>$ = $<ast_node>1;    }
+            |   /* empty */ {   $<ast_node>$ = NULL;    }
+            ;
+///////////////////////////////////////////////////////////////////////////////////////
+MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {}
+            ;
+
 Slist       : Slist Stmt    {   $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_CONN,$<ast_node>1,$<ast_node>2);   }
             | Stmt          {   $<ast_node>$ = $<ast_node>1;    }
             ;

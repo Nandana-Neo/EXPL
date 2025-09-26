@@ -9,4 +9,5 @@ for file in ../input_files/STAGE$1/*; do
     echo "Testing: ${file#*/STAGE*/}"
     ./compile.sh -i ${file#../}
     echo "DONE: ${file#*/STAGE*/}"
+    echo "---------------------------------------------"
 done
