@@ -132,5 +132,14 @@ void prefix(tnode* node){
 
 
 void free_tree(tnode* n){
-    
+    if(n==NULL)
+        return;
+    free_tree(n->left);
+    free_tree(n->middle);
+    free_tree(n->right);
+    if(n->varname != NULL)
+        free(n->varname);
+    if(n->nodetype == NODE_LEAF && n->type == TYPE_STR)
+        free(n->val.str_val);
+    free(n);
 }

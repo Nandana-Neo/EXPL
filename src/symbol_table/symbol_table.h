@@ -70,6 +70,7 @@ array* add_array_node(array* arr,int val);
 parameter* create_parameter(char* name, VarType type);
 
 parameter* add_parameter_to_list(parameter* lst, parameter* curr);
+
 /**Function: int same_parameter_list(parameter* l1, parameter* l2)
  * ----------------------------------------------------------------
  * Checks if the contents of the lists are same.
@@ -77,6 +78,13 @@ parameter* add_parameter_to_list(parameter* lst, parameter* curr);
  * else 0
  */
 int same_parameter_list(parameter* l1, parameter* l2);
+
+/**
+ * Function: free_param_list
+ * ---------------------------
+ * Frees the parameter list including the variable name
+ */
+void free_param_list(parameter* ls);
 
 /******************LOCAL SYMBOL TABLE********************/ 
 typedef struct Lsymbol{
@@ -121,4 +129,21 @@ Lsymbol* connect_lsymbol(Lsymbol* lst1, Lsymbol* lst2);
  */
 Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, VarType type);
 
+/**
+ * Function: free_lsymbol
+ * ------------------------
+ * Frees the symbol table including the variable names
+ */
+void free_lsymbol(Lsymbol* ls);
+
+/**
+ * Function: add_paramlist_lsymbol
+ * --------------------------------------
+ * Input: 
+ * - param_ls   : parameter*
+ * - tb         : Lsymbol*
+ * Output:
+ * Adds the parameters in the param_ls into the local symbol table tb and also assigns corresponding binding
+ */
+Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb);
 #endif

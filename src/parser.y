@@ -148,10 +148,15 @@ FDef        :   Type ID '(' ParamList ')' '{' LDeclBlock Body '}'   {
                                                                             exit(1);
                                                                         }
                                                                         Lsymbol* lsymbol_table_entry = $<lsymbol_entry>7;
+                                                                        lsymbol_table_entry = add_paramlist_lsymbol($4, lsymbol_table_entry);
+                                                                        free_param_list($4);
                                                                         fprintf(output_file,"_F%d:\n",fn_decl->flabel);
 
-                                                                        code_gen($<ast_node>8, fp, -1, -1);
+                                                                        code_gen($<ast_node>8, fp, -1, -1); // TODO
                                                                         fprintf("RET\n");
+                                                                        free_tree($<ast_node>8);
+                                                                        free_lsymbol(lsymbol_table_entry);
+                                                                        
                                                                     }
             ;
 
@@ -245,6 +250,44 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                         val.int_val = 0;
                                                         $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_DOWHILE,NULL,$<ast_node>2,NULL,$<ast_node>5);
                                                     }
+
+L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
+                    node_val val;
+                    val.int_val = 0;
+                    Gsymbol * st_entry = get_variable($<id_name>1);
+                    if(st_entry==NULL){
+                        fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
+                        exit(1);
+                    }
+                    $<ast_node>$ = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
+                }
+        
+        |   ID INDEX{   // array
+                        node_val val;
+                        val.int_val = 0;
+                        Gsymbol * st_entry = get_variable($<id_name>1);
+                        if(st_entry==NULL){
+                            fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
+                            exit(1);
+                        }
+                        tnode* id_node = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
+                        if(id_node->type != TYPE_INT_PTR && id_node->type != TYPE_CHAR_PTR){
+                            fprintf(stderr,"Error: Type Mismatch in array\n");
+                            exit(1);
+                        }
+
+                        // type of the node is the type of the ID node
+                        $<ast_node>$ = make_array_node(variable_type(id_node->type), id_node, $<ast_node>2);
+                    }
+        
+        |   '*' E   {
+                        if(!is_pointer_type($<ast_node>2->type)){
+                            fprintf(stderr,"Error(ptr): Type Mismatch\n");
+                            exit(1);
+                        }
+                        $<ast_node>$ = make_value_at_node($<ast_node>2);
+                    }
+        ;
 
 AsgStmt     : L_VAL '=' E  {    
                             if($<ast_node>1->type != $<ast_node>3->type){
@@ -361,40 +404,6 @@ E   :   E '<' E     {
 ArgList :   ArgList ',' E   {}
         |   E               {}
         |   /* empty */     {}
-        ;
-
-L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
-                    node_val val;
-                    val.int_val = 0;
-                    Gsymbol * st_entry = get_variable($<id_name>1);
-                    if(st_entry==NULL){
-                        fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
-                        exit(1);
-                    }
-                    $<ast_node>$ = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
-                }
-        
-        |   ID INDEX{   // array
-                        node_val val;
-                        val.int_val = 0;
-                        Gsymbol * st_entry = get_variable($<id_name>1);
-                        if(st_entry==NULL){
-                            fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
-                            exit(1);
-                        }
-                        tnode* id_node = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
-                        if(id_node->type != TYPE_INT_PTR && id_node->type != TYPE_CHAR_PTR){
-                            fprintf(stderr,"Error: Type Mismatch in array\n");
-                            exit(1);
-                        }
-
-                        // type of the node is the type of the ID node
-                        $<ast_node>$ = make_array_node(variable_type(id_node->type), id_node, $<ast_node>2);
-                    }
-        
-        |   '*' E   {
-                        $<ast_node>$ = make_value_at_node($<ast_node>2);
-                    }
         ;
 
 INDEX   :   INDEX '[' E ']' {

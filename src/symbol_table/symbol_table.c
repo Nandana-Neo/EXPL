@@ -124,6 +124,13 @@ int same_parameter_list(parameter* l1, parameter* l2){
     return 1;
 }
 
+void free_param_list(parameter* ls){
+    if(ls == NULL)
+        return;
+    free(ls->next);
+    free(ls->name);
+}
+
 /***********************Local Symbol Table Fns*********************/ 
 Lsymbol* create_lsymbol(char* varname, VarType type, int binding, Lsymbol* next){
     Lsymbol* node = (Lsymbol*)malloc(sizeof(Lsymbol));
@@ -173,4 +180,25 @@ Lsymbol* get_lsymbol(Lsymbol* ls, char* name){
         node = node->next;
     }
     return NULL;
+}
+
+void free_lsymbol(Lsymbol* ls){
+    if(ls==NULL)
+        return;
+    free_lsymbol(ls->next);
+    free(ls->varname);
+    free(ls);
+}
+
+
+Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb){
+    if(param_ls == NULL)
+        return tb;
+    Lsymbol* curr = add_paramlist_lsymbol(param_ls->next, tb);
+    int logical_addr = -3;
+    if(curr != tb){ // not first argument
+        logical_addr = curr->binding-1;
+    }
+    curr = create_lsymbol(param_ls->name, param_ls->type, logical_addr, curr);
+    return curr;
 }

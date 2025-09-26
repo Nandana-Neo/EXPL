@@ -62,5 +62,6 @@ tnode* make_index_node(tnode* l, tnode* r);
 tnode* make_address_of_node(tnode* e);
 tnode* make_value_at_node(tnode* e);
 
+/* Fress the tree node and all its children and values allocated */
 void free_tree(tnode* n);
 #endif

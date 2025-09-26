@@ -1,6 +1,6 @@
 decl
     int num,n,c;
-    int n;
+    int n[20];
 enddecl
 begin
     read(num);

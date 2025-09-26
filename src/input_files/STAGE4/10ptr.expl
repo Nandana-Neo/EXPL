@@ -17,6 +17,7 @@ begin
     b = 100;
     write(b);
     p = &b;
+    *p = (*p) * (*(p+1));
     write(*p);
     write("*p:");
     read(*p);
