@@ -47,17 +47,25 @@ void free_gen_node(loc_and_val* node){
 }
 
 loc_and_val* code_gen_ID(tnode* node, FILE* fp){
-    Gsymbol* symbol_table_entry = node->gst_entry;
-    if(symbol_table_entry == NULL){
+    Lsymbol* lst_entry = node->lst_entry;
+    Gsymbol* gst_entry = node->gst_entry;
+    if(lst_entry == NULL && gst_entry==NULL){
         fprintf(stderr, "Variable not declared:%s\n",node->varname);
         exit(1);
     }
     loc_and_val* ans = create_gen_node(-1,-1);
-    int location = symbol_table_entry->binding;
     int reg_val = get_reg();
-    fprintf(fp,"MOV R%d, [%d]\n",reg_val,location);
     int reg_loc = get_reg();
-    fprintf(fp,"MOV R%d, %d\n",reg_loc,location);
+    if(lst_entry != NULL){
+        int location = lst_entry->binding;
+        fprintf(fp,"MOV R%d, %d\n",reg_loc, location);
+        fprintf(fp,"ADD R%d, BP\n",reg_loc);
+    }
+    else{
+        int location = gst_entry->binding;
+        fprintf(fp,"MOV R%d, %d\n",reg_loc,location);
+    }
+    fprintf(fp,"MOV R%d, [R%d]\n",reg_val,reg_loc);
     ans->loc = reg_loc;
     ans->val = reg_val;
     return ans;

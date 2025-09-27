@@ -3,9 +3,6 @@
 
 #include <stdio.h>
 
-// Current pointer to local symbol table
-extern Lsymbol* curr_lsymbol;
-
 typedef enum {
     TYPE_NONE = -1,   // not ID node
     TYPE_INT  = 0,
@@ -124,7 +121,9 @@ typedef struct Lsymbol{
     struct Lsymbol* next;
 } Lsymbol;
 
-
+// Current pointer to local symbol table
+extern Lsymbol* curr_lsymbol;
+extern int lst_binding;
 /**
  * Function: pointer_type
  * 

@@ -57,6 +57,17 @@ Gsymbol* get_variable_gst(char* name){
     return NULL;
 }
 
+Lsymbol* get_variable_lst(char* name, Lsymbol* lst){
+    Lsymbol* node = lst;
+    while(node!=NULL){
+        if(strcmp(node->varname,name)==0){
+            return node;
+        }
+        node = node->next;
+    }
+    return NULL;
+}
+
 Gsymbol* add_array_to_symbol(FILE* fp, char* varname,array* array_sz, VarType type, int sz){
     type = pointer_type(type);
     sz+=1;  // first mem stores the arr variable which points to the nxt location
@@ -138,10 +149,15 @@ void free_param_list(parameter* ls){
 /***********************Local Symbol Table Fns*********************/ 
 
 Lsymbol* create_lsymbol(char* varname, VarType type, int binding, Lsymbol* next){
+    if(get_variable_lst(varname, curr_lsymbol) != NULL){
+        fprintf(stderr,"Variable redeclared:%s\n",varname);
+        exit(1);
+    }
+    // printf("[DEBUG] Lsymbol created:%s\n", varname);
     Lsymbol* node = (Lsymbol*)malloc(sizeof(Lsymbol));
     node->varname = strdup(varname);
     node->type = type;
-    node->binding = 0;
+    node->binding = binding;
     node->next = next;
     return node;
 }
@@ -191,6 +207,7 @@ void free_lsymbol(Lsymbol* ls){
     if(ls==NULL)
         return;
     free_lsymbol(ls->next);
+    // printf("[DEBUG]:Lsymbol freed:%s\n",ls->varname);
     free(ls->varname);
     free(ls);
 }
@@ -202,4 +219,25 @@ Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding){
     tb = add_paramlist_lsymbol(param_ls->next, tb, binding-1);
     tb = create_lsymbol(param_ls->name, param_ls->type, binding, tb);
     return tb;
+}
+
+Lsymbol* lst_if_repeated(Lsymbol* lst){
+    Lsymbol* curr = lst;
+    while(curr != NULL){
+        if(get_variable_lst(curr->varname, curr->next)!=NULL)
+            return curr;
+        curr = curr->next;
+    }
+    return NULL;
+}
+
+void print_lsymbol(){
+    Lsymbol* curr = curr_lsymbol;
+    printf("|Name\t|Type\t|Binding\t|\n");
+    printf("----------------------------------------------------------\n");
+    while(curr!=NULL){
+        printf("|%s\t|%d\t|%d\t|\n",curr->varname,curr->type,curr->binding);
+        curr = curr->next;
+    }
+    printf("----------------------------------------------------------\n");
 }

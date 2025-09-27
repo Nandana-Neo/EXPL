@@ -19,21 +19,22 @@
     Lsymbol* lsymbol_entry;   // local symbol table entry
     parameter* param_list;  // list of parameters for the fns
 }
-%token ID P_BEGIN P_END READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL;
+%token ID READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL P_BEGIN P_END;
 %token NUM_VAL STR_VAL;
 %token MAIN_DEF;
 %type<decl_type> Type;
-%type<param_list> Param ParamList;
+%type<param_list> Param ParamList ParamListBracs;
+%type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
 %nonassoc '<' '>' '=' ';' '&';
 %left '+' '-';
 %left '*' '/' '%';
 %%
-/* Program     :   GDeclBlock FDefBlock MainBlock  {}
+Program     :   GDeclBlock FDefBlock MainBlock  {}
             |   GDeclBlock MainBlock            {}
             |   MainBlock                       {}
-            ; */
+            ;
 
-Program     : GDeclBlock P_BEGIN Slist P_END   {
+/* Program     : GDeclBlock P_BEGIN Slist P_END   {
                                     FILE * fp = output_file;
                                     code_gen_SP_init(fp);
                                     code_gen($<ast_node>3, fp, -1, -1);
@@ -45,7 +46,7 @@ Program     : GDeclBlock P_BEGIN Slist P_END   {
                                 fprintf(stdout,"Empty program");
                                 exit(0);
                             }
-            ;
+            ; */
 
 
 GDeclBlock  :   DECL GDeclList ENDDECL  {}
@@ -94,41 +95,43 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                     $<decl_node>$ = create_decl_node($<id_name>2,1,TYPE_INT_PTR);
                                     free($<id_name>2);
                                 }
-            |   ID '(' ParamList ')'    {   
-                                            $<decl_node>$ = create_decl_node_fn($<id_name>1, TYPE_INT, $3);
+            |   ID ParamListBracs       {   
+                                            free_lsymbol(curr_lsymbol);
+                                            curr_lsymbol = NULL;
+                                            $<decl_node>$ = create_decl_node_fn($<id_name>1, TYPE_INT, $2);
                                             free($<id_name>1);
                                         }
             ;
 ///////////////////////////////////////////////////////////////////////////////////////
-LDeclBlock      : DECL LDeclList ENDDECL    {   $<lsymbol_entry>$ = curr_lsymbol = $<lsymbol_entry>2; }
-                | DECL ENDDECL              {   $<lsymbol_entry>$ = NULL; }
+LDeclBlock      : DECL LDeclList ENDDECL    {   curr_lsymbol = $$ = connect_lsymbol(curr_lsymbol, $2);    }
+                | DECL ENDDECL              {   $$ = curr_lsymbol; }
                 ;
 
-LDeclList   : LDeclList LDecl     {     $<lsymbol_entry>$ = connect_lsymbol($<lsymbol_entry>1,$<lsymbol_entry>2);   }
-            | LDecl               {     $<lsymbol_entry>$ = $<lsymbol_entry>1;  }
+LDeclList   : LDeclList LDecl     {     $$ = connect_lsymbol($1,$2);   }
+            | LDecl               {     $$ = $1;  }
             ;
 
-LDecl       : Type LIdList ';'  {   $<lsymbol_entry>$ = update_type_lsymbol_tb($<lsymbol_entry>2, $1); }
+LDecl       : Type LIdList ';'  {   $$ = update_type_lsymbol_tb($2, $1); }
             ;
 
 Type        : INT           {   $$ = TYPE_INT; }
             | STR           {   $$ = TYPE_STR; }
             ;
 
-LIdList     : LIdList ',' LIdDecl   {
-                                        $<lsymbol_entry>$ = connect_lsymbol($<lsymbol_entry>1,$<lsymbol_entry>3);
+LIdList     : LIdList ',' LIdDecl   {   
+                                        $$ = connect_lsymbol($1,$3); // $1 is actually curr_lsymbol
                                     }
             | LIdDecl               {
-                                        $<lsymbol_entry>$ = $<lsymbol_entry>1;
+                                        $$ = $1;
                                     }
             ;
 
-LIdDecl     : ID                {   
-                                    $<lsymbol_entry>$ = create_lsymbol($<id_name>1,TYPE_INT,-1,NULL);
+LIdDecl     : ID                {
+                                    $$ = create_lsymbol($<id_name>1,TYPE_INT,lst_binding++,NULL);
                                     free($<id_name>1);                      
                                 }
             | '*' ID            {   
-                                    $<lsymbol_entry>$ = create_lsymbol($<id_name>2,TYPE_INT_PTR,-1,NULL);
+                                    $$ = create_lsymbol($<id_name>2,TYPE_INT_PTR,lst_binding++,NULL);
                                     free($<id_name>2);
                                 }
             ;
@@ -137,29 +140,45 @@ FDefBlock   :   FDefBlock FDef  {}
             |   FDef            {}
             ;
 
-FDef        :   Type ID '(' ParamList ')' '{' LDeclBlock Body '}'   {
+FDef        :   Type ID ParamListBracs '{' LDeclBlock Body '}'   {
                                                                         Gsymbol* fn_decl = get_variable_gst($<id_name>2);
+                                                                        if(fn_decl == NULL){
+                                                                            fprintf(stderr,"ERROR: Function declaration not found:%s",$<id_name>2);
+                                                                            exit(1);
+                                                                        }
                                                                         if(fn_decl->type != $1){
-                                                                            fprintf(stderr,"Mismatching function definition:%s",$<id_name>2);
+                                                                            fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
                                                                             exit(1);
                                                                         }
-                                                                        if(same_parameter_list(fn_decl->param_list,$4)!=1){
-                                                                            fprintf(stderr,"Mismatching function definition:%s",$<id_name>2);
+                                                                        if(same_parameter_list(fn_decl->param_list,$3)!=1){
+                                                                            fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
                                                                             exit(1);
                                                                         }
-                                                                        Lsymbol* lsymbol_table_entry = $<lsymbol_entry>7;
-                                                                        lsymbol_table_entry = add_paramlist_lsymbol($4, lsymbol_table_entry);
-                                                                        free_param_list($4);
-                                                                        fprintf(output_file,"_F%d:\n",fn_decl->flabel);
-                                                                        curr_lsymbol = lsymbol_table_entry;
-                                                                        
-                                                                        code_gen($<ast_node>8, fp, -1, -1); // TODO
-                                                                        fprintf("RET\n");
-                                                                        free_tree($<ast_node>8);
-                                                                        free_lsymbol(lsymbol_table_entry);
-                                                                        
+                                                                        if(curr_lsymbol != $5){
+                                                                            fprintf(stderr,"ERROR in implementation of fn:%s",$<id_name>2);
+                                                                            exit(1);
+                                                                        }
+                                                                        Lsymbol* repeated_node = lst_if_repeated(curr_lsymbol);
+                                                                        if(repeated_node){
+                                                                            fprintf(stderr,"Variable redeclared:%s\n",repeated_node->varname);
+                                                                            exit(1);
+                                                                        }
+                                                                        free_param_list($3);
+                                                                        fprintf(output_file,"_F%d:\n",fn_decl->f_label);
+                                                                        print_lsymbol();
+                                                                        // code_gen($<ast_node>6, fp, -1, -1); // TODO
+                                                                        fprintf(output_file,"RET\n");
+                                                                        free_tree($<ast_node>6);
+                                                                        free_lsymbol(curr_lsymbol);
+                                                                        curr_lsymbol = NULL;
+                                                                        lst_binding = 1;
                                                                     }
             ;
+ParamListBracs  :   '(' ParamList ')'   {   
+                                            curr_lsymbol = add_paramlist_lsymbol($2, NULL,-1);
+                                            $$ = $2;    
+                                        }
+                ;
 
 ParamList   :   ParamList ',' Param {   $$ = add_parameter_to_list($1, $3); }
             |   Param               {   $$ = $1;    }
@@ -169,7 +188,7 @@ ParamList   :   ParamList ',' Param {   $$ = add_parameter_to_list($1, $3); }
 Param       :   Type ID     { $$ = create_parameter($<id_name>2, $1); }
             ;
 
-Body        :   Slist       {   $<ast_node>$ = $<ast_node>1;    }
+Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }
             |   /* empty */ {   $<ast_node>$ = NULL;    }
             ;
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -230,7 +249,7 @@ Whilestmt   : WHILE '(' E ')' DO Slist ENDWHILE     {
                                                         }
                                                         node_val val;
                                                         val.int_val = 0;
-                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_WHILE,NULL,$<ast_node>3,NULL,$<ast_node>6);
+                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_WHILE,NULL,NULL,$<ast_node>3,NULL,$<ast_node>6,NULL);
                                                     }
             ;
 RepeatStmt  :  REPEAT Slist UNTIL '(' E ')'         {
@@ -240,7 +259,7 @@ RepeatStmt  :  REPEAT Slist UNTIL '(' E ')'         {
                                                         }
                                                         node_val val;
                                                         val.int_val = 0;
-                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_REPEAT,NULL,$<ast_node>2,NULL,$<ast_node>5);
+                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_REPEAT,NULL,NULL,$<ast_node>2,NULL,$<ast_node>5,NULL);
                                                     }
 DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                         if($<ast_node>5->type != TYPE_BOOL){
@@ -249,36 +268,60 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                         }
                                                         node_val val;
                                                         val.int_val = 0;
-                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_DOWHILE,NULL,$<ast_node>2,NULL,$<ast_node>5);
+                                                        $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_DOWHILE,NULL,NULL,$<ast_node>2,NULL,$<ast_node>5,NULL);
                                                     }
 
 L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
                     node_val val;
                     val.int_val = 0;
-                    Gsymbol * st_entry = get_variable_gst($<id_name>1);
-                    if(st_entry==NULL){
+                    Lsymbol* lst_entry = get_variable_lst($<id_name>1, curr_lsymbol);
+                    VarType type = TYPE_INT;
+                    Gsymbol* gst_entry = NULL;
+                    if(lst_entry == NULL){
+                        gst_entry = get_variable_gst($<id_name>1);
+                    }
+
+                    if(lst_entry == NULL && gst_entry == NULL){
                         fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
                         exit(1);
                     }
-                    $<ast_node>$ = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
+                    if(lst_entry != NULL){
+                        type = lst_entry->type;
+                    }
+                    else{
+                        type = gst_entry->type;
+                    }
+                    $<ast_node>$ = make_leaf_node(val, type, $<id_name>1, gst_entry, lst_entry);
                 }
         
         |   ID INDEX{   // array
                         node_val val;
                         val.int_val = 0;
-                        Gsymbol * st_entry = get_variable_gst($<id_name>1);
-                        if(st_entry==NULL){
+                        Lsymbol* lst_entry = get_variable_lst($<id_name>1, curr_lsymbol);
+                        Gsymbol* gst_entry = NULL;
+                        if(lst_entry == NULL)
+                            gst_entry = get_variable_gst($<id_name>1);
+
+                        if(lst_entry == NULL && gst_entry == NULL){
                             fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
                             exit(1);
                         }
-                        tnode* id_node = make_leaf_node(val,st_entry->type,$<id_name>1,st_entry);
+                        VarType type = TYPE_INT;
+                        if(lst_entry != NULL){
+                            type = lst_entry->type;
+                        }
+                        else{
+                            type = gst_entry->type;
+                        }
+                        tnode* id_node = make_leaf_node(val, type, $<id_name>1, gst_entry, lst_entry);
+
                         if(id_node->type != TYPE_INT_PTR && id_node->type != TYPE_CHAR_PTR){
                             fprintf(stderr,"Error: Type Mismatch in array\n");
                             exit(1);
                         }
 
                         // type of the node is the type of the ID node
-                        $<ast_node>$ = make_array_node(variable_type(id_node->type), id_node, $<ast_node>2);
+                        $<ast_node>$ = make_array_node(variable_type(type), id_node, $<ast_node>2);
                     }
         
         |   '*' E   {
@@ -378,11 +421,13 @@ E   :   E '<' E     {
                         $<ast_node>$ = make_operator_node(type,NODE_DIV,$<ast_node>1,$<ast_node>3);
                     }
     |   E '-' E     {
-                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
+                        if((!is_pointer_type($<ast_node>1->type) && $<ast_node>1->type != TYPE_INT) || (!is_pointer_type($<ast_node>3->type) && $<ast_node>3->type != TYPE_INT )){
                             fprintf(stderr,"Error[-]: Type Mismatch\n");
                             exit(1);
                         }
                         VarType type = TYPE_INT;
+                        if(is_pointer_type($<ast_node>1->type))
+                            type = $<ast_node>1->type;
                         $<ast_node>$ = make_operator_node(type,NODE_SUB,$<ast_node>1,$<ast_node>3);
                     }
     |   '(' E ')'   {
@@ -451,6 +496,8 @@ int main(int argc, char* argv[]){
         perror("fopen");
         return 1;
     }
+    curr_lsymbol = NULL;
+    lst_binding = 1;
     code_gen_start(output_file);
     yyparse();
     return 1;

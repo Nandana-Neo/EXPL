@@ -55,6 +55,19 @@ Gsymbol* add_fn_to_symbol(char* name, VarType return_type, parameter* param_list
 Gsymbol* get_variable_gst(char* name);
 
 /**
+ * Function: get_variable_lst
+ * ------------------------
+ * 
+ * Input:
+ * - name : char*   // name of the variable
+ * 
+ * Output:
+ * - Lsymbol* node   // Symbol table entry of the variable
+ * Returns NULL if variable is not in the table
+ */
+Lsymbol* get_variable_lst(char* name, Lsymbol* lst);
+
+/**
  * Function: add_array_to_symbol
  * 
  * Adds the array node to the symbol tree along with moving the location to the array node
@@ -143,4 +156,14 @@ void free_lsymbol(Lsymbol* ls);
  * Adds the parameters in the param_ls into the local symbol table tb and also assigns corresponding binding
  */
 Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding);
+
+/**
+ * Function: lst_if_repeated
+ * --------------------------
+ * Returns non NULL pointer if there are repeated and conflicting entries in the lst
+ * else returns NULL
+ */
+Lsymbol* lst_if_repeated(Lsymbol* lst);
+
+void print_lsymbol();
 #endif

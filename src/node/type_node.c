@@ -1,5 +1,8 @@
 #include "type_node.h"
 
+Lsymbol* curr_lsymbol = NULL;
+int lst_binding = 1;
+
 VarType pointer_type(VarType type){
     switch(type){
         case TYPE_INT:
