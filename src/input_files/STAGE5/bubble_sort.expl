@@ -7,10 +7,11 @@ int BubbleSort(int first, int last)
   decl
     int output;
     str a,b;
-    int temp, a;
+    int temp;
   enddecl
   begin
     temp = first+last;
+    return a;
   end
 }
 

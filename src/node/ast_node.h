@@ -63,6 +63,7 @@ tnode* make_address_of_node(tnode* e);
 tnode* make_value_at_node(tnode* e);
 
 tnode* make_fn_node(char* name, tnode* arg);
+tnode* make_return_node(tnode* e);
 tnode* add_node_to_arglist(tnode* arg, tnode* node);
 
 /** Function: int compare_arg_param 

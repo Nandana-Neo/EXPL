@@ -123,6 +123,13 @@ tnode* make_fn_node(char* name, tnode* arg){
     return node;
 }
 
+tnode* make_return_node(tnode* e){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, e->type, NULL, NODE_RET, NULL, NULL, e, NULL, NULL, NULL);
+    return node;
+}
+
 void prefix(tnode* node){
     if(node == NULL){
         return;

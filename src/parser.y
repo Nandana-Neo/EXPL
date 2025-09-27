@@ -19,7 +19,7 @@
     Lsymbol* lsymbol_entry;   // local symbol table entry
     parameter* param_list;  // list of parameters for the fns
 }
-%token ID READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL P_BEGIN P_END;
+%token ID READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL P_BEGIN P_END RETURN_STMT;
 %token NUM_VAL STR_VAL;
 %token MAIN_DEF;
 %type<decl_type> Type;
@@ -208,6 +208,7 @@ Stmt        : InputStmt ';'     {   $<ast_node>$ = $<ast_node>1;    }
             | DoWhileStmt ';'   {   $<ast_node>$ = $<ast_node>1;    }
             | BreakStmt ';'     {   $<ast_node>$ = $<ast_node>1;    }
             | ContinueStmt ';'  {   $<ast_node>$ = $<ast_node>1;    }
+            | ReturnStmt ';'    {   $<ast_node>$ = $<ast_node>1;    }
             ;
 
 BreakStmt   : BREAK             {   $<ast_node>$ = make_break_node(); }
@@ -271,6 +272,10 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
                                                         $<ast_node>$ = create_tree(val,TYPE_NONE,NULL,NODE_DOWHILE,NULL,NULL,$<ast_node>2,NULL,$<ast_node>5,NULL);
                                                     }
 
+ReturnStmt  :   RETURN_STMT E                       {
+                                                        $<ast_node>$ = make_return_node($<ast_node>2);
+                                                    }
+            ;
 L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
                     node_val val;
                     val.int_val = 0;

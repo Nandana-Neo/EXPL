@@ -43,6 +43,7 @@
 "decl"      {   return DECL;    }
 "enddecl"   {   return ENDDECL; }
 "int main"  {   return MAIN_DEF;}
+"return"    {   return RETURN_STMT; }
 
 
 [a-zA-Z]+[0-9a-zA-Z_]*   {
