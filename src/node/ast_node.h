@@ -38,10 +38,10 @@ NodeType node_type(char* type);
  * Output:
  *  tnode * pointer to node
 */
-tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype, Gsymbol* gst_entry, tnode *l, tnode *m, tnode *r);
+tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype, Gsymbol* gst_entry, Lsymbol* lst_entry, tnode *l, tnode *m, tnode *r, tnode* nxt);
 
 /*Make a leaf tnode, can be NUM/STR node or ID node */
-tnode* make_leaf_node(node_val n, VarType type, char* varname, Gsymbol* gst_entry);
+tnode* make_leaf_node(node_val n, VarType type, char* varname, Gsymbol* gst_entry, Lsymbol* lst_entry);
 
 /*Create operator node*/
 tnode* make_operator_node(VarType type, NodeType nodetype, tnode* l, tnode* r);
@@ -61,6 +61,17 @@ tnode* make_index_node(tnode* l, tnode* r);
 // unary operator
 tnode* make_address_of_node(tnode* e);
 tnode* make_value_at_node(tnode* e);
+
+tnode* make_fn_node(char* name, tnode* arg);
+tnode* add_node_to_arglist(tnode* arg, tnode* node);
+
+/** Function: int compare_arg_param 
+ * ---------------------------------
+ * Returns 1 if type of arg_ls and param_ls are matching
+ * Else 0
+ * 
+*/
+int compare_arg_param(tnode* arg_ls, parameter* param_ls);
 
 /* Fress the tree node and all its children and values allocated */
 void free_tree(tnode* n);

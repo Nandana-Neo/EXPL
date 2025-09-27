@@ -100,7 +100,7 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                         }
             ;
 ///////////////////////////////////////////////////////////////////////////////////////
-LDeclBlock      : DECL LDeclList ENDDECL    {   $<lsymbol_entry>$ = $<lsymbol_entry>2; }
+LDeclBlock      : DECL LDeclList ENDDECL    {   $<lsymbol_entry>$ = curr_lsymbol = $<lsymbol_entry>2; }
                 | DECL ENDDECL              {   $<lsymbol_entry>$ = NULL; }
                 ;
 
@@ -138,7 +138,7 @@ FDefBlock   :   FDefBlock FDef  {}
             ;
 
 FDef        :   Type ID '(' ParamList ')' '{' LDeclBlock Body '}'   {
-                                                                        Gsymbol* fn_decl = get_variable($<id_name>2);
+                                                                        Gsymbol* fn_decl = get_variable_gst($<id_name>2);
                                                                         if(fn_decl->type != $1){
                                                                             fprintf(stderr,"Mismatching function definition:%s",$<id_name>2);
                                                                             exit(1);
@@ -151,7 +151,8 @@ FDef        :   Type ID '(' ParamList ')' '{' LDeclBlock Body '}'   {
                                                                         lsymbol_table_entry = add_paramlist_lsymbol($4, lsymbol_table_entry);
                                                                         free_param_list($4);
                                                                         fprintf(output_file,"_F%d:\n",fn_decl->flabel);
-
+                                                                        curr_lsymbol = lsymbol_table_entry;
+                                                                        
                                                                         code_gen($<ast_node>8, fp, -1, -1); // TODO
                                                                         fprintf("RET\n");
                                                                         free_tree($<ast_node>8);
@@ -254,7 +255,7 @@ DoWhileStmt : DO Slist WHILE '(' E ')'              {
 L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
                     node_val val;
                     val.int_val = 0;
-                    Gsymbol * st_entry = get_variable($<id_name>1);
+                    Gsymbol * st_entry = get_variable_gst($<id_name>1);
                     if(st_entry==NULL){
                         fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
                         exit(1);
@@ -265,7 +266,7 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
         |   ID INDEX{   // array
                         node_val val;
                         val.int_val = 0;
-                        Gsymbol * st_entry = get_variable($<id_name>1);
+                        Gsymbol * st_entry = get_variable_gst($<id_name>1);
                         if(st_entry==NULL){
                             fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
                             exit(1);
@@ -398,12 +399,25 @@ E   :   E '<' E     {
     |   '&' E       {
                         $<ast_node>$ = make_address_of_node($<ast_node>2);
                     }
-    |   ID '(' ArgList ')'  {}
+    |   ID '(' ArgList ')'  {   
+                                                                        
+                                Gsymbol* fn_decl = get_variable_gst($<id_name>1);
+                                if(fn_decl == NULL){
+                                    printf("No declaration found for fn: %s",$<id_name>1);
+                                    exit(1);
+                                }
+                                if(compare_arg_param($<ast_node>3, fn_decl->param_list) == 0){
+                                    printf("Mismatching type for function:%s",$<id_name>1);
+                                    exit(1);
+                                }
+                                // Type checking on ArgList
+                                $<ast_node>$ = make_fn_node($<id_name>1, $<ast_node>3);
+                            }
     ;
 
-ArgList :   ArgList ',' E   {}
-        |   E               {}
-        |   /* empty */     {}
+ArgList :   ArgList ',' E   {   $<ast_node>$ = add_node_to_arglist($<ast_node>1, $<ast_node>3); }
+        |   E               {   $<ast_node>$ = $<ast_node>1; }
+        |   /* empty */     {   $<ast_node>$ = NULL ;}
         ;
 
 INDEX   :   INDEX '[' E ']' {

@@ -42,7 +42,7 @@ Gsymbol* add_variable_to_symbol(char* name, int size, VarType type);
 Gsymbol* add_fn_to_symbol(char* name, VarType return_type, parameter* param_list);
 
 /**
- * Function: get_variable
+ * Function: get_variable_gst
  * ------------------------
  * 
  * Input:
@@ -52,7 +52,7 @@ Gsymbol* add_fn_to_symbol(char* name, VarType return_type, parameter* param_list
  * - Gsymbol node   // Symbol table entry of the variable
  * Returns NULL if variable is not in the table
  */
-Gsymbol* get_variable(char* name);
+Gsymbol* get_variable_gst(char* name);
 
 /**
  * Function: add_array_to_symbol
@@ -69,6 +69,9 @@ array* add_array_node(array* arr,int val);
 
 parameter* create_parameter(char* name, VarType type);
 
+/**
+ * Adds curr to then end of lst
+ */
 parameter* add_parameter_to_list(parameter* lst, parameter* curr);
 
 /**Function: int same_parameter_list(parameter* l1, parameter* l2)
@@ -87,12 +90,6 @@ int same_parameter_list(parameter* l1, parameter* l2);
 void free_param_list(parameter* ls);
 
 /******************LOCAL SYMBOL TABLE********************/ 
-typedef struct Lsymbol{
-    char* varname;
-    VarType type;
-    int binding;
-    struct Lsymbol* next;
-} Lsymbol;
 
 /**
  * Function: create_lsymbol()
@@ -145,5 +142,5 @@ void free_lsymbol(Lsymbol* ls);
  * Output:
  * Adds the parameters in the param_ls into the local symbol table tb and also assigns corresponding binding
  */
-Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb);
+Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding);
 #endif

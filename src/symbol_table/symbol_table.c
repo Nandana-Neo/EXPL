@@ -8,7 +8,7 @@ int get_f_label(){
 }
 
 Gsymbol* add_variable_to_symbol(char* name, int size, VarType type){
-    if(get_variable(name)!=NULL){
+    if(get_variable_gst(name)!=NULL){
         fprintf(stderr,"Variable redeclared:%s\n",name);
         exit(1);
     }
@@ -28,7 +28,7 @@ Gsymbol* add_variable_to_symbol(char* name, int size, VarType type){
 }
 
 Gsymbol* add_fn_to_symbol(char* name, VarType return_type, parameter* param_list){
-    if(get_variable(name)!=NULL){
+    if(get_variable_gst(name)!=NULL){
         fprintf(stderr,"Variable redeclared:%s\n",name);
         exit(1);
     }
@@ -46,7 +46,7 @@ Gsymbol* add_fn_to_symbol(char* name, VarType return_type, parameter* param_list
     return node;
 }
 
-Gsymbol* get_variable(char* name){
+Gsymbol* get_variable_gst(char* name){
     Gsymbol* node = symbol_table;
     while(node!=NULL){
         if(strcmp(node->name,name)==0){
@@ -102,9 +102,13 @@ parameter* create_parameter(char* name, VarType type){
 }
 
 parameter* add_parameter_to_list(parameter* lst, parameter* curr){
-    //add to head of list
-    curr->next = lst;
-    return curr;
+    //add to end of list
+    if(lst == NULL)
+        return curr;
+    if(curr == NULL)
+        return lst;
+    lst->next = add_parameter_to_list(lst->next, curr);
+    return lst;
 }
 
 
@@ -132,6 +136,7 @@ void free_param_list(parameter* ls){
 }
 
 /***********************Local Symbol Table Fns*********************/ 
+
 Lsymbol* create_lsymbol(char* varname, VarType type, int binding, Lsymbol* next){
     Lsymbol* node = (Lsymbol*)malloc(sizeof(Lsymbol));
     node->varname = strdup(varname);
@@ -191,14 +196,10 @@ void free_lsymbol(Lsymbol* ls){
 }
 
 
-Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb){
+Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding){
     if(param_ls == NULL)
         return tb;
-    Lsymbol* curr = add_paramlist_lsymbol(param_ls->next, tb);
-    int logical_addr = -3;
-    if(curr != tb){ // not first argument
-        logical_addr = curr->binding-1;
-    }
-    curr = create_lsymbol(param_ls->name, param_ls->type, logical_addr, curr);
-    return curr;
+    tb = add_paramlist_lsymbol(param_ls->next, tb, binding-1);
+    tb = create_lsymbol(param_ls->name, param_ls->type, binding, tb);
+    return tb;
 }

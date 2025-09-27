@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 
+// Current pointer to local symbol table
+extern Lsymbol* curr_lsymbol;
+
 typedef enum {
     TYPE_NONE = -1,   // not ID node
     TYPE_INT  = 0,
@@ -16,6 +19,7 @@ typedef enum {
 typedef enum {
     NODE_LEAF,
     NODE_CONN,
+    NODE_FN,    // for fn call
     NODE_ARR,   // for array
     NODE_INDEX, // for index of array
     NODE_ADDR_OF,    // for ptr = &a
@@ -67,7 +71,9 @@ typedef struct tnode{
     char* varname;   // name of a variable for ID nodes
     NodeType nodetype;   // information about non-leaf nodes - read/write/connector/+/* etc.
     struct Gsymbol* gst_entry;     // pointer to GST entry for global variables and functions
-    struct tnode *left, *middle, *right; //left and right branches
+    struct Lsymbol* lst_entry;      // pointer to LST entry for local variables and functions
+    struct tnode *left, *middle, *right; //left, middle and right branches
+    struct tnode* next;     // points to the arguments given into the function
 } tnode;
 
 /**
@@ -107,6 +113,17 @@ typedef struct loc_and_val{
     int val;    // reg no holding the val -> -1 if no register
     int loc;    // reg no holding the location -> -1 if no register
 } loc_and_val;
+
+/**
+ * Local Symbol Table
+ */
+typedef struct Lsymbol{
+    char* varname;
+    VarType type;
+    int binding;
+    struct Lsymbol* next;
+} Lsymbol;
+
 
 /**
  * Function: pointer_type

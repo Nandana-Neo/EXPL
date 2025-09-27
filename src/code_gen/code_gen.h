@@ -7,9 +7,6 @@
 #include "../node/ast_node.h"
 #include "../symbol_table/symbol_table.h"
 
-// Current pointer to local symbol table
-extern Lsymbol* curr_lsymbol;
-
 /**
  * Function: get_reg
  * -----------------
