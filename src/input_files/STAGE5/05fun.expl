@@ -1,6 +1,5 @@
 decl
- int fun(int x);
- int a;
+ int fun(int x), a;
 enddecl
 
 int fun(int x)

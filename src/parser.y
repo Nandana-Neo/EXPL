@@ -118,6 +118,7 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
 ///////////////////////////////////////////////////////////////////////////////////////
 LDeclBlock      : DECL LDeclList ENDDECL    {   curr_lsymbol = $$ = connect_lsymbol(curr_lsymbol, $2);    }
                 | DECL ENDDECL              {   $$ = curr_lsymbol; }
+                | /*empty*/                 {   $$ = curr_lsymbol; }
                 ;
 
 LDeclList   : LDeclList LDecl     {     $$ = connect_lsymbol($1,$2);   }
@@ -488,17 +489,17 @@ E   :   E '<' E     {
                         $<ast_node>$ = make_address_of_node($<ast_node>2);
                     }
     |   ID '(' ArgList ')'  {   
-                                printf("\n\n[DEBUG]Fn Call:%s\n",$<id_name>1);                                        
+                                // printf("\n\n[DEBUG]Fn Call:%s\n",$<id_name>1);                                        
                                 Gsymbol* fn_decl = get_variable_gst($<id_name>1);
                                 if(fn_decl == NULL){
                                     printf("No declaration found for fn: %s",$<id_name>1);
                                     exit(1);
                                 }
 
-                                printf("[DEBUG]: PARAMLIST:\n");
-                                print_param_list(fn_decl->param_list); // DEBUG
-                                printf("[DEBUG]: ARGLIST:\n");
-                                print_arg_ls($<ast_node>3);             // DEBUG
+                                // printf("[DEBUG]: PARAMLIST:\n");
+                                // print_param_list(fn_decl->param_list); // DEBUG
+                                // printf("[DEBUG]: ARGLIST:\n");
+                                // print_arg_ls($<ast_node>3);             // DEBUG
 
                                 if(compare_arg_param($<ast_node>3, fn_decl->param_list) == 0){
                                     printf("Mismatching type for function:%s\n",$<id_name>1);
