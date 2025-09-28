@@ -74,6 +74,8 @@ tnode* add_node_to_arglist(tnode* arg, tnode* node);
 */
 int compare_arg_param(tnode* arg_ls, parameter* param_ls);
 
+void print_arg_ls(tnode* node);
+
 /* Fress the tree node and all its children and values allocated */
 void free_tree(tnode* n);
 #endif

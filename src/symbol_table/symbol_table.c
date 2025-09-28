@@ -139,10 +139,17 @@ int same_parameter_list(parameter* l1, parameter* l2){
     return 1;
 }
 
+void print_param_list(parameter* ls){
+    if(ls==NULL)
+        return;
+    printf("Param-%s-%d\n",ls->name,ls->type);
+    print_param_list(ls->next);
+}
+
 void free_param_list(parameter* ls){
     if(ls == NULL)
         return;
-    free(ls->next);
+    free_param_list(ls->next);
     free(ls->name);
 }
 

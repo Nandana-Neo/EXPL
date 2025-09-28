@@ -29,20 +29,19 @@ tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype,
         curr->val.int_val = 0;
     curr->gst_entry = gst_entry;
     curr->lst_entry = lst_entry;
-    if(nodetype == NODE_LEAF){
-        // leaf node
-        curr->varname = varname;
-        curr->nodetype = NODE_LEAF;
-        curr->left = curr->right = NULL;
-        return curr;
-    }
-    //else
-    curr->varname = NULL; // only exception is a fn
     curr->left = l;
     curr->middle = m;
     curr->right = r;
     curr->next = nxt;
     curr->nodetype = nodetype;
+    if(nodetype == NODE_LEAF){
+        // leaf node
+        curr->varname = varname;
+        curr->nodetype = NODE_LEAF;
+        return curr;
+    }
+    //else
+    curr->varname = NULL; // only exception is a fn
     return curr;
 }
 
@@ -154,20 +153,40 @@ void prefix(tnode* node){
 
 
 tnode* add_node_to_arglist(tnode* arg, tnode* node){
-    if(arg == NULL)
+    if (arg == NULL) {
         return node;
-    if(node == NULL)
-        return arg;
-    arg->next = add_node_to_arglist(arg->next, node);
+    }
+    
+    if (arg == NULL) {
+        return node;
+    }
+
+    // Traverse to the last node
+    tnode* current = arg;
+    while (current->next != NULL) {
+        current = current->next;
+    }
+    
+    // Attach the new node
+    current->next = node;
     return arg;
 }
 
 int compare_arg_param(tnode* arg_ls, parameter* param_ls){
     if(arg_ls == NULL && param_ls == NULL)
         return 1;
+    if(arg_ls==NULL || param_ls == NULL)
+        return 0;
     if(arg_ls->type != param_ls->type)
         return 0;
     return compare_arg_param(arg_ls->next, param_ls->next);
+}
+
+void print_arg_ls(tnode* node){
+    if(node==NULL)
+        return;
+    printf("Arg:%d\n",node->type);
+    print_arg_ls(node->next);
 }
 
 void free_tree(tnode* n){

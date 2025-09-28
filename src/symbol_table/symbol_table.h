@@ -102,6 +102,9 @@ int same_parameter_list(parameter* l1, parameter* l2);
  */
 void free_param_list(parameter* ls);
 
+/*Prints param list*/
+void print_param_list(parameter* ls);
+
 /******************LOCAL SYMBOL TABLE********************/ 
 
 /**
