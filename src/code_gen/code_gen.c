@@ -2,10 +2,10 @@
 #include <string.h>
 
 static int regNum = 0;
-static int label = 0;
+static int label = 1;   // 0 used for end of main fn
 
 int get_reg(){
-    if(regNum==19){
+    if(regNum==20){
         fprintf(stderr, "\nOut of free registers\n");  //error
         exit(1);
     }
@@ -44,6 +44,106 @@ void free_gen_node(loc_and_val* node){
     if(node->val != -1)
         free_reg();
     free(node);
+}
+
+loc_and_val* code_gen_ARG(tnode* node, FILE* fp, int start_label, int end_label){
+    if(node == NULL)
+        return NULL;
+    code_gen_ARG(node->next, fp, start_label, end_label);   // last aeg to be pushed first
+    loc_and_val* gen_node = code_gen(node, fp, start_label, end_label);
+    fprintf(fp, "PUSH R%d\n", gen_node->val);
+    free_gen_node(gen_node);
+    return NULL;
+}
+
+loc_and_val* code_gen_FN_CALL(tnode* node, FILE* fp, int start_label, int end_label){
+    int i = 0;
+    while(i<regNum){
+        fprintf(fp, "PUSH R%d\n", i);
+        i++;
+    }
+    regNum = 0; // reset registers
+
+    code_gen_ARG(node->left, fp, start_label, end_label);
+    fprintf(fp, "PUSH R0\n");   // empty space for return register
+    fprintf(fp, "CALL _F%d\n",node->gst_entry->f_label);
+
+    regNum = i; // re-assign registers
+    int return_reg = get_reg();
+    int dummy_reg = (return_reg!=0)? 0 : 1;
+
+    fprintf(fp,"POP R%d\n",return_reg);     //return value
+    tnode* curr = node->left;               // POP arglist
+    while(curr != NULL){
+        fprintf(fp,"POP R%d\n",dummy_reg);
+        curr = curr->next;
+    }
+
+    i--;
+    while(i>=0){
+        fprintf(fp, "POP R%d\n", i);
+        i--;
+    }
+    return create_gen_node(-1, return_reg);
+}
+
+void push_local_decl(Lsymbol* lst, FILE* fp){
+    if(lst == NULL)
+        return;
+    if(lst->binding > 0){    // local decl
+        fprintf(fp,"PUSH R0\n");
+    }
+    push_local_decl(lst->next, fp);
+}
+
+void pop_local_decl(Lsymbol* lst, FILE* fp){
+    if(lst == NULL)
+        return;
+    if(lst->binding > 0){    // local decl
+        int dummy_reg = get_reg();
+        fprintf(fp,"POP R%d\n",dummy_reg);
+        free_reg();
+    }
+    pop_local_decl(lst->next, fp);
+}
+
+void code_gen_fn_begin(FILE* fp){
+    // Push BP
+    fprintf(fp,"PUSH BP\n");
+    // Resassign BP to SP
+    fprintf(fp,"MOV BP, SP\n");
+    // Push space for local decl variables
+    push_local_decl(curr_lsymbol, fp);
+}
+
+void code_gen_fn_end(FILE* fp){
+    // Pop out local variables
+    pop_local_decl(curr_lsymbol, fp);
+    // Pop BP
+    fprintf(fp,"POP BP\n");
+    // RET instr
+    fprintf(fp,"RET\n");
+}
+
+loc_and_val* code_gen_fn(tnode* node, FILE* fp){
+    code_gen_fn_begin(fp);
+    // code gen for fn
+    code_gen(node, fp, -1, -1);
+    // return statement - default
+    code_gen_fn_end(fp);
+    return NULL;
+}
+
+loc_and_val* code_gen_RET(tnode* node, FILE* fp, int start_label, int end_label){
+    loc_and_val* e_reg = code_gen(node->left, fp, start_label, end_label);
+    int addr = get_reg();
+    fprintf(fp,"MOV R%d, BP\n",addr);
+    fprintf(fp,"SUB R%d, 2\n",addr);
+    fprintf(fp,"MOV [R%d], R%d\n", addr, e_reg->val);
+    free_reg();
+    free_gen_node(e_reg);
+    code_gen_fn_end(fp);
+    return create_gen_node(-1,-1);
 }
 
 loc_and_val* code_gen_ID(tnode* node, FILE* fp){
@@ -219,8 +319,9 @@ loc_and_val* code_gen_OP(tnode* node, FILE* fp){
 loc_and_val* code_gen_READ(tnode* node, FILE* fp){
     // only left node will be there and that will be variable name
     tnode* var_node = node->left;
-    Gsymbol* symbol_table_entry = node->left->gst_entry;
-    if(symbol_table_entry == NULL && !(node->left->nodetype==NODE_ARR || node->left->nodetype==NODE_VAL_AT)){
+    Lsymbol* lst_entry = node->left->lst_entry;
+    Gsymbol* gst_entry = node->left->gst_entry;
+    if(lst_entry == NULL && gst_entry == NULL && !(node->left->nodetype==NODE_ARR || node->left->nodetype==NODE_VAL_AT)){
         fprintf(stderr, "READ: Variable not declared:%s\n",var_node->varname);
         exit(1);
     }
@@ -231,10 +332,14 @@ loc_and_val* code_gen_READ(tnode* node, FILE* fp){
         location = l_gen_node->loc; // register number storing the location
     }
     else{
-        location = symbol_table_entry->binding; // actual location
-        int reg = get_reg();
-        fprintf(fp,"MOV R%d, %d\n", reg, location);
-        location = reg; // register storing the location
+        location = get_reg();
+        if(lst_entry!=NULL){
+            fprintf(fp,"MOV R%d, %d\n",location, lst_entry->binding);
+            fprintf(fp,"ADD R%d, BP\n", location);
+        }
+        else{
+            fprintf(fp,"MOV R%d, %d\n", location, gst_entry->binding);
+        }
         l_gen_node = create_gen_node(-1, location);
     }
     for(int i=0;i < l_gen_node->val; i++){ // the val has the register number that stores the return value
@@ -445,6 +550,10 @@ loc_and_val* code_gen(tnode* node, FILE* fp, int start_label, int end_label){
             return code_gen_ADDR_OF(node, fp);
         case NODE_VAL_AT:
             return code_gen_VAL_AT(node, fp);
+        case NODE_FN:
+            return code_gen_FN_CALL(node, fp, start_label, end_label);
+        case NODE_RET:
+            return code_gen_RET(node, fp, start_label, end_label);
         default:
             return code_gen_OP(node, fp);
     }
@@ -459,6 +568,7 @@ void code_gen_SP_init(FILE* fp){
 }
 
 void code_gen_final(FILE* fp){
+    fprintf(fp,"_L0:\n");
     fprintf(fp,"MOV R0,\"Exit\"\n");
     fprintf(fp,"PUSH R0\n");
     fprintf(fp,"PUSH R0\n");

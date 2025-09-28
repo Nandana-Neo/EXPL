@@ -1,7 +1,7 @@
 #include "symbol_table.h"
 
 int SP = 4096;
-static int f_label = 0;
+static int f_label = 1;
 
 int get_f_label(){
     return f_label++;

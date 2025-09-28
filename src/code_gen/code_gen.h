@@ -54,6 +54,59 @@ int get_label();
 */
 loc_and_val* code_gen(tnode* node, FILE * fp, int start_label, int end_label);
 
+/**Function: code_gen_ARG
+ * --------------------------
+ * Generate code for the arguments to a function as well as push the value of the argument into the stack
+ */
+loc_and_val* code_gen_ARG(tnode* node, FILE* fp, int start_label, int end_label);
+
+/**Function: code_gen_FN_CALL
+ * -------------------------------
+ * Generate code for a caller fn node
+ */
+loc_and_val* code_gen_FN_CALL(tnode* node, FILE* fp, int start_label, int end_label);
+
+/**Function: push_local_decl 
+ * --------------------------
+ * Generates code to push the local declarations in the lst specified into the stack
+ * Checks by binding>0
+*/
+void push_local_decl(Lsymbol* lst, FILE* fp);
+
+/**Function: pop_local_decl 
+ * --------------------------
+ * Generates code to pop the local declarations in the lst specified into the stack
+ * Checks by binding>0
+*/
+void pop_local_decl(Lsymbol* lst, FILE* fp);
+
+/**
+ * Function: code_gen_fn_begin 
+ * ------------------------------
+ * Generates code to push BP, update BP to SP and push local decl
+ */
+void code_gen_fn_begin(FILE* fp);
+
+/**
+ * Function: code_gen_fn_end
+ * ---------------------------
+ * Generates code to pop local decl, pop BP and RET
+ */
+void code_gen_fn_end(FILE* fp);
+
+/**Function: code_gen_fn
+ * ---------------------
+ * Generates code for the function from callee side
+ */
+loc_and_val* code_gen_fn(tnode* node, FILE* fp);
+
+/**
+ * Function: code_gen_RET
+ * -------------------------
+ * Generates code for a return exp node
+ */
+loc_and_val* code_gen_RET(tnode* node, FILE* fp, int start_label, int end_label);
+
 /**
  * Function : code_gen_ID
  * ----------------------

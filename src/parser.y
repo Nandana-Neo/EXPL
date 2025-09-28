@@ -29,9 +29,14 @@
 %left '+' '-';
 %left '*' '/' '%';
 %%
-Program     :   GDeclBlock FDefBlock MainBlock  {}
-            |   GDeclBlock MainBlock            {}
-            |   MainBlock                       {}
+Program     :   GDeclBlock FDefBlock MainBlock  {   
+                                                    // evaluate($<ast_node>3);
+                                                    exit(0);
+                                                }
+            |   GDeclBlock MainBlock            {      
+                                                    // evaluate($<ast_node>3);
+                                                    exit(0);
+                                                }
             ;
 
 /* Program     : GDeclBlock P_BEGIN Slist P_END   {
@@ -49,8 +54,16 @@ Program     :   GDeclBlock FDefBlock MainBlock  {}
             ; */
 
 
-GDeclBlock  :   DECL GDeclList ENDDECL  {}
-            |   DECL ENDDECL            {}
+GDeclBlock  :   DECL GDeclList ENDDECL  {   
+                                            code_gen_SP_init(output_file);
+                                            fprintf(output_file, "JMP _F0\n");
+                                        }
+            |   DECL ENDDECL            {   code_gen_SP_init(output_file);
+                                            fprintf(output_file, "JMP _F0\n");
+                                        }
+            |   /*empty*/               {   code_gen_SP_init(output_file);
+                                            fprintf(output_file, "JMP _F0\n");
+                                        }
             ;
 
 GDeclList   :   GDeclList GDecl {}
@@ -164,10 +177,11 @@ FDef        :   Type ID ParamListBracs '{' LDeclBlock Body '}'   {
                                                                             exit(1);
                                                                         }
                                                                         free_param_list($3);
-                                                                        fprintf(output_file,"_F%d:\n",fn_decl->f_label);
                                                                         print_lsymbol();
-                                                                        // code_gen($<ast_node>6, fp, -1, -1); // TODO
-                                                                        fprintf(output_file,"RET\n");
+
+                                                                        fprintf(output_file,"_F%d:\n",fn_decl->f_label);
+
+                                                                        code_gen_fn($<ast_node>6, output_file); // TODO
                                                                         free_tree($<ast_node>6);
                                                                         free_lsymbol(curr_lsymbol);
                                                                         curr_lsymbol = NULL;
@@ -175,7 +189,7 @@ FDef        :   Type ID ParamListBracs '{' LDeclBlock Body '}'   {
                                                                     }
             ;
 ParamListBracs  :   '(' ParamList ')'   {   
-                                            curr_lsymbol = add_paramlist_lsymbol($2, NULL,-1);
+                                            curr_lsymbol = add_paramlist_lsymbol($2, NULL,-3);
                                             $$ = $2;    
                                         }
                 ;
@@ -192,7 +206,31 @@ Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }
             |   /* empty */ {   $<ast_node>$ = NULL;    }
             ;
 ///////////////////////////////////////////////////////////////////////////////////////
-MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {}
+MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
+                                                                if(curr_lsymbol != $5){
+                                                                    fprintf(stderr,"ERROR in implementation of fn: main");
+                                                                    exit(1);
+                                                                }
+                                                                Lsymbol* repeated_node = lst_if_repeated(curr_lsymbol);
+                                                                if(repeated_node){
+                                                                    fprintf(stderr,"Variable redeclared:%s\n",repeated_node->varname);
+                                                                    exit(1);
+                                                                }
+                                                                print_lsymbol();
+
+                                                                fprintf(output_file, "_F0:\n");
+                                                                fprintf(output_file, "PUSH R0\n");  // return value for main
+                                                                fprintf(output_file, "MOV R0, _L0\n");  // Push return address 
+                                                                fprintf(output_file, "PUSH R0\n"); 
+                                                                code_gen_fn_begin(output_file);
+                                                                code_gen($<ast_node>6, output_file, -1, -1);
+                                                                code_gen_final(output_file);
+
+                                                                free_tree($<ast_node>6);
+                                                                free_lsymbol(curr_lsymbol);
+                                                                curr_lsymbol = NULL;
+                                                                lst_binding = 1;
+                                                            }
             ;
 
 Slist       : Slist Stmt    {   $<ast_node>$ = make_operator_node(TYPE_NONE,NODE_CONN,$<ast_node>1,$<ast_node>2);   }

@@ -26,7 +26,7 @@ done
 cd ..
 ./output -i $input -o $temp
 ./label_translator -i $temp -o $output
-rm temp.xsm
+# rm temp.xsm
 # rm output
 cd script
 # Run `./xsm -l library.lib -e src/output` in console in parent folder xsm_expl

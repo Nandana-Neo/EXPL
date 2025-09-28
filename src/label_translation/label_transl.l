@@ -8,8 +8,19 @@
     int lines = 2040; // Considering first 8 lines 2056-16;
 %}
 label   _L[0-9]+
+flabel  _F[0-9]+
 %%
 {label}:\n         { 
+                        if(label_transl_step==1){
+                            //no printing
+                        }
+                        else{
+                            int label_len = yyleng-2;   //remove last 2 chars
+                            char * label = strndup(yytext,label_len);
+                            create_label_node(label,lines);
+                        }
+                    }
+{flabel}:\n         { 
                         if(label_transl_step==1){
                             //no printing
                         }
@@ -32,6 +43,13 @@ label   _L[0-9]+
                             fprintf(output_file,"%c",*yytext);
                     }
 {label}             {   
+                        if(label_transl_step==1){
+                            int address = get_address(yytext);
+                            fprintf(output_file,"%d",address);
+                        }
+                    }
+
+{flabel}             {   
                         if(label_transl_step==1){
                             int address = get_address(yytext);
                             fprintf(output_file,"%d",address);

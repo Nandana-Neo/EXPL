@@ -1,0 +1,35 @@
+decl
+  int n,i,j,dup, Test(int first, int last);
+enddecl
+
+int Test(int first, int last)
+{
+  decl
+    int output;
+    int temp;
+  enddecl
+  begin
+    write("TEST");
+    temp = first+last;
+    if(temp > 10) then
+      write("HI");
+    endif;
+    return temp;
+    write("nope");
+  end
+}
+
+int main()
+{
+  decl
+    int first, r;
+  enddecl
+
+  begin
+    read(n);
+
+    r = Test(n,n+1);
+    write("MAIN");
+    write(r);
+  end
+}
