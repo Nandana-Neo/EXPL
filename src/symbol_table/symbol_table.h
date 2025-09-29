@@ -7,7 +7,7 @@
 #include "../node/type_node.h"
 
 // Stores the address to the symbol 
-static Gsymbol * symbol_table = NULL;
+extern Gsymbol * symbol_table;
 
 extern int SP;   // points to the free slot at top of stack
 

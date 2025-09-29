@@ -2,6 +2,7 @@
 
 int SP = 4096;
 static int f_label = 1;
+Gsymbol * symbol_table = NULL;
 
 int get_f_label(){
     return f_label++;

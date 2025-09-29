@@ -23,7 +23,7 @@
 %token NUM_VAL STR_VAL;
 %token MAIN_DEF;
 %token AND OR NOT;
-%type<decl_type> Type;
+%type<decl_type> Type PointerType;
 %type<param_list> Param ParamList ParamListBracs;
 %type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
 %nonassoc '<' '>' '=' ';' '&';
@@ -115,6 +115,12 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                             $<decl_node>$ = create_decl_node_fn($<id_name>1, TYPE_INT, $2);
                                             free($<id_name>1);
                                         }
+            |   '*' ID ParamListBracs       {   
+                                            free_lsymbol(curr_lsymbol);
+                                            curr_lsymbol = NULL;
+                                            $<decl_node>$ = create_decl_node_fn($<id_name>2, TYPE_INT_PTR, $3);
+                                            free($<id_name>2);
+                                        }
             ;
 ///////////////////////////////////////////////////////////////////////////////////////
 LDeclBlock      : DECL LDeclList ENDDECL    {   curr_lsymbol = $$ = connect_lsymbol(curr_lsymbol, $2);    }
@@ -127,6 +133,10 @@ LDeclList   : LDeclList LDecl     {     $$ = connect_lsymbol($1,$2);   }
             ;
 
 LDecl       : Type LIdList ';'  {   $$ = update_type_lsymbol_tb($2, $1); }
+            ;
+
+PointerType : Type '*'      {   $$ = pointer_type($1);  }
+            | Type          {   $$ = $1;  }
             ;
 
 Type        : INT           {   $$ = TYPE_INT; }
@@ -155,7 +165,7 @@ FDefBlock   :   FDefBlock FDef  {}
             |   FDef            {}
             ;
 
-FDef        :   Type ID ParamListBracs '{' LDeclBlock Body '}'   {
+FDef        :   PointerType ID ParamListBracs '{' LDeclBlock Body '}'   {
                                                                         Gsymbol* fn_decl = get_variable_gst($<id_name>2);
                                                                         if(fn_decl == NULL){
                                                                             fprintf(stderr,"ERROR: Function declaration not found:%s",$<id_name>2);
