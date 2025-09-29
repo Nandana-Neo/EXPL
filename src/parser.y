@@ -202,6 +202,7 @@ ParamList   :   ParamList ',' Param {   $$ = add_parameter_to_list($1, $3); }
             ;
 
 Param       :   Type ID     { $$ = create_parameter($<id_name>2, $1); }
+            |   Type '*' ID    { $$ = create_parameter($<id_name>3, pointer_type($1)); }
             ;
 
 Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }
@@ -249,6 +250,7 @@ Stmt        : InputStmt ';'     {   $<ast_node>$ = $<ast_node>1;    }
             | BreakStmt ';'     {   $<ast_node>$ = $<ast_node>1;    }
             | ContinueStmt ';'  {   $<ast_node>$ = $<ast_node>1;    }
             | ReturnStmt ';'    {   $<ast_node>$ = $<ast_node>1;    }
+            | FnCall ';'    {   $<ast_node>$ = $<ast_node>1;    }
             ;
 
 BreakStmt   : BREAK             {   $<ast_node>$ = make_break_node(); }
@@ -510,27 +512,31 @@ E   :   E '<' E     {
     |   '&' E       {
                         $<ast_node>$ = make_address_of_node($<ast_node>2);
                     }
-    |   ID '(' ArgList ')'  {   
-                                // printf("\n\n[DEBUG]Fn Call:%s\n",$<id_name>1);                                        
-                                Gsymbol* fn_decl = get_variable_gst($<id_name>1);
-                                if(fn_decl == NULL){
-                                    printf("No declaration found for fn: %s",$<id_name>1);
-                                    exit(1);
-                                }
-
-                                // printf("[DEBUG]: PARAMLIST:\n");
-                                // print_param_list(fn_decl->param_list); // DEBUG
-                                // printf("[DEBUG]: ARGLIST:\n");
-                                // print_arg_ls($<ast_node>3);             // DEBUG
-
-                                if(compare_arg_param($<ast_node>3, fn_decl->param_list) == 0){
-                                    printf("Mismatching type for function:%s\n",$<id_name>1);
-                                    exit(1);
-                                }
-                                // Type checking on ArgList
-                                $<ast_node>$ = make_fn_node($<id_name>1, $<ast_node>3);
-                            }
+    | FnCall        {   $<ast_node>$ = $<ast_node>1; }
     ;
+
+FnCall  :   ID '(' ArgList ')'  {   
+                                    // printf("\n\n[DEBUG]Fn Call:%s\n",$<id_name>1);                                        
+                                    Gsymbol* fn_decl = get_variable_gst($<id_name>1);
+                                    if(fn_decl == NULL){
+                                        printf("No declaration found for fn: %s",$<id_name>1);
+                                        exit(1);
+                                    }
+
+                                    // printf("[DEBUG]: PARAMLIST:\n");
+                                    // print_param_list(fn_decl->param_list); // DEBUG
+                                    // printf("[DEBUG]: ARGLIST:\n");
+                                    // print_arg_ls($<ast_node>3);             // DEBUG
+
+                                    if(compare_arg_param($<ast_node>3, fn_decl->param_list) == 0){
+                                        printf("Mismatching type for function:%s\n",$<id_name>1);
+                                        exit(1);
+                                    }
+                                    // Type checking on ArgList
+                                    $<ast_node>$ = make_fn_node($<id_name>1, $<ast_node>3);
+                                }
+        ;
+
 
 ArgList :   ArgList ',' E   {   $<ast_node>$ = add_node_to_arglist($<ast_node>1, $<ast_node>3);
                                 tnode* node = $<ast_node>$; }

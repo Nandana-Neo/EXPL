@@ -246,9 +246,14 @@ loc_and_val* code_gen_ADDR_OF(tnode* node, FILE* fp){
         fprintf(stderr, "ERROR: Reference to unknown type\n");
         exit(1);
     }
-    int loc = node->left->gst_entry->binding;
     int reg1 = get_reg();
-    fprintf(fp, "MOV R%d, %d\n",reg1,loc);
+    if(node->left->lst_entry){
+        fprintf(fp, "MOV R%d, %d\n", reg1, node->left->lst_entry->binding);
+        fprintf(fp, "ADD R%d, BP\n", reg1);
+    }
+    else{
+        fprintf(fp, "MOV R%d, %d\n",reg1,node->left->gst_entry->binding);
+    }
     loc_and_val* ans = create_gen_node(-1, reg1);
     return ans;
 }

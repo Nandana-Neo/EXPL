@@ -1,0 +1,52 @@
+decl
+    int fun(int* x), a;
+    int swap(int* p, int* q);
+enddecl
+
+int fun(int* x)
+{
+    begin
+        *x = (*x) + (*x);
+        return 0;
+    end
+}
+
+int swap(int* p, int* q)
+{
+    decl
+        int t;
+    enddecl
+    begin
+        t = *p;
+        *p = *q;
+        *q = t;
+        return 1;
+    end
+}
+
+int main()
+{
+    decl
+        int b,c;
+        int *p, *q;
+    enddecl
+
+    begin
+        read(b);
+        p = &b;
+        c = fun(p);
+        write(c);
+        write(b);
+        write("SWAP");
+        b = 10;
+        c = 100;
+        p = &b;
+        q = &c;
+        swap(p,q);
+        write(b);
+        write(c);
+        return 0;
+
+    end
+}
+
