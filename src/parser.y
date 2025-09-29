@@ -22,6 +22,7 @@
 %token ID READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL P_BEGIN P_END RETURN_STMT;
 %token NUM_VAL STR_VAL;
 %token MAIN_DEF;
+%token AND OR NOT;
 %type<decl_type> Type;
 %type<param_list> Param ParamList ParamListBracs;
 %type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
@@ -401,32 +402,53 @@ E   :   E '<' E     {
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_GT,$<ast_node>1,$<ast_node>3);
                     }
     |   E '<''=' E  {
-                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>4->type != TYPE_INT){
                             fprintf(stderr,"Error[<=]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_LE,$<ast_node>1,$<ast_node>4);
                     }
     |   E '>''=' E  {
-                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>4->type != TYPE_INT){
                             fprintf(stderr,"Error[>=]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_GE,$<ast_node>1,$<ast_node>4);
                     }
     |   E '!''=' E  {
-                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>4->type != TYPE_INT){
                             fprintf(stderr,"Error[!=]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_NE,$<ast_node>1,$<ast_node>4);
                     }
     |   E '=''=' E  {
-                        if($<ast_node>1->type != TYPE_INT || $<ast_node>3->type != TYPE_INT){
+                        if($<ast_node>1->type != TYPE_INT || $<ast_node>4->type != TYPE_INT){
                             fprintf(stderr,"Error[==]: Type Mismatch\n");
                             exit(1);
                         }
                         $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_EQ,$<ast_node>1,$<ast_node>4);
+                    }
+    |   E AND E     {
+                        if($<ast_node>1->type != TYPE_BOOL || $<ast_node>3->type != TYPE_BOOL){
+                            fprintf(stderr,"Error[AND]: Type Mismatch\n");
+                            exit(1);
+                        }
+                        $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_AND,$<ast_node>1,$<ast_node>3);
+                    }
+    |   E OR E      {
+                        if($<ast_node>1->type != TYPE_BOOL || $<ast_node>3->type != TYPE_BOOL){
+                            fprintf(stderr,"Error[OR]: Type Mismatch\n");
+                            exit(1);
+                        }
+                        $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_OR,$<ast_node>1,$<ast_node>3);
+                    }
+    |   NOT E       {
+                        if($<ast_node>2->type != TYPE_BOOL){
+                            fprintf(stderr,"Error[NOT]: Type Mismatch\n");
+                            exit(1);
+                        }
+                        $<ast_node>$ = make_operator_node(TYPE_BOOL,NODE_NOT,$<ast_node>2,NULL);
                     }
     |   E '+' E     {
                         if((!is_pointer_type($<ast_node>1->type) && $<ast_node>1->type != TYPE_INT) || (!is_pointer_type($<ast_node>3->type) && $<ast_node>3->type != TYPE_INT )){

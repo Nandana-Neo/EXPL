@@ -300,6 +300,21 @@ loc_and_val* code_gen_OP(tnode* node, FILE* fp){
         case NODE_NE:
             fprintf(fp, "NE R%d, R%d\n",i->val,j->val);
             break;
+        case NODE_AND:
+            fprintf(fp, "ADD R%d, R%d\n",i->val,j->val);
+            fprintf(fp, "MOV R%d, 2\n", j->val);
+            fprintf(fp, "EQ R%d, R%d\n", i->val, j->val);
+            break;
+        case NODE_OR:
+            fprintf(fp, "ADD R%d, R%d\n",i->val,j->val);
+            fprintf(fp, "MOV R%d, 1\n", j->val);
+            fprintf(fp, "GE R%d, R%d\n", i->val, j->val);
+            break;
+        case NODE_NOT:
+            // right is NULL, so j is NULL
+            fprintf(fp, "ADD R%d, 1\n", i->val);
+            fprintf(fp, "MOD R%d, 2\n", i->val);
+            break;
         case NODE_ASGN:
             fprintf(fp, "MOV [R%d], R%d\n",i->loc,j->val);
             break;

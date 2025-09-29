@@ -44,7 +44,9 @@
 "enddecl"   {   return ENDDECL; }
 "int main"  {   return MAIN_DEF;}
 "return"    {   return RETURN_STMT; }
-
+"AND"       {   return AND; }
+"OR"        {   return OR;  }
+"NOT"       {   return NOT; }
 
 [a-zA-Z]+[0-9a-zA-Z_]*   {
     char* variable = strdup(yytext);
