@@ -2,16 +2,7 @@
 #define NODE_TYPE_HEADER_FILE
 
 #include <stdio.h>
-
-typedef enum {
-    TYPE_NONE = -1,   // not ID node
-    TYPE_INT  = 0,
-    TYPE_CHAR = 1,
-    TYPE_BOOL = 2,
-    TYPE_STR = 3,
-    TYPE_INT_PTR,
-    TYPE_CHAR_PTR
-} VarType;
+#include "../type_table/type_table.h"
 
 typedef enum {
     NODE_LEAF,
@@ -69,6 +60,8 @@ typedef union node_val {
 typedef struct tnode{
     node_val val;    // value of a number for NUM nodes
     VarType type;   // type of variable
+    TypeTable* type_entry;  // type of variable
+    int pointer;        // 1 if pointer type
     char* varname;   // name of a variable for ID nodes
     NodeType nodetype;   // information about non-leaf nodes - read/write/connector/+/* etc.
     struct Gsymbol* gst_entry;     // pointer to GST entry for global variables and functions
@@ -91,6 +84,7 @@ typedef struct array{
 typedef struct Param{
     char* name;
     VarType type;
+    TypeTable* type_entry;
     struct Param* next;
 } parameter;    
 
@@ -100,6 +94,7 @@ typedef struct Param{
 typedef struct Gsymbol {
     char* name;             // name of the variable
     VarType type;           // type of the variable - INT or STR
+    TypeTable* type_entry;
     SymbolType symbol_type; // type of the entity - ARR or FN or VARIABLE
     array* size_array;       // stores the length of multidim array
     int size;               // size of the type of the variable - default(1)
@@ -121,6 +116,7 @@ typedef struct loc_and_val{
 typedef struct Lsymbol{
     char* varname;
     VarType type;
+    TypeTable* type_entry;
     int binding;
     struct Lsymbol* next;
 } Lsymbol;
