@@ -2,6 +2,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include "node/type_node.h"
+    #include "type_table/type_table.h"
     #include "node/ast_node.h"
     #include "node/decl_node.h"
     #include "code_gen/code_gen.h"
@@ -18,24 +19,25 @@
     struct decl_node * decl_node;  // for declarations section to register variables to symbol table
     Lsymbol* lsymbol_entry;   // local symbol table entry
     parameter* param_list;  // list of parameters for the fns
+    //// TYPE DEF
+    char* type_name;    // for type name in struct fields
+    FieldList* field_list;  // list of fields for type def
 }
 %token ID READ WRITE IF THEN ELSE ENDIF WHILE DO ENDWHILE BREAK CONTINUE REPEAT UNTIL INT STR DECL ENDDECL P_BEGIN P_END RETURN_STMT;
 %token NUM_VAL STR_VAL;
 %token MAIN_DEF;
 %token AND OR NOT;
+%token TYPE ENDTYPE;
 %type<decl_type> Type PointerType;
 %type<param_list> Param ParamList ParamListBracs;
 %type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
+%type<type_name> TypeName;
+%type<field_list> FieldDecl FieldDeclList;
 %nonassoc '<' '>' '=' ';' '&';
 %left '+' '-';
 %left '*' '/' '%';
 %%
-Program     :   GDeclBlock FDefBlock MainBlock  {   
-                                                    // evaluate($<ast_node>3);
-                                                    exit(0);
-                                                }
-            |   GDeclBlock MainBlock            {      
-                                                    // evaluate($<ast_node>3);
+Program     :   TypeDefBlock GDeclBlock FDefBlock MainBlock  {   
                                                     exit(0);
                                                 }
             ;
@@ -55,6 +57,41 @@ Program     :   GDeclBlock FDefBlock MainBlock  {
             ; */
 
 
+TypeDefBlock  : TYPE TypeDefList ENDTYPE    { // type table creation completed
+                                                print_type_table();
+                                            }
+              |
+              ;
+
+TypeDefList   : TypeDefList TypeDef
+              | TypeDef
+              ;
+
+TypeDef       : ID '{' FieldDeclList '}'    {   TypeTable* struct_def = type_table_add($<id_name>1,1,$3);
+                                                // return error if any non declared type is used in the fields here
+                                                update_field_types(struct_def); 
+                                                free($<id_name>1);
+                                            }
+              ;
+
+FieldDeclList : FieldDeclList FieldDecl     {   $$ = field_list_join($1, $2);   }
+              | FieldDecl                   {   $$ = $1;  }
+              ;
+
+FieldDecl    : TypeName ID ';'  {   TypeTable* temp_type = type_table_get($1);  
+                                    if(temp_type == NULL){
+                                        // could be the currently being parsed struct type
+                                        temp_type = create_temp_type($1);
+                                    }
+                                    $$ = field_create($<id_name>2, temp_type);
+                                }
+
+TypeName     : INT      {   $$ = strdup("int");     }
+             | STR      {   $$ = strdup("char");    } 
+             | ID       {   $$ = $<id_name>1;    }//TypeName for user-defined types
+             ;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 GDeclBlock  :   DECL GDeclList ENDDECL  {   
                                             code_gen_SP_init(output_file);
                                             fprintf(output_file, "JMP _F0\n");
@@ -163,6 +200,7 @@ LIdDecl     : ID                {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 FDefBlock   :   FDefBlock FDef  {}
             |   FDef            {}
+            |
             ;
 
 FDef        :   PointerType ID ParamListBracs '{' LDeclBlock Body '}'   {
@@ -587,6 +625,11 @@ int main(int argc, char* argv[]){
     }
     curr_lsymbol = NULL;
     lst_binding = 1;
+
+    // initialise type table entries
+    type_table = NULL;
+    type_table_init();
+
     code_gen_start(output_file);
     yyparse();
     return 1;

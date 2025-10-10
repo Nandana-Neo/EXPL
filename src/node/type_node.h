@@ -61,7 +61,6 @@ typedef struct tnode{
     node_val val;    // value of a number for NUM nodes
     VarType type;   // type of variable
     TypeTable* type_entry;  // type of variable
-    int pointer;        // 1 if pointer type
     char* varname;   // name of a variable for ID nodes
     NodeType nodetype;   // information about non-leaf nodes - read/write/connector/+/* etc.
     struct Gsymbol* gst_entry;     // pointer to GST entry for global variables and functions
