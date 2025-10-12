@@ -22,7 +22,7 @@ TypeTable* type_table_add_primitive(VarType type){
             break;
         case TYPE_STR:
         case TYPE_CHAR:
-            name = strdup("char");
+            name = strdup("str");
             break;
         case TYPE_BOOL:
             name = strdup("bool");
@@ -34,7 +34,7 @@ TypeTable* type_table_add_primitive(VarType type){
             name = strdup("int_p");
             break;
         case TYPE_CHAR_PTR:
-            name = strdup("char_p");
+            name = strdup("str_p");
             break;
         case TYPE_NULL:
             name = strdup("null");
@@ -56,7 +56,7 @@ TypeTable* type_table_get(char* name){
     return NULL;
 }
 
-TypeTable* create_temp_type(char* name){
+TypeTable* create_temp_type_table(char* name){
     if(type_table_get(name) != NULL){
         return type_table_get(name);
     }
@@ -85,7 +85,7 @@ void update_field_types(TypeTable* type){
     while(f){
         TypeTable* t = type_table_get(f->type->name);
         if(t == NULL){
-            fprintf(stderr, "Type Error: Undeclared type used:%s\n",f->name);
+            fprintf(stderr, "Type Error: Undeclared type used:%s\n",f->type->name);
             exit(1);
         }
         if(t!=f->type){
@@ -150,6 +150,7 @@ FieldList* field_list_join(FieldList* f1, FieldList* f2){
     while(f_end->next != NULL)
         f_end = f_end->next;
     f_end->next = f2;
+    f2->field_id = f_end->field_id+1;
     return f1;
 }
 
@@ -165,7 +166,7 @@ int compare_type(Type* t1, Type* t2){
         return 0;
     TypeTable* tt1 = t1->type_table;
     TypeTable* tt2 = t2->type_table;
-    return compare_type_table(t1, t2);
+    return compare_type_table(t1->type_table, t2->type_table);
 }
 int compare_type_table(TypeTable* t1, TypeTable* t2){
     if(t1==t2)

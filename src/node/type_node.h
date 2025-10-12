@@ -83,7 +83,7 @@ typedef struct array{
 typedef struct Param{
     char* name;
     VarType type;
-    TypeTable* type_entry;
+    Type* type_entryy;
     struct Param* next;
 } parameter;    
 
@@ -92,8 +92,8 @@ typedef struct Param{
  */
 typedef struct Gsymbol {
     char* name;             // name of the variable
-    VarType type;           // type of the variable - INT or STR
-    TypeTable* type_entry;
+    Type* type_entryy;
+    VarType type;
     SymbolType symbol_type; // type of the entity - ARR or FN or VARIABLE
     array* size_array;       // stores the length of multidim array
     int size;               // size of the type of the variable - default(1)
@@ -114,8 +114,8 @@ typedef struct loc_and_val{
  */
 typedef struct Lsymbol{
     char* varname;
+    Type* type_entryy;
     VarType type;
-    TypeTable* type_entry;
     int binding;
     struct Lsymbol* next;
 } Lsymbol;

@@ -1,0 +1,23 @@
+type
+  bst{
+  int a;
+  bst left;
+  bst right;
+  }
+  List
+  {
+    int data;
+    List next;
+  }
+endtype
+
+decl
+  List * head;
+  bst root;
+enddecl
+
+
+int main()
+{
+  
+}

@@ -47,6 +47,8 @@
 "AND"       {   return AND; }
 "OR"        {   return OR;  }
 "NOT"       {   return NOT; }
+"type"      {   return TYPE;    }
+"endtype"   {   return ENDTYPE; }
 
 [a-zA-Z]+[0-9a-zA-Z_]*   {
     char* variable = strdup(yytext);

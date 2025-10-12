@@ -1,4 +1,5 @@
 %{
+    #define YYERROR_CALL(msg) yyerror();
     #include <stdio.h>
     #include <stdlib.h>
     #include "node/type_node.h"
@@ -15,7 +16,7 @@
 {
     tnode * ast_node;   // for creating the tree node for code gen
     char * id_name;   // for getting the variable name for symbol tree creation
-    int decl_type;      // for getting the type of the variable while declaration
+    Type* decl_type;      // for getting the type of the variable while declaration
     struct decl_node * decl_node;  // for declarations section to register variables to symbol table
     Lsymbol* lsymbol_entry;   // local symbol table entry
     parameter* param_list;  // list of parameters for the fns
@@ -40,21 +41,6 @@
 Program     :   TypeDefBlock GDeclBlock FDefBlock MainBlock  {   
                                                     exit(0);
                                                 }
-            ;
-
-/* Program     : GDeclBlock P_BEGIN Slist P_END   {
-                                    FILE * fp = output_file;
-                                    code_gen_SP_init(fp);
-                                    code_gen($<ast_node>3, fp, -1, -1);
-                                    code_gen_final(fp);
-                                    // evaluate($<ast_node>3);
-                                    exit(0);
-                                }
-            | P_BEGIN P_END     {   
-                                fprintf(stdout,"Empty program");
-                                exit(0);
-                            }
-            ; */
 
 
 TypeDefBlock  : TYPE TypeDefList ENDTYPE    { // type table creation completed
@@ -81,18 +67,19 @@ FieldDeclList : FieldDeclList FieldDecl     {   $$ = field_list_join($1, $2);   
 FieldDecl    : TypeName ID ';'  {   TypeTable* temp_type = type_table_get($1);  
                                     if(temp_type == NULL){
                                         // could be the currently being parsed struct type
-                                        temp_type = create_temp_type($1);
+                                        temp_type = create_temp_type_table($1);
                                     }
                                     $$ = field_create($<id_name>2, temp_type);
                                 }
 
 TypeName     : INT      {   $$ = strdup("int");     }
-             | STR      {   $$ = strdup("char");    } 
-             | ID       {   $$ = $<id_name>1;    }//TypeName for user-defined types
+             | STR      {   $$ = strdup("str");    } 
+             | ID       {   $$ = $<id_name>1;       }//TypeName for user-defined types
              ;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 GDeclBlock  :   DECL GDeclList ENDDECL  {   
+                                            print_st();
                                             code_gen_SP_init(output_file);
                                             fprintf(output_file, "JMP _F0\n");
                                         }
@@ -108,7 +95,9 @@ GDeclList   :   GDeclList GDecl {}
             |   GDecl           {}
             ;
 
-GDecl       :   Type GIdList ';'    {   update_type_decl($<decl_node>2, $1);   }
+GDecl       :   Type GIdList ';'    {   update_type_decl($<decl_node>2, $1);   
+                                        free($1);
+                                    }
             ;
 
 GIdList     :   GIdList ',' GIdDecl     {   $<decl_node>$ = add_to_list($<decl_node>1, $<decl_node>3); }
@@ -121,7 +110,9 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                                     int sz = ast_node->val.int_val;
                                                     free(ast_node);
                                                     array* arr_sz = add_array_node(NULL, sz);
-                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, TYPE_INT, arr_sz, output_file);
+                                                    Type * dummy_type = create_type(type_table_get("int"), 0);
+                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, output_file);
+                                                    free(dummy_type);
                                                     free($<id_name>1);
                                                 }
             | ID '[' NUM_VAL ']' '[' NUM_VAL ']'{
@@ -135,27 +126,38 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                                     array* arr_sz = add_array_node(NULL, sz1);
                                                     arr_sz = add_array_node(arr_sz, sz2);
                                                     
-                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, TYPE_INT, arr_sz, output_file);
+                                                    Type * dummy_type = create_type(type_table_get("int"), 0);
+                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, output_file);
+                                                    free(dummy_type);
                                                     free($<id_name>1);
                                                 }
 
-            | ID                {   $<decl_node>$ = create_decl_node($<id_name>1,1,TYPE_INT);
+            | ID                {   
+                                    Type * dummy_type = create_type(type_table_get("int"), 0);
+                                    $<decl_node>$ = create_decl_node($<id_name>1,1,dummy_type);
+                                    free(dummy_type);
                                     free($<id_name>1);                      
                                 }
             | '*' ID            {   
-                                    $<decl_node>$ = create_decl_node($<id_name>2,1,TYPE_INT_PTR);
+                                    Type * dummy_type = create_type(type_table_get("int"), 1);
+                                    $<decl_node>$ = create_decl_node($<id_name>2,1,dummy_type);
+                                    free(dummy_type);
                                     free($<id_name>2);
                                 }
             |   ID ParamListBracs       {   
                                             free_lsymbol(curr_lsymbol);
                                             curr_lsymbol = NULL;
-                                            $<decl_node>$ = create_decl_node_fn($<id_name>1, TYPE_INT, $2);
+                                            Type * dummy_type = create_type(type_table_get("int"), 0);
+                                            $<decl_node>$ = create_decl_node_fn($<id_name>1, dummy_type, $2);
+                                            free(dummy_type);
                                             free($<id_name>1);
                                         }
-            |   '*' ID ParamListBracs       {   
+            |   '*' ID ParamListBracs   {   
                                             free_lsymbol(curr_lsymbol);
                                             curr_lsymbol = NULL;
-                                            $<decl_node>$ = create_decl_node_fn($<id_name>2, TYPE_INT_PTR, $3);
+                                            Type * dummy_type = create_type(type_table_get("int"), 1);
+                                            $<decl_node>$ = create_decl_node_fn($<id_name>2, dummy_type, $3);
+                                            free(dummy_type);
                                             free($<id_name>2);
                                         }
             ;
@@ -169,15 +171,36 @@ LDeclList   : LDeclList LDecl     {     $$ = connect_lsymbol($1,$2);   }
             | LDecl               {     $$ = $1;  }
             ;
 
-LDecl       : Type LIdList ';'  {   $$ = update_type_lsymbol_tb($2, $1); }
+LDecl       : Type LIdList ';'  {   $$ = update_type_lsymbol_tb($2, $1); 
+                                    free($1);          
+                                }
             ;
 
-PointerType : Type '*'      {   $$ = pointer_type($1);  }
+PointerType : Type '*'      {   $1->ptr = 1;  }
             | Type          {   $$ = $1;  }
             ;
 
-Type        : INT           {   $$ = TYPE_INT; }
-            | STR           {   $$ = TYPE_STR; }
+Type        : INT           {   TypeTable* type_table_entry = type_table_get("int");
+                                if(type_table_entry == NULL){
+                                    fprintf(stderr, "Undefined type used:int\n");
+                                    exit(1);
+                                }
+                                $$ = create_type(type_table_entry,0);
+                            }
+            | STR           {   TypeTable* type_table_entry = type_table_get("str");
+                                if(type_table_entry == NULL){
+                                    fprintf(stderr, "Undefined type used: str\n");
+                                    exit(1);
+                                }
+                                $$ = create_type(type_table_entry,0);
+                            }
+            | ID            {   TypeTable* type_table_entry = type_table_get($<id_name>1);
+                                if(type_table_entry == NULL){
+                                    fprintf(stderr, "Undefined type used:%s\n",$<id_name>1);
+                                    exit(1);
+                                }
+                                $$ = create_type(type_table_entry,0);
+                            }
             ;
 
 LIdList     : LIdList ',' LIdDecl   {   
@@ -189,11 +212,15 @@ LIdList     : LIdList ',' LIdDecl   {
             ;
 
 LIdDecl     : ID                {
-                                    $$ = create_lsymbol($<id_name>1,TYPE_INT,lst_binding++,NULL);
+                                    Type * dummy_type = create_type(type_table_get("int"), 0);
+                                    $$ = create_lsymbol($<id_name>1,dummy_type,lst_binding++,NULL);
+                                    free(dummy_type);
                                     free($<id_name>1);                      
                                 }
             | '*' ID            {   
-                                    $$ = create_lsymbol($<id_name>2,TYPE_INT_PTR,lst_binding++,NULL);
+                                    Type * dummy_type = create_type(type_table_get("int"), 1);
+                                    $$ = create_lsymbol($<id_name>2,dummy_type,lst_binding++,NULL);
+                                    free(dummy_type);
                                     free($<id_name>2);
                                 }
             ;
@@ -209,10 +236,11 @@ FDef        :   PointerType ID ParamListBracs '{' LDeclBlock Body '}'   {
                                                                             fprintf(stderr,"ERROR: Function declaration not found:%s",$<id_name>2);
                                                                             exit(1);
                                                                         }
-                                                                        if(fn_decl->type != $1){
+                                                                        if( compare_type(fn_decl->type_entryy, $1) == 0){
                                                                             fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
                                                                             exit(1);
                                                                         }
+                                                                        free($1);
                                                                         if(same_parameter_list(fn_decl->param_list,$3)!=1){
                                                                             fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
                                                                             exit(1);
@@ -249,8 +277,15 @@ ParamList   :   ParamList ',' Param {   $$ = add_parameter_to_list($1, $3); }
             |   /* empty */         {   $$ = NULL;  }
             ;
 
-Param       :   Type ID     { $$ = create_parameter($<id_name>2, $1); }
-            |   Type '*' ID    { $$ = create_parameter($<id_name>3, pointer_type($1)); }
+Param       :   Type ID         { 
+                                    $$ = create_parameter($<id_name>2, $1); 
+                                    free($1);
+                                }
+            |   Type '*' ID     { 
+                                    $1->ptr = 1;
+                                    $$ = create_parameter($<id_name>3, $1); 
+                                    free($1);
+                                }
             ;
 
 Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }

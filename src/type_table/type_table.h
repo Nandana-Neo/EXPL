@@ -64,13 +64,14 @@ TypeTable* type_table_get(char *name);
  * Creates temporary type table data structure node without connection to main type table
  * Used to check later on while parsing
  */ 
-TypeTable* create_temp_type(char* name);
+TypeTable* create_temp_type_table(char* name);
 
 /**
  * Creates a type table entry for the (user defined) type of 'name' with given 'fields' and returns the pointer to the type table entry. 
  * The field list must specify the field index, type and name of each field. 
  * 
  * Returns NULL upon failure. This routine is invoked when the compiler encounters a type definition in the source program.
+ * - size is automatically computed according to field list length
  */ 
 TypeTable* type_table_add(char* name, int size, FieldList* fields);
 
