@@ -6,8 +6,8 @@ void type_table_init(){
     // primitives
     type_table_add_primitive(TYPE_INT);
     type_table_add_primitive(TYPE_STR);
-    type_table_add_primitive(TYPE_INT_PTR);
-    type_table_add_primitive(TYPE_CHAR_PTR);
+    // type_table_add_primitive(TYPE_INT_PTR);
+    // type_table_add_primitive(TYPE_CHAR_PTR);
     type_table_add_primitive(TYPE_BOOL);
     // special values
     type_table_add_primitive(TYPE_NULL);
@@ -188,4 +188,55 @@ void print_type_table(){
         printf("\n");
         curr = curr->next;
     }
+}
+////////////////////////////////////////////////////////////////////////
+// Primitive Type Checks
+int is_int(Type* type){
+    if(compare_type_table(type->type_table, type_table_get("int")) != 1)
+        return 0;
+    if(type->ptr != 0)
+        return 0;
+    return 1;
+}
+int is_int_ptr(Type* type){
+    if(compare_type_table(type->type_table, type_table_get("int")) != 1)
+        return 0;
+    if(type->ptr != 1)
+        return 0;
+    return 1;
+}
+
+int is_str(Type* type){
+    if(compare_type_table(type->type_table, type_table_get("str")) != 1)
+        return 0;
+    if(type->ptr != 0)
+        return 0;
+    return 1;
+}
+int is_str_ptr(Type* type){
+    if(compare_type_table(type->type_table, type_table_get("str")) != 1)
+        return 0;
+    if(type->ptr != 1)
+        return 0;
+    return 1;
+}
+
+int is_bool(Type* type){
+    if(compare_type_table(type->type_table, type_table_get("bool")) != 1)
+        return 0;
+    if(type->ptr != 0)
+        return 0;
+    return 1;
+}
+
+int is_null(Type* type){
+    if(compare_type_table(type->type_table, type_table_get("null")) != 1)
+        return 0;
+    return 1;
+}
+
+int is_void(Type* type){
+    if(compare_type_table(type->type_table, type_table_get("void")) != 1)
+        return 0;
+    return 1;
 }

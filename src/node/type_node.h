@@ -59,8 +59,7 @@ typedef union node_val {
  */
 typedef struct tnode{
     node_val val;    // value of a number for NUM nodes
-    VarType type;   // type of variable
-    TypeTable* type_entry;  // type of variable
+    Type* type_entryy;  // type of variable
     char* varname;   // name of a variable for ID nodes
     NodeType nodetype;   // information about non-leaf nodes - read/write/connector/+/* etc.
     struct Gsymbol* gst_entry;     // pointer to GST entry for global variables and functions
@@ -82,7 +81,6 @@ typedef struct array{
  */
 typedef struct Param{
     char* name;
-    VarType type;
     Type* type_entryy;
     struct Param* next;
 } parameter;    
@@ -93,7 +91,6 @@ typedef struct Param{
 typedef struct Gsymbol {
     char* name;             // name of the variable
     Type* type_entryy;
-    VarType type;
     SymbolType symbol_type; // type of the entity - ARR or FN or VARIABLE
     array* size_array;       // stores the length of multidim array
     int size;               // size of the type of the variable - default(1)
@@ -115,7 +112,6 @@ typedef struct loc_and_val{
 typedef struct Lsymbol{
     char* varname;
     Type* type_entryy;
-    VarType type;
     int binding;
     struct Lsymbol* next;
 } Lsymbol;

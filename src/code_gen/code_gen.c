@@ -173,9 +173,9 @@ loc_and_val* code_gen_ID(tnode* node, FILE* fp){
 
 loc_and_val* code_gen_VAL(tnode* node, FILE* fp){
     int i = get_reg();
-    if(node->type   == TYPE_INT)
+    if(is_int(node->type_entryy))
         fprintf(fp,"MOV R%d, %d\n",i,node->val.int_val);
-    else if(node->type == TYPE_STR)
+    else if(is_str(node->type_entryy))
         //store first 16 chars into the reg
         fprintf(fp,"MOV R%d, %s\n",i,node->val.str_val);
     
@@ -325,7 +325,7 @@ loc_and_val* code_gen_OP(tnode* node, FILE* fp){
             break;
     }
     free_gen_node(j);
-    if(node->type == NODE_ASGN){
+    if(node->nodetype == NODE_ASGN){
         if(i->loc != -1)
             free_reg();
         if(i->val != -1)
@@ -608,7 +608,7 @@ int evaluate(tnode* node){
     switch(node->nodetype){
         case NODE_LEAF:
             if(node->varname == NULL){  // NUM/STR/CHAR
-                if(node->type == TYPE_INT)
+                if(is_int(node->type_entryy))
                     return node->val.int_val;   // NUM
                 else 
                     return 0;

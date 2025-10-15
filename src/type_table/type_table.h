@@ -135,4 +135,18 @@ int compare_type_table(TypeTable* t1, TypeTable* t2);
  */
 void print_type_table();
 
+/************************************************************************* */
+/*                         Primitive Comparison Fns                        */
+/************************************************************************* */
+int is_int(Type* type);
+int is_int_ptr(Type* type);
+
+int is_str(Type* type);
+int is_str_ptr(Type* type);
+
+int is_bool(Type* type);
+
+int is_null(Type* type);
+
+int is_void(Type* type);
 #endif
