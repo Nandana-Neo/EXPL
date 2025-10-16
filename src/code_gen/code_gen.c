@@ -527,6 +527,7 @@ loc_and_val* code_gen_CONTINUE(tnode* node, FILE* fp, int start_label){
 
 
 loc_and_val* code_gen(tnode* node, FILE* fp, int start_label, int end_label){
+    return NULL;
     if(node == NULL){
         return NULL;
     }

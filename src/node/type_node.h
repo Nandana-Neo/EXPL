@@ -11,6 +11,7 @@ typedef enum {
     NODE_RET,   // return node to fn call
     NODE_ARR,   // for array
     NODE_INDEX, // for index of array
+    NODE_MEMBER_OF,  // for id.id
     NODE_ADDR_OF,    // for ptr = &a
     NODE_VAL_AT,    // for *ptr
     NODE_ADD,   // "+"

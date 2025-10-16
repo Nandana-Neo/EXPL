@@ -64,6 +64,9 @@ tnode* make_index_node(tnode* l, tnode* r);
 tnode* make_address_of_node(tnode* e);
 tnode* make_value_at_node(tnode* e);
 
+// represents parent.child with type given (is type of child)
+tnode* make_member_of_node(tnode* parent, Type* type, tnode* child);
+
 tnode* make_fn_node(char* name, tnode* arg);
 tnode* make_return_node(tnode* e);
 tnode* add_node_to_arglist(tnode* arg, tnode* node);

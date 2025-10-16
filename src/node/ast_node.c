@@ -109,12 +109,20 @@ tnode* make_address_of_node(tnode* e){
     return node;
 }
 
+
 tnode* make_value_at_node(tnode* e){
     node_val val;
     val.int_val = 0;
     Type* type = create_type(e->type_entryy->type_table, 0);
     tnode* node = create_tree(val, type, NULL, NODE_VAL_AT, NULL, NULL, e, NULL, NULL, NULL);
     free(type);
+    return node;
+}
+
+tnode* make_member_of_node(tnode* parent, Type* type, tnode* child){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, type, NULL, NODE_MEMBER_OF, NULL, NULL, parent, NULL, child, NULL);
     return node;
 }
 

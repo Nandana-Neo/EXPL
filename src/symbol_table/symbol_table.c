@@ -246,11 +246,13 @@ Lsymbol* lst_if_repeated(Lsymbol* lst){
 
 void print_lsymbol(){
     Lsymbol* curr = curr_lsymbol;
+    printf("\nPrinting LST\n");
+    printf("---------------------------------\n");
     printf("|Name\t|Type\t|Binding\t|\n");
-    printf("----------------------------------------------------------\n");
+    printf("---------------------------------\n");
     while(curr!=NULL){
-        printf("|%s\t|%d\t|%d\t|\n",curr->varname,curr->type_entryy->type_table->name,curr->binding);
+        printf("|%s\t|%s\t|%d\t\t|\n",curr->varname,curr->type_entryy->type_table->name,curr->binding);
         curr = curr->next;
     }
-    printf("----------------------------------------------------------\n");
+    printf("---------------------------------\n");
 }

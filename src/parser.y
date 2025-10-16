@@ -37,6 +37,7 @@
 %nonassoc '<' '>' '=' ';' '&';
 %left '+' '-';
 %left '*' '/' '%';
+%left '.';
 %%
 Program     :   TypeDefBlock GDeclBlock FDefBlock MainBlock  {   
                                                     exit(0);
@@ -290,6 +291,7 @@ Param       :   Type ID         {
 
 Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }
             |   /* empty */ {   $<ast_node>$ = NULL;    }
+            |   P_BEGIN P_END   {   $<ast_node>$ = NULL;    }
             ;
 ///////////////////////////////////////////////////////////////////////////////////////
 MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
@@ -462,11 +464,68 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
                         }
                         $<ast_node>$ = make_value_at_node($<ast_node>2);
                     }
+        | Field     {   $<ast_node>$ = $<ast_node>1; }
         ;
 
+Field   :   Field  '.' ID   {
+
+                                if(!$<ast_node>1->type_entryy || !$<ast_node>1->type_entryy->type_table){
+                                    fprintf(stderr,"Error[.]: Type Error\n");
+                                    exit(1);
+                                }
+                                FieldList* field = field_list_get($<id_name>3, $<ast_node>1->type_entryy->type_table);
+                                if(field == NULL){
+                                    fprintf(stderr,"Error[.]: Field %s does not exist\n",$<id_name>3);
+                                    exit(1);
+                                }
+                                Type* type = create_type(field->type,0);
+                                node_val val;
+                                val.int_val = 0;
+                                tnode* r_node = make_leaf_node(val, type, $<id_name>3, NULL, NULL);
+                                $<ast_node>$ = make_member_of_node($<ast_node>1, type, r_node);
+                                free(type);
+                            }
+        |   ID '.' ID       {   
+                                node_val val;
+                                val.int_val = 0;
+                                Lsymbol* lst_entry = get_variable_lst($<id_name>1, curr_lsymbol);
+                                Type* type = NULL;
+                                Gsymbol* gst_entry = NULL;
+                                if(lst_entry == NULL){
+                                    gst_entry = get_variable_gst($<id_name>1);
+                                }
+
+                                if(lst_entry == NULL && gst_entry == NULL){
+                                    fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
+                                    exit(1);
+                                }
+                                if(lst_entry != NULL){
+                                    type = lst_entry->type_entryy;
+                                }
+                                else{
+                                    type = gst_entry->type_entryy;
+                                }
+                                tnode* l_node = make_leaf_node(val, type, $<id_name>1, gst_entry, lst_entry);
+                                
+                                if(!l_node->type_entryy || !l_node->type_entryy->type_table){
+                                    fprintf(stderr,"Error[.]: Type Error\n");
+                                    exit(1);
+                                }
+                                FieldList* field = field_list_get($<id_name>3, l_node->type_entryy->type_table);
+                                if(field == NULL){
+                                    fprintf(stderr,"Error[.]: Field %s does not exist\n",$<id_name>3);
+                                    exit(1);
+                                }
+                                type = create_type(field->type,0);
+                                val.int_val = 0;
+                                tnode* r_node = make_leaf_node(val, type, $<id_name>3, NULL, NULL);
+                                $<ast_node>$ = make_member_of_node(l_node, type, r_node);
+                                free(type);   
+                            }
+        ;
 
 AsgStmt     : L_VAL '=' E  {    
-                            if(compare_type($<ast_node>1->type_entryy, $<ast_node>3->type_entryy)==0){
+                            if(!compare_type($<ast_node>1->type_entryy, $<ast_node>3->type_entryy) && !is_null($<ast_node>3->type_entryy)){
                                 fprintf(stderr,"Error[=]: Type Mismatch\n");
                                 exit(1);
                             } 
