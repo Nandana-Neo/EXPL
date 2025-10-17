@@ -451,14 +451,14 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
                         }
                         tnode* id_node = make_leaf_node(val, type, $<id_name>1, gst_entry, lst_entry);
 
-                        // if(id_node->type_entryy->ptr != 1){
-                        //     fprintf(stderr,"Error: Type Mismatch in array\n");
-                        //     exit(1);
-                        // }
+                        if(id_node->type_entryy->ptr != 1){
+                            fprintf(stderr,"Error: Type Mismatch in array\n");
+                            exit(1);
+                        }
 
                         // type of the node is the type of the ID node
-                        type->ptr = 0;
                         $<ast_node>$ = make_array_node(type, id_node, $<ast_node>2);
+                        $<ast_node>$->type_entryy->ptr = 0;
                     }
         
         |   '*' E   {
@@ -547,14 +547,14 @@ Field   :   Field  '.' ID   {
                         }
                         tnode* id_node = make_leaf_node(val, type, $<id_name>1, gst_entry, lst_entry);
 
-                        // if(id_node->type_entryy->ptr != 1){
-                        //     fprintf(stderr,"Error: Type Mismatch in array\n");
-                        //     exit(1);
-                        // }
+                        if(id_node->type_entryy->ptr != 1){
+                            fprintf(stderr,"Error: Type Mismatch in array\n");
+                            exit(1);
+                        }
 
                         // type of the node is the type of the ID node
-                        type->ptr = 0;
                         tnode* l_node = make_array_node(type, id_node, $<ast_node>2);
+                        l_node->type_entryy->ptr = 0;
 
                         if(!l_node->type_entryy || !l_node->type_entryy->type_table){
                                     fprintf(stderr,"Error[.]: Type Error\n");
