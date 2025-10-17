@@ -248,6 +248,7 @@ loc_and_val* code_gen_ADDR_OF(tnode* node, FILE* fp);
 
 loc_and_val* code_gen_VAL_AT(tnode* node, FILE* fp);
 
+loc_and_val* code_gen_null_node(tnode* node, FILE* fp);
 loc_and_val* code_gen_MEMBER_OF(tnode* node, FILE* fp);
 loc_and_val* code_gen_initialize(tnode* node, FILE* fp);
 loc_and_val* code_gen_alloc(tnode* node, FILE* fp);

@@ -40,7 +40,8 @@ typedef enum {
     NODE_INITIALIZE,
     NODE_ALLOC,
     NODE_FREE,
-    NODE_CONTINUE
+    NODE_CONTINUE,
+    NODE_NULL
 } NodeType;
 
 typedef enum {

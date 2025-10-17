@@ -146,6 +146,13 @@ tnode* make_return_node(tnode* e){
     return node;
 }
 
+tnode* make_null_node() {
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type(type_table_get("null"),0);
+    tnode* node = create_tree(val, type, NULL, NODE_NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+}
+
 tnode* make_initialize_node(){
     node_val val;
     val.int_val = 0;
@@ -155,11 +162,11 @@ tnode* make_initialize_node(){
     return node;
 }
 
-tnode* make_alloc_node(tnode* sz){
+tnode* make_alloc_node(){
     node_val val;
     val.int_val = 0;
     Type* type = create_type(type_table_get("null"),0); // null pointer first
-    tnode* node = create_tree(val, type, NULL, NODE_ALLOC, NULL, NULL, sz, NULL, NULL, NULL);
+    tnode* node = create_tree(val, type, NULL, NODE_ALLOC, NULL, NULL, NULL, NULL, NULL, NULL);
     free(type);
     return node;
 }

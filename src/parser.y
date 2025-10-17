@@ -1,5 +1,5 @@
 %{
-    #define YYERROR_CALL(msg) yyerror();
+    // #define YYERROR_CALL(msg) yyerror();
     #include <stdio.h>
     #include <stdlib.h>
     #include "node/type_node.h"
@@ -30,6 +30,7 @@
 %token AND OR NOT;
 %token TYPE ENDTYPE;
 %token INITIALIZE ALLOC FREE;
+%token NULL_VAL;
 %type<decl_type> Type PointerType;
 %type<param_list> Param ParamList ParamListBracs;
 %type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
@@ -178,7 +179,8 @@ LDecl       : Type LIdList ';'  {   $$ = update_type_lsymbol_tb($2, $1);
                                 }
             ;
 
-PointerType : Type '*'      {   $1->ptr = 1;  }
+PointerType : Type '*'      {   $1->ptr = 1;
+                                $$ = $1;  }
             | Type          {   $$ = $1;  }
             ;
 
@@ -449,10 +451,10 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
                         }
                         tnode* id_node = make_leaf_node(val, type, $<id_name>1, gst_entry, lst_entry);
 
-                        if(id_node->type_entryy->ptr != 1){
-                            fprintf(stderr,"Error: Type Mismatch in array\n");
-                            exit(1);
-                        }
+                        // if(id_node->type_entryy->ptr != 1){
+                        //     fprintf(stderr,"Error: Type Mismatch in array\n");
+                        //     exit(1);
+                        // }
 
                         // type of the node is the type of the ID node
                         type->ptr = 0;
@@ -524,6 +526,51 @@ Field   :   Field  '.' ID   {
                                 $<ast_node>$ = make_member_of_node(l_node, type, r_node);
                                 free(type);   
                             }
+        |   ID INDEX '.' ID   {   // array
+                        node_val val;
+                        val.int_val = 0;
+                        Lsymbol* lst_entry = get_variable_lst($<id_name>1, curr_lsymbol);
+                        Gsymbol* gst_entry = NULL;
+                        if(lst_entry == NULL)
+                            gst_entry = get_variable_gst($<id_name>1);
+
+                        if(lst_entry == NULL && gst_entry == NULL){
+                            fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
+                            exit(1);
+                        }
+                        Type* type = NULL;
+                        if(lst_entry != NULL){
+                            type = lst_entry->type_entryy;
+                        }
+                        else{
+                            type = gst_entry->type_entryy;
+                        }
+                        tnode* id_node = make_leaf_node(val, type, $<id_name>1, gst_entry, lst_entry);
+
+                        // if(id_node->type_entryy->ptr != 1){
+                        //     fprintf(stderr,"Error: Type Mismatch in array\n");
+                        //     exit(1);
+                        // }
+
+                        // type of the node is the type of the ID node
+                        type->ptr = 0;
+                        tnode* l_node = make_array_node(type, id_node, $<ast_node>2);
+
+                        if(!l_node->type_entryy || !l_node->type_entryy->type_table){
+                                    fprintf(stderr,"Error[.]: Type Error\n");
+                                    exit(1);
+                        }
+                        FieldList* field = field_list_get($<id_name>4, l_node->type_entryy->type_table);
+                        if(field == NULL){
+                            fprintf(stderr,"Error[.]: Field %s does not exist\n",$<id_name>4);
+                            exit(1);
+                        }
+                        type = create_type(field->type,0);
+                        val.int_val = 0;
+                        tnode* r_node = make_leaf_node(val, type, $<id_name>4, NULL, NULL);
+                        $<ast_node>$ = make_member_of_node(l_node, type, r_node);
+                        free(type); 
+                    }
         ;
 
 AsgStmt     : L_VAL '=' E  {    
@@ -572,7 +619,7 @@ E   :   E '<' E     {
                         free(type);
                     }
     |   E '!''=' E  {
-                        if(!compare_type($<ast_node>1->type_entryy, $<ast_node>4->type_entryy) || !is_int($<ast_node>1->type_entryy)){
+                        if(!(is_null($<ast_node>1->type_entryy) || is_null($<ast_node>4->type_entryy)) && (!compare_type($<ast_node>1->type_entryy, $<ast_node>4->type_entryy) || !is_int($<ast_node>1->type_entryy))){
                             fprintf(stderr,"Error[!=]: Type Mismatch\n");
                             exit(1);
                         }
@@ -581,7 +628,7 @@ E   :   E '<' E     {
                         free(type);
                     }
     |   E '=''=' E  {
-                        if(!compare_type($<ast_node>1->type_entryy, $<ast_node>4->type_entryy) || !is_int($<ast_node>1->type_entryy)){
+                        if(!(is_null($<ast_node>1->type_entryy) || is_null($<ast_node>4->type_entryy)) && (!compare_type($<ast_node>1->type_entryy, $<ast_node>4->type_entryy) || !is_int($<ast_node>1->type_entryy))){
                             fprintf(stderr,"Error[==]: Type Mismatch\n");
                             exit(1);
                         }
@@ -630,7 +677,7 @@ E   :   E '<' E     {
                             type = create_type($<ast_node>1->type_entryy->type_table,$<ast_node>1->type_entryy->ptr);
                         else if($<ast_node>3->type_entryy && $<ast_node>3->type_entryy->ptr)
                             type = create_type($<ast_node>3->type_entryy->type_table,$<ast_node>3->type_entryy->ptr);
-                        if(type) // is NULL
+                        if(!type) // is NULL
                             type = create_type(type_table_get("int"), 0);
                         $<ast_node>$ = make_operator_node(type,NODE_ADD,$<ast_node>1,$<ast_node>3);
                         free(type);
@@ -690,6 +737,7 @@ E   :   E '<' E     {
                     }
     |   FnCall      {   $<ast_node>$ = $<ast_node>1; }
     |   MemFn       {   $<ast_node>$ = $<ast_node>1; }
+    | NULL_VAL      {   $<ast_node>$ = make_null_node(); }
     ;
 
 MemFn   :   INITIALIZE '('')'   {   $<ast_node>$ = make_initialize_node(); }
@@ -697,7 +745,10 @@ MemFn   :   INITIALIZE '('')'   {   $<ast_node>$ = make_initialize_node(); }
                                         printf("Error: Alloc() arg1 should be integer\n");
                                         exit(1);
                                     } 
-                                    $<ast_node>$ = make_alloc_node($<ast_node>3);
+                                    $<ast_node>$ = make_alloc_node();
+                                }
+        |   ALLOC '('  ')'      {
+                                    $<ast_node>$ = make_alloc_node();
                                 }
         |   FREE '(' E ')'      {   if(!is_int($<ast_node>3->type_entryy)){
                                         printf("Error: Free() arg1 should be integer\n");

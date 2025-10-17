@@ -134,7 +134,7 @@ int same_parameter_list(parameter* l1, parameter* l2){
     parameter* n1 = l1;
     parameter* n2 = l2;
     while(n1!=NULL && n2!=NULL){
-        if(n1->type_entryy && n2->type_entryy && compare_type(n1->type_entryy, n2->type_entryy) == 1)
+        if(!n1->type_entryy && !n2->type_entryy && compare_type(n1->type_entryy, n2->type_entryy) == 0)
             return 0;
         if(strcmp(n1->name,n2->name)!=0)
             return 0;

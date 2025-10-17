@@ -56,6 +56,7 @@
 "initialize"    {   return INITIALIZE;  }
 "alloc"     {   return ALLOC;   }
 "free"      {   return FREE;    }
+"null"      {   return NULL_VAL;    }
 
 [a-zA-Z]+[0-9a-zA-Z_]*   {
     char* variable = strdup(yytext);

@@ -299,35 +299,38 @@ loc_and_val* code_gen_initialize(tnode* node, FILE* fp){
     fprintf(fp, "POP R%d\n",dummy); // arg 2
     fprintf(fp, "POP R%d\n",dummy); // arg 1
     fprintf(fp, "POP R%d\n",dummy); // HeapSet
+
+    for(int i=reg_val-1; i>=0; i--){
+        fprintf(fp, "POP R%d\n", i);
+    }
     loc_and_val* registers = create_gen_node(-1, reg_val);
     return registers;
 }
 
 loc_and_val* code_gen_alloc(tnode* node, FILE* fp){
-    loc_and_val* sz = code_gen(node->left, fp, -1, -1);
-    if(sz->loc != -1){
-        free_reg();
-        sz->loc = -1;
-    }
-    for(int i=0; i<sz->val; i++){
+    loc_and_val* reg_val = create_gen_node(-1, get_reg());
+    for(int i=0; i<reg_val->val; i++){
         fprintf(fp, "PUSH R%d\n", i);
     }
     int dummy = 0;
-    if(sz->val==0)
+    if(reg_val->val==0)
         dummy = 1;
     fprintf(fp, "MOV R%d, \"Alloc\"\n", dummy);
     fprintf(fp, "PUSH R%d\n", dummy); // Alloc
-    fprintf(fp, "PUSH R%d\n", sz->val); // arg1
+    fprintf(fp, "PUSH R%d\n", dummy); // arg1
     fprintf(fp, "PUSH R%d\n", dummy); // arg2
     fprintf(fp, "PUSH R%d\n", dummy); // arg3
     fprintf(fp, "PUSH R%d\n", dummy); // return val
     fprintf(fp, "CALL 0\n");
-    fprintf(fp, "POP R%d\n",sz->val); // return val
+    fprintf(fp, "POP R%d\n",reg_val->val); // return val
     fprintf(fp, "POP R%d\n",dummy); // arg 3
     fprintf(fp, "POP R%d\n",dummy); // arg 2
     fprintf(fp, "POP R%d\n",dummy); // arg 1
     fprintf(fp, "POP R%d\n",dummy); // Alloc
-    return sz;
+    for(int i=reg_val->val-1; i>=0; i--){
+        fprintf(fp, "POP R%d\n", i);
+    }
+    return reg_val;
 }
 
 loc_and_val* code_gen_free(tnode* node, FILE* fp){
@@ -354,7 +357,16 @@ loc_and_val* code_gen_free(tnode* node, FILE* fp){
     fprintf(fp, "POP R%d\n",dummy); // arg 2
     fprintf(fp, "POP R%d\n",dummy); // arg 1
     fprintf(fp, "POP R%d\n",dummy); // Alloc
+    for(int i=addr->val-1; i>=0; i--){
+        fprintf(fp, "POP R%d\n", i);
+    }
     return addr;
+}
+
+loc_and_val* code_gen_null_node(tnode* node, FILE* fp){
+    int reg_val = get_reg();
+    fprintf(fp, "MOV R%d, \"null\"\n",reg_val);
+    return create_gen_node(-1, reg_val);
 }
 
 loc_and_val* code_gen_OP(tnode* node, FILE* fp){
@@ -671,6 +683,8 @@ loc_and_val* code_gen(tnode* node, FILE* fp, int start_label, int end_label){
             return code_gen_alloc(node, fp);
         case NODE_FREE:
             return code_gen_free(node, fp);
+        case NODE_NULL:
+            return code_gen_null_node(node, fp);
         default:
             return code_gen_OP(node, fp);
     }

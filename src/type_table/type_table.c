@@ -166,6 +166,8 @@ Type* create_type(TypeTable* type_table, int ptr){
 }
 
 int compare_type(Type* t1, Type* t2){
+    if(t1 == NULL || t2==NULL)
+        return 0;
     if(t1->ptr != t2->ptr)
         return 0;
     TypeTable* tt1 = t1->type_table;

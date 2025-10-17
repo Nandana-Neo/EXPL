@@ -25,11 +25,12 @@ int main()
     int j;
   enddecl
   begin
-    write("hi");
     initialize();
     head = alloc(2);
-    head.data = 24;
+    head.data = 10;
     j = head.data;
-    write(j);
+    root = alloc(3);
+    root.a = 4;
+    write(root.a + head.data);
   end
 }
