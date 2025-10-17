@@ -104,6 +104,10 @@ void update_type_size(TypeTable* type){
         f = f->next;
         cnt++;
     }
+    if(cnt>8){
+        printf("Error: User defined variables cannot have size more than 8\n");
+        exit(1);
+    }
     type->size = cnt;
 }
 

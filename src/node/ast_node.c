@@ -146,6 +146,33 @@ tnode* make_return_node(tnode* e){
     return node;
 }
 
+tnode* make_initialize_node(){
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type(type_table_get("int"), 0);
+    tnode* node = create_tree(val, type, NULL, NODE_INITIALIZE, NULL, NULL, NULL, NULL, NULL, NULL);
+    free(type);
+    return node;
+}
+
+tnode* make_alloc_node(tnode* sz){
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type(type_table_get("null"),0); // null pointer first
+    tnode* node = create_tree(val, type, NULL, NODE_ALLOC, NULL, NULL, sz, NULL, NULL, NULL);
+    free(type);
+    return node;
+}
+
+tnode* make_free_node(tnode* ptr){
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type(type_table_get("int"),0);
+    tnode* node = create_tree(val, type, NULL, NODE_FREE, NULL, NULL, ptr, NULL, NULL, NULL);
+    free(type);
+    return node;
+}
+
 void prefix(tnode* node){
     if(node == NULL){
         return;

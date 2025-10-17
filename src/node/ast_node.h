@@ -69,6 +69,10 @@ tnode* make_member_of_node(tnode* parent, Type* type, tnode* child);
 
 tnode* make_fn_node(char* name, tnode* arg);
 tnode* make_return_node(tnode* e);
+
+tnode* make_initialize_node();
+tnode* make_alloc_node(tnode* sz);
+tnode* make_free_node(tnode* ptr);
 tnode* add_node_to_arglist(tnode* arg, tnode* node);
 
 /** Function: int compare_arg_param 

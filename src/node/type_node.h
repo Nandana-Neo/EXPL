@@ -37,6 +37,9 @@ typedef enum {
     NODE_WRITE, 
     NODE_READ,
     NODE_BREAK,
+    NODE_INITIALIZE,
+    NODE_ALLOC,
+    NODE_FREE,
     NODE_CONTINUE
 } NodeType;
 

@@ -29,6 +29,7 @@
 %token MAIN_DEF;
 %token AND OR NOT;
 %token TYPE ENDTYPE;
+%token INITIALIZE ALLOC FREE;
 %type<decl_type> Type PointerType;
 %type<param_list> Param ParamList ParamListBracs;
 %type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
@@ -54,8 +55,8 @@ TypeDefList   : TypeDefList TypeDef
               | TypeDef
               ;
 
-TypeDef       : ID '{' FieldDeclList '}'    {   TypeTable* struct_def = type_table_add($<id_name>1,1,$3);
-                                                // return error if any non declared type is used in the fields here
+TypeDef       : ID '{' FieldDeclList '}'    {   TypeTable* struct_def = type_table_add($<id_name>1,1,$3); // throws error if field size > 8
+                                                // returns error if any non declared type is used in the fields here
                                                 update_field_types(struct_def); 
                                                 free($<id_name>1);
                                             }
@@ -336,6 +337,7 @@ Stmt        : InputStmt ';'     {   $<ast_node>$ = $<ast_node>1;    }
             | ContinueStmt ';'  {   $<ast_node>$ = $<ast_node>1;    }
             | ReturnStmt ';'    {   $<ast_node>$ = $<ast_node>1;    }
             | FnCall ';'    {   $<ast_node>$ = $<ast_node>1;    }
+            | E ';'         {   $<ast_node>$ = $<ast_node>1;    }
             ;
 
 BreakStmt   : BREAK             {   $<ast_node>$ = make_break_node(); }
@@ -687,7 +689,23 @@ E   :   E '<' E     {
                         $<ast_node>$ = make_address_of_node($<ast_node>2);
                     }
     |   FnCall      {   $<ast_node>$ = $<ast_node>1; }
+    |   MemFn       {   $<ast_node>$ = $<ast_node>1; }
     ;
+
+MemFn   :   INITIALIZE '('')'   {   $<ast_node>$ = make_initialize_node(); }
+        |   ALLOC '(' E ')'     {   if(!is_int($<ast_node>3->type_entryy)){
+                                        printf("Error: Alloc() arg1 should be integer\n");
+                                        exit(1);
+                                    } 
+                                    $<ast_node>$ = make_alloc_node($<ast_node>3);
+                                }
+        |   FREE '(' E ')'      {   if(!is_int($<ast_node>3->type_entryy)){
+                                        printf("Error: Free() arg1 should be integer\n");
+                                        exit(1);
+                                    } 
+                                    $<ast_node>$ = make_free_node($<ast_node>3);
+                                }
+        ;
 
 FnCall  :   ID '(' ArgList ')'  {   
                                     // printf("\n\n[DEBUG]Fn Call:%s\n",$<id_name>1);                                        

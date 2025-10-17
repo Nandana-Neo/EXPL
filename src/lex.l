@@ -53,6 +53,9 @@
 "NOT"       {   return NOT; }
 "type"      {   return TYPE;    }
 "endtype"   {   return ENDTYPE; }
+"initialize"    {   return INITIALIZE;  }
+"alloc"     {   return ALLOC;   }
+"free"      {   return FREE;    }
 
 [a-zA-Z]+[0-9a-zA-Z_]*   {
     char* variable = strdup(yytext);
