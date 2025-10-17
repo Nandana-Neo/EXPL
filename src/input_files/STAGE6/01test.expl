@@ -12,7 +12,7 @@ type
 endtype
 
 decl
-  List* head;
+  List head;
   int a;
   bst root;
   List hi(int a);
@@ -25,7 +25,11 @@ int main()
     int j;
   enddecl
   begin
-    head = &hi(root.left.right.a);
+    write("hi");
+    initialize();
+    head = alloc(2);
+    head.data = 24;
     j = head.data;
+    write(j);
   end
 }

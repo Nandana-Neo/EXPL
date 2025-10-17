@@ -261,7 +261,7 @@ FDef        :   PointerType ID ParamListBracs '{' LDeclBlock Body '}'   {
 
                                                                         fprintf(output_file,"_F%d:\n",fn_decl->f_label);
 
-                                                                        code_gen_fn($<ast_node>6, output_file); // TODO
+                                                                        code_gen_fn($<ast_node>6, output_file);
                                                                         free_tree($<ast_node>6);
                                                                         free_lsymbol(curr_lsymbol);
                                                                         curr_lsymbol = NULL;
