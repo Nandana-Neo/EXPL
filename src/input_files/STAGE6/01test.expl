@@ -1,0 +1,36 @@
+type
+  bst{
+  int a;
+  bst left;
+  bst right;
+  }
+  List
+  {
+    int data;
+    List next;
+  }
+endtype
+
+decl
+  List head;
+  int a;
+  bst root;
+  List hi(int a);
+enddecl
+
+
+int main()
+{
+  decl
+    int j;
+  enddecl
+  begin
+    initialize();
+    head = alloc(2);
+    head.data = 10;
+    j = head.data;
+    root = alloc(3);
+    root.a = 4;
+    write(root.a + head.data);
+  end
+}

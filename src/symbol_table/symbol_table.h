@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../node/type_node.h"
+#include "../type_table/type_table.h"
 
 // Stores the address to the symbol 
 extern Gsymbol * symbol_table;
@@ -21,13 +22,15 @@ int get_f_label();
  * 
  * Input: 
  * - name: char *    // name of the variable
- * - type: int       // type of the variable
+ * - type: Type*       // type of the variable
  * - size: int       // size allocated to var
  * 
  * Output:
  * - Gsymbol node   // symbol table entry of the variable assigned
+ * -------------------------------------------------------------------------------
+ * - Type is duplicated, so Type can be freed
  */
-Gsymbol* add_variable_to_symbol(char* name, int size, VarType type);
+Gsymbol* add_variable_to_symbol(char* name, int size, Type* type);
 
 /**
  * Function: add_fn
@@ -36,10 +39,12 @@ Gsymbol* add_variable_to_symbol(char* name, int size, VarType type);
  * 
  * Input:
  * - name: char *
- * - return_type: VarType
+ * - return_type: Type *
  * - param_list: parameter *
+ * ------------------------------------------------
+ * - Type is duplicated, so Type can be freed
  */
-Gsymbol* add_fn_to_symbol(char* name, VarType return_type, parameter* param_list);
+Gsymbol* add_fn_to_symbol(char* name, Type* return_type, parameter* param_list);
 
 /**
  * Function: get_variable_gst
@@ -72,7 +77,7 @@ Lsymbol* get_variable_lst(char* name, Lsymbol* lst);
  * 
  * Adds the array node to the symbol tree along with moving the location to the array node
  */
-Gsymbol* add_array_to_symbol(FILE* fp, char* varname,array* array_sz, VarType type, int sz);
+Gsymbol* add_array_to_symbol(FILE* fp, char* varname,array* array_sz, Type* type, int sz);
 
 void print_st();
 
@@ -80,7 +85,11 @@ void print_array_int(array * arr);
 
 array* add_array_node(array* arr,int val);
 
-parameter* create_parameter(char* name, VarType type);
+/**
+ * Creates parameter and also duplicates the type pointer.
+ * Type can be freed
+ */
+parameter* create_parameter(char* name, Type* type);
 
 /**
  * Adds curr to then end of lst
@@ -117,8 +126,9 @@ void print_param_list(parameter* ls);
  * - next: Lsymbol* -> give NULL for default
  * 
  * The varname is re-assigned. Hence, can free the varname outside the fn
+ * Type is duplicated, so Type can be freed
  */
-Lsymbol* create_lsymbol(char* varname, VarType type, int binding, Lsymbol* next);
+Lsymbol* create_lsymbol(char* varname, Type* type, int binding, Lsymbol* next);
 
 /**
  * Function: connect_lsymbol()
@@ -139,8 +149,9 @@ Lsymbol* connect_lsymbol(Lsymbol* lst1, Lsymbol* lst2);
  * - type: VarType
  * Output:
  * Updates the type of all the lst variables from default int or int_ptr to type or type_ptr
+ * The type of list is updated, type can be freed
  */
-Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, VarType type);
+Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type);
 
 /**
  * Function: free_lsymbol

@@ -8,14 +8,15 @@ int get_f_label(){
     return f_label++;
 }
 
-Gsymbol* add_variable_to_symbol(char* name, int size, VarType type){
+Gsymbol* add_variable_to_symbol(char* name, int size, Type* type){
     if(get_variable_gst(name)!=NULL){
         fprintf(stderr,"Variable redeclared:%s\n",name);
         exit(1);
     }
     Gsymbol* node = (Gsymbol*)malloc(sizeof(Gsymbol));
     node->name = strdup(name);
-    node->type = type;
+    // duplicate the type
+    node->type_entryy = create_type(type->type_table, type->ptr);
     node->size = size;
     node->binding = SP;
     SP+=size;
@@ -28,7 +29,7 @@ Gsymbol* add_variable_to_symbol(char* name, int size, VarType type){
     return node;
 }
 
-Gsymbol* add_fn_to_symbol(char* name, VarType return_type, parameter* param_list){
+Gsymbol* add_fn_to_symbol(char* name, Type* return_type, parameter* param_list){
     if(get_variable_gst(name)!=NULL){
         fprintf(stderr,"Variable redeclared:%s\n",name);
         exit(1);
@@ -37,7 +38,7 @@ Gsymbol* add_fn_to_symbol(char* name, VarType return_type, parameter* param_list
     node->name = strdup(name);
     node->symbol_type = SYMBOL_FN;
     node->param_list = param_list;
-    node->type = return_type;
+    node->type_entryy = create_type(return_type->type_table, return_type->ptr);
     node->f_label = get_f_label();
     node->binding = -1;
     node->size_array = NULL;
@@ -69,8 +70,8 @@ Lsymbol* get_variable_lst(char* name, Lsymbol* lst){
     return NULL;
 }
 
-Gsymbol* add_array_to_symbol(FILE* fp, char* varname,array* array_sz, VarType type, int sz){
-    type = pointer_type(type);
+Gsymbol* add_array_to_symbol(FILE* fp, char* varname,array* array_sz, Type* type, int sz){
+    type->ptr = 1;
     sz+=1;  // first mem stores the arr variable which points to the nxt location
     Gsymbol* node = add_variable_to_symbol(varname, sz, type);
     fprintf(fp,"MOV [%d],%d\n",node->binding,node->binding+1);
@@ -81,11 +82,16 @@ Gsymbol* add_array_to_symbol(FILE* fp, char* varname,array* array_sz, VarType ty
 
 void print_st(){
     Gsymbol * curr = symbol_table;
+    printf("Printing GST\n");
+    printf("--------------------------------------------------------------------\n");
+    printf("|Name\t\t|Size\t\t|Binding\t|Type-ptr\t|\n");
+    printf("-------------------------------------------------------------------\n");
     while(curr != NULL){
-        printf("%s-%d-%d\n",curr->name,curr->size,curr->binding);
+        printf("|%s\t\t|%d\t\t|%d\t\t|%s-%d\t\t|\n",curr->name,curr->size,curr->binding,curr->type_entryy->type_table->name, curr->type_entryy->ptr);
         print_array_int(curr->size_array);
         curr = curr->next;
     }
+    printf("--------------------------------------------------------------------\n\n");
 }
 
 void print_array_int(array * arr){
@@ -105,10 +111,10 @@ array* add_array_node(array* arr,int val){
     return node;
 }
 
-parameter* create_parameter(char* name, VarType type){
+parameter* create_parameter(char* name, Type* type){
     parameter* node = (parameter *)malloc(sizeof(parameter));
     node->name = name;
-    node->type = type;
+    node->type_entryy = create_type(type->type_table, type->ptr);
     node->next = NULL;
     return node;
 }
@@ -128,7 +134,7 @@ int same_parameter_list(parameter* l1, parameter* l2){
     parameter* n1 = l1;
     parameter* n2 = l2;
     while(n1!=NULL && n2!=NULL){
-        if(n1->type != n2->type)
+        if(!n1->type_entryy && !n2->type_entryy && compare_type(n1->type_entryy, n2->type_entryy) == 0)
             return 0;
         if(strcmp(n1->name,n2->name)!=0)
             return 0;
@@ -143,20 +149,23 @@ int same_parameter_list(parameter* l1, parameter* l2){
 void print_param_list(parameter* ls){
     if(ls==NULL)
         return;
-    printf("Param-%s-%d\n",ls->name,ls->type);
+    printf("Param-%s-%d-ptr%d\n",ls->name,ls->type_entryy->type_table->name, ls->type_entryy->ptr);
     print_param_list(ls->next);
 }
 
 void free_param_list(parameter* ls){
     if(ls == NULL)
         return;
+    if(ls->type_entryy)
+        free(ls->type_entryy);
     free_param_list(ls->next);
     free(ls->name);
+    free(ls);
 }
 
 /***********************Local Symbol Table Fns*********************/ 
 
-Lsymbol* create_lsymbol(char* varname, VarType type, int binding, Lsymbol* next){
+Lsymbol* create_lsymbol(char* varname, Type* type, int binding, Lsymbol* next){
     if(get_variable_lst(varname, curr_lsymbol) != NULL){
         fprintf(stderr,"Variable redeclared:%s\n",varname);
         exit(1);
@@ -164,7 +173,7 @@ Lsymbol* create_lsymbol(char* varname, VarType type, int binding, Lsymbol* next)
     // printf("[DEBUG] Lsymbol created:%s\n", varname);
     Lsymbol* node = (Lsymbol*)malloc(sizeof(Lsymbol));
     node->varname = strdup(varname);
-    node->type = type;
+    node->type_entryy = create_type(type->type_table, type->ptr);
     node->binding = binding;
     node->next = next;
     return node;
@@ -183,18 +192,11 @@ Lsymbol* connect_lsymbol(Lsymbol* lst1, Lsymbol* lst2){
     return lst1;
 }
 
-Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, VarType type){
+Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type){
     Lsymbol* curr = lst;
     while(curr!=NULL){
-        switch (curr->type){
-        case TYPE_INT:
-            curr->type = type;
-            break;
-        
-        case TYPE_INT_PTR:
-            curr->type = pointer_type(type);
-            break;      
-        }
+        curr->type_entryy->type_table = type->type_table;
+        curr->type_entryy->ptr = curr->type_entryy->ptr || type->ptr;
         curr = curr->next;
     }
     return lst;
@@ -215,6 +217,9 @@ void free_lsymbol(Lsymbol* ls){
     if(ls==NULL)
         return;
     free_lsymbol(ls->next);
+    if(ls->type_entryy){
+        free(ls->type_entryy);
+    }
     // printf("[DEBUG]:Lsymbol freed:%s\n",ls->varname);
     free(ls->varname);
     free(ls);
@@ -225,7 +230,7 @@ Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding){
     if(param_ls == NULL)
         return tb;
     tb = add_paramlist_lsymbol(param_ls->next, tb, binding-1);
-    tb = create_lsymbol(param_ls->name, param_ls->type, binding, tb);
+    tb = create_lsymbol(param_ls->name, param_ls->type_entryy, binding, tb);
     return tb;
 }
 
@@ -241,11 +246,13 @@ Lsymbol* lst_if_repeated(Lsymbol* lst){
 
 void print_lsymbol(){
     Lsymbol* curr = curr_lsymbol;
+    printf("\nPrinting LST\n");
+    printf("---------------------------------\n");
     printf("|Name\t|Type\t|Binding\t|\n");
-    printf("----------------------------------------------------------\n");
+    printf("---------------------------------\n");
     while(curr!=NULL){
-        printf("|%s\t|%d\t|%d\t|\n",curr->varname,curr->type,curr->binding);
+        printf("|%s\t|%s\t|%d\t\t|\n",curr->varname,curr->type_entryy->type_table->name,curr->binding);
         curr = curr->next;
     }
-    printf("----------------------------------------------------------\n");
+    printf("---------------------------------\n");
 }

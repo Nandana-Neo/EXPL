@@ -18,12 +18,15 @@ NodeType node_type(char* type){
     return NODE_CONN;
 }
 
-tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype, Gsymbol *gst_entry, Lsymbol* lst_entry, tnode *l, tnode *m, tnode *r, tnode* nxt){
+tnode* create_tree(node_val val, Type* type, char* varname, NodeType nodetype, Gsymbol *gst_entry, Lsymbol* lst_entry, tnode *l, tnode *m, tnode *r, tnode* nxt){
     tnode * curr = (tnode*)malloc(sizeof(tnode));
-    curr->type = type;
-    if(type == TYPE_INT)
+    if(type)
+        curr->type_entryy = create_type(type->type_table, type->ptr);
+    else
+        curr->type_entryy = NULL;
+    if(is_int(type) == 1)
         curr->val.int_val = val.int_val;
-    else if(type == TYPE_STR)
+    else if(is_str(type) == 1)
         curr->val.str_val = val.str_val;
     else
         curr->val.int_val = 0;
@@ -45,12 +48,12 @@ tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype,
     return curr;
 }
 
-tnode* make_leaf_node(node_val n, VarType type, char* varname, Gsymbol* gst_entry, Lsymbol* lst_entry){
+tnode* make_leaf_node(node_val n, Type* type, char* varname, Gsymbol* gst_entry, Lsymbol* lst_entry){
     tnode* curr = create_tree(n,type,varname,NODE_LEAF,gst_entry,lst_entry,NULL,NULL,NULL,NULL);
     return curr;
 }
 
-tnode* make_operator_node(VarType type, NodeType nodetype,tnode* l, tnode* r){
+tnode* make_operator_node(Type* type, NodeType nodetype,tnode* l, tnode* r){
     node_val val;
     val.int_val = 0;
     tnode* curr = create_tree(val,type,NULL,nodetype,NULL,NULL,l,NULL,r,NULL);
@@ -60,14 +63,14 @@ tnode* make_operator_node(VarType type, NodeType nodetype,tnode* l, tnode* r){
 tnode* make_break_node(void){
     node_val val;
     val.int_val = 0;
-    tnode* curr = create_tree(val, TYPE_NONE, NULL, NODE_BREAK, NULL, NULL, NULL, NULL, NULL, NULL);
+    tnode* curr = create_tree(val, NULL, NULL, NODE_BREAK, NULL, NULL, NULL, NULL, NULL, NULL);
     return curr;
 }
 
 tnode* make_continue_node(void){
     node_val val;
     val.int_val = 0;
-    tnode* curr = create_tree(val, TYPE_NONE, NULL, NODE_CONTINUE, NULL, NULL,NULL, NULL, NULL, NULL);
+    tnode* curr = create_tree(val, NULL, NULL, NODE_CONTINUE, NULL, NULL,NULL, NULL, NULL, NULL);
     return curr;
 }
 
@@ -77,11 +80,11 @@ tnode* make_conditional_node(tnode* l, tnode* m, tnode* r){
         nodetype = NODE_IF;
     node_val val;
     val.int_val = 0;
-    tnode* curr = create_tree(val,TYPE_NONE,NULL,nodetype,NULL,NULL,l,m,r,NULL);
+    tnode* curr = create_tree(val,NULL,NULL,nodetype,NULL,NULL,l,m,r,NULL);
     return curr;
 }
 
-tnode* make_array_node(VarType type, tnode* l, tnode* r){
+tnode* make_array_node(Type* type, tnode* l, tnode* r){
     node_val val;
     val.int_val = 0;
     tnode* node = create_tree(val, type, NULL, NODE_ARR, NULL, NULL, l, NULL, r, NULL);
@@ -91,21 +94,35 @@ tnode* make_array_node(VarType type, tnode* l, tnode* r){
 tnode* make_index_node(tnode* l, tnode* r){
     node_val val;
     val.int_val = 0;
-    tnode* node = create_tree(val, TYPE_INT, NULL, NODE_INDEX, NULL, NULL, l, NULL, r, NULL);
+    Type* type = create_type(type_table_get("int") ,0);
+    tnode* node = create_tree(val, type, NULL, NODE_INDEX, NULL, NULL, l, NULL, r, NULL);
+    free(type);
     return node;
 }
 
 tnode* make_address_of_node(tnode* e){
     node_val val;
     val.int_val = 0;
-    tnode* node = create_tree(val, pointer_type(e->type), NULL, NODE_ADDR_OF, NULL, NULL, e, NULL, NULL, NULL);
+    Type* type = create_type(e->type_entryy->type_table, 1);     // pointer type
+    tnode* node = create_tree(val, type, NULL, NODE_ADDR_OF, NULL, NULL, e, NULL, NULL, NULL);
+    free(type);
     return node;
 }
+
 
 tnode* make_value_at_node(tnode* e){
     node_val val;
     val.int_val = 0;
-    tnode* node = create_tree(val, variable_type(e->type), NULL, NODE_VAL_AT, NULL, NULL, e, NULL, NULL, NULL);
+    Type* type = create_type(e->type_entryy->type_table, 0);
+    tnode* node = create_tree(val, type, NULL, NODE_VAL_AT, NULL, NULL, e, NULL, NULL, NULL);
+    free(type);
+    return node;
+}
+
+tnode* make_member_of_node(tnode* parent, Type* type, tnode* child){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, type, NULL, NODE_MEMBER_OF, NULL, NULL, parent, NULL, child, NULL);
     return node;
 }
 
@@ -117,7 +134,7 @@ tnode* make_fn_node(char* name, tnode* arg){
         printf("No declaration found for fn: %s",name);
         exit(1);
     }
-    tnode* node = create_tree(val, gst_entry->type, name, NODE_FN, gst_entry, NULL, arg, NULL, NULL, NULL);
+    tnode* node = create_tree(val, gst_entry->type_entryy, name, NODE_FN, gst_entry, NULL, arg, NULL, NULL, NULL);
     node->varname = name;
     return node;
 }
@@ -125,7 +142,41 @@ tnode* make_fn_node(char* name, tnode* arg){
 tnode* make_return_node(tnode* e){
     node_val val;
     val.int_val = 0;
-    tnode* node = create_tree(val, e->type, NULL, NODE_RET, NULL, NULL, e, NULL, NULL, NULL);
+    tnode* node = create_tree(val, e->type_entryy, NULL, NODE_RET, NULL, NULL, e, NULL, NULL, NULL);
+    return node;
+}
+
+tnode* make_null_node() {
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type(type_table_get("null"),0);
+    tnode* node = create_tree(val, type, NULL, NODE_NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+}
+
+tnode* make_initialize_node(){
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type(type_table_get("int"), 0);
+    tnode* node = create_tree(val, type, NULL, NODE_INITIALIZE, NULL, NULL, NULL, NULL, NULL, NULL);
+    free(type);
+    return node;
+}
+
+tnode* make_alloc_node(){
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type(type_table_get("null"),0); // null pointer first
+    tnode* node = create_tree(val, type, NULL, NODE_ALLOC, NULL, NULL, NULL, NULL, NULL, NULL);
+    free(type);
+    return node;
+}
+
+tnode* make_free_node(tnode* ptr){
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type(type_table_get("int"),0);
+    tnode* node = create_tree(val, type, NULL, NODE_FREE, NULL, NULL, ptr, NULL, NULL, NULL);
+    free(type);
     return node;
 }
 
@@ -133,13 +184,13 @@ void prefix(tnode* node){
     if(node == NULL){
         return;
     }
-    if(node->type == TYPE_NONE)
+    if(node->type_entryy == NULL)
         printf("NODE(%d) ",node->nodetype);
     else{
         if(node->varname == NULL){
-            if(node->type == TYPE_INT)
+            if(is_int(node->type_entryy))
                 printf("%d ",node->val.int_val);
-            else if(node->type == TYPE_STR)
+            else if(is_str(node->type_entryy))
                 printf("%s ",node->val.str_val);
         }
         else
@@ -177,7 +228,7 @@ int compare_arg_param(tnode* arg_ls, parameter* param_ls){
         return 1;
     if(arg_ls==NULL || param_ls == NULL)
         return 0;
-    if(arg_ls->type != param_ls->type)
+    if(compare_type(arg_ls->type_entryy, param_ls->type_entryy) != 1)
         return 0;
     return compare_arg_param(arg_ls->next, param_ls->next);
 }
@@ -185,7 +236,10 @@ int compare_arg_param(tnode* arg_ls, parameter* param_ls){
 void print_arg_ls(tnode* node){
     if(node==NULL)
         return;
-    printf("Arg:%d\n",node->type);
+    if(node->type_entryy == NULL)
+        printf("NULL\n");
+    else
+        printf("Arg:%s\n",node->type_entryy->type_table->name);
     print_arg_ls(node->next);
 }
 
@@ -197,7 +251,9 @@ void free_tree(tnode* n){
     free_tree(n->right);
     if(n->varname != NULL)
         free(n->varname);
-    if(n->nodetype == NODE_LEAF && n->type == TYPE_STR)
+    if(n->nodetype == NODE_LEAF && is_str(n->type_entryy))
         free(n->val.str_val);
+    if(n->type_entryy)
+        free(n->type_entryy);
     free(n);
 }
