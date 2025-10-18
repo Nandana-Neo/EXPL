@@ -180,6 +180,13 @@ tnode* make_free_node(tnode* ptr){
     return node;
 }
 
+tnode* make_breakpoint_node(){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, NULL, NULL, NODE_BREAK_POINT, NULL, NULL, NULL, NULL, NULL, NULL);
+    return node;
+}
+
 void prefix(tnode* node){
     if(node == NULL){
         return;

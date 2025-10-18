@@ -41,7 +41,8 @@ typedef enum {
     NODE_ALLOC,
     NODE_FREE,
     NODE_CONTINUE,
-    NODE_NULL
+    NODE_NULL,
+    NODE_BREAK_POINT
 } NodeType;
 
 typedef enum {
@@ -119,6 +120,7 @@ typedef struct Lsymbol{
     char* varname;
     Type* type_entryy;
     int binding;
+    int size;
     struct Lsymbol* next;
 } Lsymbol;
 

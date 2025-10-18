@@ -226,6 +226,7 @@ loc_and_val* code_gen_BREAK(tnode* node, FILE* fp, int end_label);
  */
 loc_and_val* code_gen_CONTINUE(tnode* node, FILE* fp, int start_label);
 
+loc_and_val* code_gen_breakpoint(tnode* node, FILE* fp);
 /**
  * Function : code_gen_CONN
  * --------------------

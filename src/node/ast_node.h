@@ -75,6 +75,7 @@ tnode* make_initialize_node();
 tnode* make_alloc_node();
 tnode* make_free_node(tnode* ptr);
 tnode* add_node_to_arglist(tnode* arg, tnode* node);
+tnode* make_breakpoint_node();
 
 /** Function: int compare_arg_param 
  * ---------------------------------

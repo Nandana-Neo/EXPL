@@ -91,7 +91,9 @@ void push_local_decl(Lsymbol* lst, FILE* fp){
     if(lst == NULL)
         return;
     if(lst->binding > 0){    // local decl
-        fprintf(fp,"PUSH R0\n");
+        for(int i=0;i<lst->size;i++){
+            fprintf(fp,"PUSH R0\n");
+        }
     }
     push_local_decl(lst->next, fp);
 }
@@ -275,6 +277,7 @@ loc_and_val* code_gen_MEMBER_OF(tnode* node, FILE* fp){
     // get field no from field
     if(strncmp("tuple-",node->left->type_entryy->type_table->name,6)==0){
         // tuple
+        printf("[DEBUG] tuple -type:%s-field:%d-%s\n",node->left->type_entryy->type_table->name, field->field_id, field->name);
         fprintf(fp, "ADD R%d, %d\n", l->loc, field->field_id);
         fprintf(fp, "MOV R%d, [R%d]\n", l->val, l->loc);
     }
@@ -633,6 +636,11 @@ loc_and_val* code_gen_CONTINUE(tnode* node, FILE* fp, int start_label){
     return ans;
 }
 
+loc_and_val* code_gen_breakpoint(tnode* node, FILE* fp){
+    fprintf(fp,"BRKP\n");
+    loc_and_val* ans = create_gen_node(-1, -1);
+    return ans;
+}
 
 loc_and_val* code_gen(tnode* node, FILE* fp, int start_label, int end_label){
     if(node == NULL){
@@ -692,6 +700,8 @@ loc_and_val* code_gen(tnode* node, FILE* fp, int start_label, int end_label){
             return code_gen_free(node, fp);
         case NODE_NULL:
             return code_gen_null_node(node, fp);
+        case NODE_BREAK_POINT:
+            return code_gen_breakpoint(node, fp);
         default:
             return code_gen_OP(node, fp);
     }

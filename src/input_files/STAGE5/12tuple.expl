@@ -1,20 +1,19 @@
 decl
     tuple student (str name, int roll_no, str branchname, int year_of_admission) a, b, c;
-    tuple faculty (str name, int employee_id, str dept) x, y, z, *ftr;
 enddecl
 
 int main()
 {
     decl
+        tuple faculty (str name, int employee_id, str dept) x, y, z, *ftr, l;
         int ans;
     enddecl
 
     begin
-        read(ans);
-        a.roll_no = ans;
         ftr = &x;
-        write(a.roll_no);
+        breakpoint;
         x.name = "hiran";
+        write((*ftr).name);
     end
 }
 

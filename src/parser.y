@@ -32,6 +32,7 @@
 %token INITIALIZE ALLOC FREE;
 %token NULL_VAL;
 %token TUPLE;
+%token BREAK_POINT;
 %type<decl_type> Type PointerType;
 %type<param_list> Param ParamList ParamListBracs;
 %type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
@@ -361,6 +362,7 @@ Stmt        : InputStmt ';'     {   $<ast_node>$ = $<ast_node>1;    }
             | ReturnStmt ';'    {   $<ast_node>$ = $<ast_node>1;    }
             | FnCall ';'    {   $<ast_node>$ = $<ast_node>1;    }
             | E ';'         {   $<ast_node>$ = $<ast_node>1;    }
+            | BREAK_POINT ';'   { $<ast_node>$ = make_breakpoint_node();}
             ;
 
 BreakStmt   : BREAK             {   $<ast_node>$ = make_break_node(); }
@@ -530,6 +532,7 @@ LHS   :   LHS  '.' ID   {
                                 free(type);   
                             }
         | L_VAL             {   $<ast_node>$ = $<ast_node>1;    }
+        | '(' LHS ')'       {   $<ast_node>$ = $<ast_node>2;    }
         /* |   ID INDEX '.' ID   {   // array
                         node_val val;
                         val.int_val = 0;
@@ -734,7 +737,7 @@ E   :   E '<' E     {
     |   STR_VAL     {
                         $<ast_node>$ = $<ast_node>1;
                     }
-    |   LHS       {   $<ast_node>$ = $<ast_node>1;    
+    |   LHS         {   $<ast_node>$ = $<ast_node>1;    
                     }
     |   '&' E       {
                         $<ast_node>$ = make_address_of_node($<ast_node>2);

@@ -210,11 +210,13 @@ Lsymbol* update_size_lsymbol_tb(Lsymbol* lst, Type* type){
     while(curr != NULL){
         if(curr->type_entryy->ptr == 1){
             curr->binding = lst_binding;
+            curr->size = 1;
             lst_binding++;
         }
         else{
             curr->binding = lst_binding;
             lst_binding+=sz;
+            curr->size = sz;
         }
         curr = curr->next;
     }
