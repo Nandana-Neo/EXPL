@@ -47,7 +47,8 @@ typedef enum {
 typedef enum {
     SYMBOL_FN,
     SYMBOL_ARR,
-    SYMBOL_VAR
+    SYMBOL_VAR,
+    SYMBOL_TUPLE
 } SymbolType;
 
 /**

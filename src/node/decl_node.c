@@ -40,6 +40,35 @@ void update_type_decl(decl_node* node, Type* type){
         curr->symbol_table_entry->type_entryy->ptr = curr->symbol_table_entry->type_entryy->ptr || type->ptr;
         decl_node* prev = curr;
         curr = curr->next;
+        // free(prev);
+    }
+}
+
+
+void update_size_decl(decl_node* node, Type* type){
+    update_type_size(type->type_table);
+    int sz = type->type_table->size;
+    
+    decl_node* curr = node;
+    while(curr!=NULL){  // first arg is at the end
+        SP = curr->symbol_table_entry->binding;
+        curr = curr->next;
+    }
+    curr = node;
+    while(curr != NULL){
+        // printf("%s\n",curr->symbol_table_entry->name);
+        if(curr->symbol_table_entry->type_entryy->ptr == 1){
+            curr->symbol_table_entry->size = 1;
+            curr->symbol_table_entry->binding = SP;
+            SP += 1;
+        }
+        else{
+            curr->symbol_table_entry->size = sz;
+            curr->symbol_table_entry->binding = SP;
+            SP += sz;
+        }
+        decl_node* prev = curr;
+        curr = curr->next;
         free(prev);
     }
 }

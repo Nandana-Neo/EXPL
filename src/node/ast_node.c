@@ -251,8 +251,8 @@ void free_tree(tnode* n){
     free_tree(n->right);
     if(n->varname != NULL)
         free(n->varname);
-    if(n->nodetype == NODE_LEAF && is_str(n->type_entryy))
-        free(n->val.str_val);
+    // if(n->nodetype == NODE_LEAF && is_str(n->type_entryy))
+    //     free(n->val.str_val);
     if(n->type_entryy)
         free(n->type_entryy);
     free(n);

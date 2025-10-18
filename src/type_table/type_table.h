@@ -101,6 +101,9 @@ FieldList* field_list_get(char* name, TypeTable* type);
 /**
  * Create field with name and type 
  * Returns pointer to created field
+ * - Reassigns name
+ * - type NOT reassigned
+ * - Can free just name after usage
  */
 FieldList* field_create(char* name, TypeTable* type);
 
@@ -149,4 +152,6 @@ int is_bool(Type* type);
 int is_null(Type* type);
 
 int is_void(Type* type);
+
+int is_tuple(Type* type);
 #endif

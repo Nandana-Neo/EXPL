@@ -273,9 +273,16 @@ loc_and_val* code_gen_MEMBER_OF(tnode* node, FILE* fp){
     char* field_name = node->right->varname;
     FieldList* field = field_list_get(field_name, node->left->type_entryy->type_table);
     // get field no from field
-    fprintf(fp, "MOV R%d, R%d\n",l->loc, l->val);
-    fprintf(fp, "ADD R%d, %d\n", l->loc, field->field_id);
-    fprintf(fp, "MOV R%d, [R%d]\n", l->val, l->loc);
+    if(strncmp("tuple-",node->left->type_entryy->type_table->name,6)==0){
+        // tuple
+        fprintf(fp, "ADD R%d, %d\n", l->loc, field->field_id);
+        fprintf(fp, "MOV R%d, [R%d]\n", l->val, l->loc);
+    }
+    else{
+        fprintf(fp, "MOV R%d, R%d\n",l->loc, l->val);
+        fprintf(fp, "ADD R%d, %d\n", l->loc, field->field_id);
+        fprintf(fp, "MOV R%d, [R%d]\n", l->val, l->loc);
+    }
     return l;
 }
 

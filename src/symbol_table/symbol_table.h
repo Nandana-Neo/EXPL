@@ -153,6 +153,8 @@ Lsymbol* connect_lsymbol(Lsymbol* lst1, Lsymbol* lst2);
  */
 Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type);
 
+Lsymbol* update_size_lsymbol_tb(Lsymbol* lst, Type* type);
+
 /**
  * Function: free_lsymbol
  * ------------------------
@@ -178,6 +180,8 @@ Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding);
  * else returns NULL
  */
 Lsymbol* lst_if_repeated(Lsymbol* lst);
+
+FieldList* paraml_to_fieldl(parameter* param_ls);
 
 void print_lsymbol();
 #endif

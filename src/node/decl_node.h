@@ -39,6 +39,6 @@ decl_node* add_to_list(decl_node* ls,decl_node* node);
  */
 void free_decl_node(decl_node * node);
 
-
 void update_type_decl(decl_node* node, Type* type);
+void update_size_decl(decl_node* node, Type* type);
 #endif

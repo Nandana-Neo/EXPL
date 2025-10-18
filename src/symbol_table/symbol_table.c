@@ -202,6 +202,25 @@ Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type){
     return lst;
 }
 
+Lsymbol* update_size_lsymbol_tb(Lsymbol* lst, Type* type){
+    update_type_size(type->type_table);
+    int sz = type->type_table->size;
+    Lsymbol* curr = lst;
+    lst_binding = curr->binding;
+    while(curr != NULL){
+        if(curr->type_entryy->ptr == 1){
+            curr->binding = lst_binding;
+            lst_binding++;
+        }
+        else{
+            curr->binding = lst_binding;
+            lst_binding+=sz;
+        }
+        curr = curr->next;
+    }
+    return lst;
+}
+
 Lsymbol* get_lsymbol(Lsymbol* ls, char* name){
     Lsymbol* node = ls;
     while(node!=NULL){
@@ -242,6 +261,19 @@ Lsymbol* lst_if_repeated(Lsymbol* lst){
         curr = curr->next;
     }
     return NULL;
+}
+
+FieldList* paraml_to_fieldl(parameter* param_ls){
+    FieldList* fl = NULL;
+    while(param_ls != NULL){
+        // printf("[DEBUG] param:%s\n",param_ls->name);
+        fl = field_list_add(fl, param_ls->name, param_ls->type_entryy->type_table);
+        parameter* nxt = param_ls->next;
+        free(param_ls->name);
+        free(param_ls);
+        param_ls = nxt;
+    }
+    return fl;
 }
 
 void print_lsymbol(){

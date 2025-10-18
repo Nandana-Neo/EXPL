@@ -1,5 +1,5 @@
 %{
-    // #define YYERROR_CALL(msg) yyerror();
+    #define YYERROR_CALL(msg) yyerror();
     #include <stdio.h>
     #include <stdlib.h>
     #include "node/type_node.h"
@@ -31,6 +31,7 @@
 %token TYPE ENDTYPE;
 %token INITIALIZE ALLOC FREE;
 %token NULL_VAL;
+%token TUPLE;
 %type<decl_type> Type PointerType;
 %type<param_list> Param ParamList ParamListBracs;
 %type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
@@ -44,7 +45,7 @@
 Program     :   TypeDefBlock GDeclBlock FDefBlock MainBlock  {   
                                                     exit(0);
                                                 }
-
+            ;
 
 TypeDefBlock  : TYPE TypeDefList ENDTYPE    { // type table creation completed
                                                 print_type_table();
@@ -98,7 +99,13 @@ GDeclList   :   GDeclList GDecl {}
             |   GDecl           {}
             ;
 
-GDecl       :   Type GIdList ';'    {   update_type_decl($<decl_node>2, $1);   
+GDecl       :   Type GIdList ';'    {   
+                                        update_type_decl($<decl_node>2, $1);  
+                                        // print_st(); 
+                                        if(is_tuple($1)){
+                                            update_size_decl($<decl_node>2, $1);
+                                        }
+                                        // print_st();
                                         free($1);
                                     }
             ;
@@ -175,6 +182,9 @@ LDeclList   : LDeclList LDecl     {     $$ = connect_lsymbol($1,$2);   }
             ;
 
 LDecl       : Type LIdList ';'  {   $$ = update_type_lsymbol_tb($2, $1); 
+                                    if(is_tuple($1)){
+                                        $$ = update_size_lsymbol_tb($2,$1);
+                                    }
                                     free($1);          
                                 }
             ;
@@ -205,6 +215,17 @@ Type        : INT           {   TypeTable* type_table_entry = type_table_get("in
                                 }
                                 $$ = create_type(type_table_entry,0);
                             }
+            | TUPLE ID '(' ParamList ')'   {
+                                            char name[50];
+                                            strcpy(name, "tuple-");
+                                            strcat(name, $<id_name>2);
+                                            // print_param_list($3);   // debug
+                                            FieldList* fields = paraml_to_fieldl($4);
+                                            TypeTable* tytbl = type_table_add(name, 1, fields);
+                                            // print_type_table(); // debug
+                                            // printf("[DEBUG]name:%s\n",name);
+                                            $$ = create_type(tytbl, 0);
+                                        }
             ;
 
 LIdList     : LIdList ',' LIdDecl   {   
@@ -348,7 +369,7 @@ BreakStmt   : BREAK             {   $<ast_node>$ = make_break_node(); }
 ContinueStmt    : CONTINUE      {   $<ast_node>$ = make_continue_node();  }  
                 ;
 
-InputStmt   : READ'('L_VAL')'  {
+InputStmt   : READ'('LHS')'  {
                                 $<ast_node>$ = make_operator_node(NULL,NODE_READ,$<ast_node>3,NULL);
                             }
             ;
@@ -468,10 +489,10 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
                         }
                         $<ast_node>$ = make_value_at_node($<ast_node>2);
                     }
-        | Field     {   $<ast_node>$ = $<ast_node>1; }
+        /* | Field     {   $<ast_node>$ = $<ast_node>1; } */
         ;
 
-Field   :   Field  '.' ID   {
+LHS   :   LHS  '.' ID   {
 
                                 if(!$<ast_node>1->type_entryy || !$<ast_node>1->type_entryy->type_table){
                                     fprintf(stderr,"Error[.]: Type Error\n");
@@ -489,27 +510,8 @@ Field   :   Field  '.' ID   {
                                 $<ast_node>$ = make_member_of_node($<ast_node>1, type, r_node);
                                 free(type);
                             }
-        |   ID '.' ID       {   
-                                node_val val;
-                                val.int_val = 0;
-                                Lsymbol* lst_entry = get_variable_lst($<id_name>1, curr_lsymbol);
-                                Type* type = NULL;
-                                Gsymbol* gst_entry = NULL;
-                                if(lst_entry == NULL){
-                                    gst_entry = get_variable_gst($<id_name>1);
-                                }
-
-                                if(lst_entry == NULL && gst_entry == NULL){
-                                    fprintf(stderr,"Variable not declared cannot be used:%s\n",$<id_name>1);
-                                    exit(1);
-                                }
-                                if(lst_entry != NULL){
-                                    type = lst_entry->type_entryy;
-                                }
-                                else{
-                                    type = gst_entry->type_entryy;
-                                }
-                                tnode* l_node = make_leaf_node(val, type, $<id_name>1, gst_entry, lst_entry);
+        |   L_VAL '.' ID       {   
+                                tnode* l_node = $<ast_node>1;
                                 
                                 if(!l_node->type_entryy || !l_node->type_entryy->type_table){
                                     fprintf(stderr,"Error[.]: Type Error\n");
@@ -520,13 +522,15 @@ Field   :   Field  '.' ID   {
                                     fprintf(stderr,"Error[.]: Field %s does not exist\n",$<id_name>3);
                                     exit(1);
                                 }
-                                type = create_type(field->type,0);
+                                Type* type = create_type(field->type,0);
+                                node_val val;
                                 val.int_val = 0;
                                 tnode* r_node = make_leaf_node(val, type, $<id_name>3, NULL, NULL);
                                 $<ast_node>$ = make_member_of_node(l_node, type, r_node);
                                 free(type);   
                             }
-        |   ID INDEX '.' ID   {   // array
+        | L_VAL             {   $<ast_node>$ = $<ast_node>1;    }
+        /* |   ID INDEX '.' ID   {   // array
                         node_val val;
                         val.int_val = 0;
                         Lsymbol* lst_entry = get_variable_lst($<id_name>1, curr_lsymbol);
@@ -570,10 +574,10 @@ Field   :   Field  '.' ID   {
                         tnode* r_node = make_leaf_node(val, type, $<id_name>4, NULL, NULL);
                         $<ast_node>$ = make_member_of_node(l_node, type, r_node);
                         free(type); 
-                    }
+                    } */
         ;
 
-AsgStmt     : L_VAL '=' E  {    
+AsgStmt     : LHS '=' E  {    
                             if(!compare_type($<ast_node>1->type_entryy, $<ast_node>3->type_entryy) && !is_null($<ast_node>3->type_entryy)){
                                 fprintf(stderr,"Error[=]: Type Mismatch\n");
                                 exit(1);
@@ -730,7 +734,7 @@ E   :   E '<' E     {
     |   STR_VAL     {
                         $<ast_node>$ = $<ast_node>1;
                     }
-    |   L_VAL       {   $<ast_node>$ = $<ast_node>1;    
+    |   LHS       {   $<ast_node>$ = $<ast_node>1;    
                     }
     |   '&' E       {
                         $<ast_node>$ = make_address_of_node($<ast_node>2);

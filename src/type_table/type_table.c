@@ -73,6 +73,7 @@ TypeTable* type_table_add(char* name, int size, FieldList* fields){
     TypeTable* new_type = (TypeTable*)malloc(sizeof(TypeTable));
     new_type->size = size;
     new_type->name = strdup(name);
+    // printf("[DEBUG] name: %s\n",new_type->name);
     new_type->fields = fields;
     new_type->next = type_table;
     type_table = new_type;
@@ -144,7 +145,7 @@ FieldList* field_list_add(FieldList* field_list, char* name, TypeTable* type){
     }
     curr->next = field_create(name, type);
     curr->next->field_id = curr->field_id+1;
-    return curr;
+    return field_list;
 }
 
 FieldList* field_list_join(FieldList* f1, FieldList* f2){
@@ -243,6 +244,12 @@ int is_null(Type* type){
 
 int is_void(Type* type){
     if(!type || compare_type_table(type->type_table, type_table_get("void")) != 1)
+        return 0;
+    return 1;
+}
+
+int is_tuple(Type* type){
+    if(!type || strncmp("tuple-",type->type_table->name,6)!=0)
         return 0;
     return 1;
 }
