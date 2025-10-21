@@ -226,6 +226,7 @@ loc_and_val* code_gen_BREAK(tnode* node, FILE* fp, int end_label);
  */
 loc_and_val* code_gen_CONTINUE(tnode* node, FILE* fp, int start_label);
 
+loc_and_val* code_gen_breakpoint(tnode* node, FILE* fp);
 /**
  * Function : code_gen_CONN
  * --------------------
@@ -247,6 +248,12 @@ loc_and_val* code_gen_ARR(tnode* node, FILE* fp);
 loc_and_val* code_gen_ADDR_OF(tnode* node, FILE* fp);
 
 loc_and_val* code_gen_VAL_AT(tnode* node, FILE* fp);
+
+loc_and_val* code_gen_null_node(tnode* node, FILE* fp);
+loc_and_val* code_gen_MEMBER_OF(tnode* node, FILE* fp);
+loc_and_val* code_gen_initialize(tnode* node, FILE* fp);
+loc_and_val* code_gen_alloc(tnode* node, FILE* fp);
+loc_and_val* code_gen_free(tnode* node, FILE* fp);
 
 void code_gen_final(FILE * fp);
 

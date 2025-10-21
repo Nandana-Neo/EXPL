@@ -1,0 +1,44 @@
+decl
+    tuple node (int id, str name) a, b;
+    int swap(str* p, str* q);
+enddecl
+
+int swap(str* p, str* q)
+{
+    decl
+        str t;
+    enddecl
+    begin
+        t = *p;
+        *p = *q;
+        *q = t;
+        return 1;
+    end
+}
+
+int main()
+{
+    decl
+        int ans;
+        str * p; 
+        str *q;
+    enddecl
+
+    begin
+        read(a.id);
+        read(b.id);
+        read(a.name);
+        read(b.name);
+        if (a.id == b.id) then
+            p = &(a.name);
+            q = &(b.name);
+            swap(p, q);
+        else
+            write("Different");
+        endif;
+        write(a.name);
+        write(b.name);
+        return 0;
+    end
+}
+

@@ -11,7 +11,9 @@
 [0-9]+  {
     node_val val;
     val.int_val = atoi(yytext);
-    yylval.ast_node = make_leaf_node(val, TYPE_INT, NULL, NULL, NULL);
+    Type* type = create_type(type_table_get("int"),0);
+    yylval.ast_node = make_leaf_node(val, type, NULL, NULL, NULL);
+    free(type);
     return NUM_VAL;
 }
 
@@ -19,7 +21,9 @@
 \"[^"\n]*\"       { //safe way to match a string (not include " and \n)
     node_val val;
     val.str_val = strdup(yytext);
-    yylval.ast_node = make_leaf_node(val, TYPE_STR, NULL, NULL, NULL);
+    Type* type = create_type(type_table_get("str"),0);
+    yylval.ast_node = make_leaf_node(val, type, NULL, NULL, NULL);
+    free(type);
     return STR_VAL;
 }
 
@@ -47,6 +51,14 @@
 "AND"       {   return AND; }
 "OR"        {   return OR;  }
 "NOT"       {   return NOT; }
+"type"      {   return TYPE;    }
+"endtype"   {   return ENDTYPE; }
+"initialize"    {   return INITIALIZE;  }
+"alloc"     {   return ALLOC;   }
+"free"      {   return FREE;    }
+"null"      {   return NULL_VAL;    }
+"tuple"     {   return TUPLE;   }
+"breakpoint"   {   return BREAK_POINT;}
 
 [a-zA-Z]+[0-9a-zA-Z_]*   {
     char* variable = strdup(yytext);
@@ -54,7 +66,7 @@
     return ID;
 }
 
-[()+*/%={}<>!,;\[\]&-] {
+[()+*/.%={}<>!,;\[\]&-] {
     return *yytext;
 }
 

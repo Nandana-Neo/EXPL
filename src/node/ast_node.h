@@ -37,14 +37,16 @@ NodeType node_type(char* type);
  * 
  * Output:
  *  tnode * pointer to node
+ * ------------------------------
+ * - Can safely delete type because it is reassigned
 */
-tnode* create_tree(node_val val, VarType type, char* varname, NodeType nodetype, Gsymbol* gst_entry, Lsymbol* lst_entry, tnode *l, tnode *m, tnode *r, tnode* nxt);
+tnode* create_tree(node_val val, Type* type, char* varname, NodeType nodetype, Gsymbol* gst_entry, Lsymbol* lst_entry, tnode *l, tnode *m, tnode *r, tnode* nxt);
 
 /*Make a leaf tnode, can be NUM/STR node or ID node */
-tnode* make_leaf_node(node_val n, VarType type, char* varname, Gsymbol* gst_entry, Lsymbol* lst_entry);
+tnode* make_leaf_node(node_val n, Type* type, char* varname, Gsymbol* gst_entry, Lsymbol* lst_entry);
 
 /*Create operator node*/
-tnode* make_operator_node(VarType type, NodeType nodetype, tnode* l, tnode* r);
+tnode* make_operator_node(Type* type, NodeType nodetype, tnode* l, tnode* r);
 
 /*Create if else node*/
 tnode* make_conditional_node(tnode* l, tnode* m, tnode* r);
@@ -54,7 +56,7 @@ void prefix(tnode* node);
 
 tnode* make_break_node(void);
 tnode* make_continue_node(void);
-tnode* make_array_node(VarType type, tnode* l, tnode* r);
+tnode* make_array_node(Type* type, tnode* l, tnode* r);
 tnode* make_index_node(tnode* l, tnode* r);
 
 
@@ -62,9 +64,18 @@ tnode* make_index_node(tnode* l, tnode* r);
 tnode* make_address_of_node(tnode* e);
 tnode* make_value_at_node(tnode* e);
 
+// represents parent.child with type given (is type of child)
+tnode* make_member_of_node(tnode* parent, Type* type, tnode* child);
+
 tnode* make_fn_node(char* name, tnode* arg);
 tnode* make_return_node(tnode* e);
+
+tnode* make_null_node();
+tnode* make_initialize_node();
+tnode* make_alloc_node();
+tnode* make_free_node(tnode* ptr);
 tnode* add_node_to_arglist(tnode* arg, tnode* node);
+tnode* make_breakpoint_node();
 
 /** Function: int compare_arg_param 
  * ---------------------------------

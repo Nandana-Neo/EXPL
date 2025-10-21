@@ -18,11 +18,11 @@ typedef struct decl_node{
  * --------------------------
  * Create a decl node with varname as value
  */
-decl_node* create_decl_node(char* varname, int size, VarType type);
+decl_node* create_decl_node(char* varname, int size, Type* type);
 
-decl_node* create_decl_node_fn(char* varname, VarType type, parameter* param_list);
+decl_node* create_decl_node_fn(char* varname, Type* type, parameter* param_list);
 
-decl_node* create_decl_node_arr(char* varname, int size, VarType type, array* arr_sz, FILE* fp);
+decl_node* create_decl_node_arr(char* varname, int size, Type* type, array* arr_sz, FILE* fp);
 
 /**
  * Function: add_to_list
@@ -39,6 +39,6 @@ decl_node* add_to_list(decl_node* ls,decl_node* node);
  */
 void free_decl_node(decl_node * node);
 
-
-void update_type_decl(decl_node* node, VarType type);
+void update_type_decl(decl_node* node, Type* type);
+void update_size_decl(decl_node* node, Type* type);
 #endif

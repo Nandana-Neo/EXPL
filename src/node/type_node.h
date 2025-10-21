@@ -2,16 +2,7 @@
 #define NODE_TYPE_HEADER_FILE
 
 #include <stdio.h>
-
-typedef enum {
-    TYPE_NONE = -1,   // not ID node
-    TYPE_INT  = 0,
-    TYPE_CHAR = 1,
-    TYPE_BOOL = 2,
-    TYPE_STR = 3,
-    TYPE_INT_PTR,
-    TYPE_CHAR_PTR
-} VarType;
+#include "../type_table/type_table.h"
 
 typedef enum {
     NODE_LEAF,
@@ -20,6 +11,7 @@ typedef enum {
     NODE_RET,   // return node to fn call
     NODE_ARR,   // for array
     NODE_INDEX, // for index of array
+    NODE_MEMBER_OF,  // for id.id
     NODE_ADDR_OF,    // for ptr = &a
     NODE_VAL_AT,    // for *ptr
     NODE_ADD,   // "+"
@@ -45,13 +37,19 @@ typedef enum {
     NODE_WRITE, 
     NODE_READ,
     NODE_BREAK,
-    NODE_CONTINUE
+    NODE_INITIALIZE,
+    NODE_ALLOC,
+    NODE_FREE,
+    NODE_CONTINUE,
+    NODE_NULL,
+    NODE_BREAK_POINT
 } NodeType;
 
 typedef enum {
     SYMBOL_FN,
     SYMBOL_ARR,
-    SYMBOL_VAR
+    SYMBOL_VAR,
+    SYMBOL_TUPLE
 } SymbolType;
 
 /**
@@ -68,7 +66,7 @@ typedef union node_val {
  */
 typedef struct tnode{
     node_val val;    // value of a number for NUM nodes
-    VarType type;   // type of variable
+    Type* type_entryy;  // type of variable
     char* varname;   // name of a variable for ID nodes
     NodeType nodetype;   // information about non-leaf nodes - read/write/connector/+/* etc.
     struct Gsymbol* gst_entry;     // pointer to GST entry for global variables and functions
@@ -90,7 +88,7 @@ typedef struct array{
  */
 typedef struct Param{
     char* name;
-    VarType type;
+    Type* type_entryy;
     struct Param* next;
 } parameter;    
 
@@ -99,7 +97,7 @@ typedef struct Param{
  */
 typedef struct Gsymbol {
     char* name;             // name of the variable
-    VarType type;           // type of the variable - INT or STR
+    Type* type_entryy;
     SymbolType symbol_type; // type of the entity - ARR or FN or VARIABLE
     array* size_array;       // stores the length of multidim array
     int size;               // size of the type of the variable - default(1)
@@ -120,8 +118,9 @@ typedef struct loc_and_val{
  */
 typedef struct Lsymbol{
     char* varname;
-    VarType type;
+    Type* type_entryy;
     int binding;
+    int size;
     struct Lsymbol* next;
 } Lsymbol;
 

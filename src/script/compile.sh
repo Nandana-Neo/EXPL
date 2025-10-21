@@ -29,4 +29,4 @@ cd ..
 # rm temp.xsm
 # rm output
 cd script
-# Run `./xsm -l library.lib -e src/output` in console in parent folder xsm_expl
+# Run `./xsm -l library.lib -e src/out.xsm` in console in parent folder xsm_expl

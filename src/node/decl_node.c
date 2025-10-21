@@ -1,21 +1,21 @@
 #include "decl_node.h"
 
 
-decl_node* create_decl_node(char* varname, int size, VarType type){
+decl_node* create_decl_node(char* varname, int size, Type* type){
     decl_node * node = (decl_node *)malloc(sizeof(decl_node));
     node->symbol_table_entry = add_variable_to_symbol(varname, size, type); 
     node->next = NULL;
     return node;
 }
 
-decl_node* create_decl_node_fn(char* varname, VarType type, parameter* param_list){
+decl_node* create_decl_node_fn(char* varname, Type* type, parameter* param_list){
     decl_node* node = (decl_node *)malloc(sizeof(decl_node));
     node->symbol_table_entry = add_fn_to_symbol(varname, type, param_list);
     node->next = NULL;
     return node;
 }
 
-decl_node* create_decl_node_arr(char* varname, int size, VarType type, array* arr_sz, FILE* fp){
+decl_node* create_decl_node_arr(char* varname, int size, Type* type, array* arr_sz, FILE* fp){
     decl_node * node = (decl_node *)malloc(sizeof(decl_node));
     node->symbol_table_entry = add_array_to_symbol(fp,varname,arr_sz, type, size); 
     node->next = NULL;
@@ -33,15 +33,39 @@ void free_decl_node(decl_node * node){
 }
 
 
-void update_type_decl(decl_node* node, VarType type){
+void update_type_decl(decl_node* node, Type* type){
     decl_node* curr = node;
     while(curr != NULL){
-        switch(curr->symbol_table_entry->type){
-            case TYPE_INT:
-                curr->symbol_table_entry->type = type;
-                break;
-            case TYPE_INT_PTR:
-                curr->symbol_table_entry->type = pointer_type(type);
+        curr->symbol_table_entry->type_entryy->type_table = type->type_table;
+        curr->symbol_table_entry->type_entryy->ptr = curr->symbol_table_entry->type_entryy->ptr || type->ptr;
+        decl_node* prev = curr;
+        curr = curr->next;
+        // free(prev);
+    }
+}
+
+
+void update_size_decl(decl_node* node, Type* type){
+    update_type_size(type->type_table);
+    int sz = type->type_table->size;
+    
+    decl_node* curr = node;
+    while(curr!=NULL){  // first arg is at the end
+        SP = curr->symbol_table_entry->binding;
+        curr = curr->next;
+    }
+    curr = node;
+    while(curr != NULL){
+        // printf("%s\n",curr->symbol_table_entry->name);
+        if(curr->symbol_table_entry->type_entryy->ptr == 1){
+            curr->symbol_table_entry->size = 1;
+            curr->symbol_table_entry->binding = SP;
+            SP += 1;
+        }
+        else{
+            curr->symbol_table_entry->size = sz;
+            curr->symbol_table_entry->binding = SP;
+            SP += sz;
         }
         decl_node* prev = curr;
         curr = curr->next;
