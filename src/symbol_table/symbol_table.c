@@ -176,6 +176,7 @@ Lsymbol* create_lsymbol(char* varname, Type* type, int binding, Lsymbol* next){
     node->type_entryy = create_type(type->type_table, type->ptr);
     node->binding = binding;
     node->next = next;
+    node->size = 1;
     return node;
 }
 

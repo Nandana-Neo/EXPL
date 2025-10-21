@@ -244,9 +244,16 @@ loc_and_val* code_gen_ARR(tnode* node, FILE* fp){
 
 loc_and_val* code_gen_ADDR_OF(tnode* node, FILE* fp){
     // left node should be a varaible ,i.e., ID
-    if(node->left->nodetype != NODE_LEAF || node->left->varname==NULL){
+    if( !(node->left->nodetype==NODE_MEMBER_OF) && !(node->left->nodetype == NODE_LEAF) && node->left->varname==NULL){
         fprintf(stderr, "ERROR: Reference to unknown type\n");
         exit(1);
+    }
+    if(node->left->nodetype == NODE_MEMBER_OF){
+        loc_and_val* member_of_node = code_gen_MEMBER_OF(node->left, fp);
+        fprintf(fp, "MOV R%d, R%d\n", member_of_node->val, member_of_node->loc);
+        free_reg();
+        member_of_node->loc = -1;
+        return member_of_node;
     }
     int reg1 = get_reg();
     if(node->left->lst_entry){
@@ -452,13 +459,13 @@ loc_and_val* code_gen_READ(tnode* node, FILE* fp){
     tnode* var_node = node->left;
     Lsymbol* lst_entry = node->left->lst_entry;
     Gsymbol* gst_entry = node->left->gst_entry;
-    if(lst_entry == NULL && gst_entry == NULL && !(node->left->nodetype==NODE_ARR || node->left->nodetype==NODE_VAL_AT)){
+    if(lst_entry == NULL && gst_entry == NULL && !(node->left->nodetype==NODE_ARR || node->left->nodetype==NODE_VAL_AT || node->left->nodetype==NODE_MEMBER_OF)){
         fprintf(stderr, "READ: Variable not declared:%s\n",var_node->varname);
         exit(1);
     }
     int location;
     loc_and_val* l_gen_node = NULL;
-    if(node->left->nodetype == NODE_ARR || node->left->nodetype==NODE_VAL_AT){
+    if(node->left->nodetype == NODE_ARR || node->left->nodetype==NODE_VAL_AT || node->left->nodetype==NODE_MEMBER_OF){
         l_gen_node = code_gen(var_node, fp , -1, -1);
         location = l_gen_node->loc; // register number storing the location
     }

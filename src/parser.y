@@ -626,7 +626,11 @@ E   :   E '<' E     {
                         free(type);
                     }
     |   E '!''=' E  {
-                        if(!(is_null($<ast_node>1->type_entryy) || is_null($<ast_node>4->type_entryy)) && (!compare_type($<ast_node>1->type_entryy, $<ast_node>4->type_entryy) || !is_int($<ast_node>1->type_entryy))){
+                        if(
+                            !is_null($<ast_node>1->type_entryy) &&
+                            !is_null($<ast_node>4->type_entryy) && 
+                            !compare_type($<ast_node>1->type_entryy, $<ast_node>4->type_entryy)
+                        ){
                             fprintf(stderr,"Error[!=]: Type Mismatch\n");
                             exit(1);
                         }
@@ -635,7 +639,11 @@ E   :   E '<' E     {
                         free(type);
                     }
     |   E '=''=' E  {
-                        if(!(is_null($<ast_node>1->type_entryy) || is_null($<ast_node>4->type_entryy)) && (!compare_type($<ast_node>1->type_entryy, $<ast_node>4->type_entryy) || !is_int($<ast_node>1->type_entryy))){
+                        if(
+                            !is_null($<ast_node>1->type_entryy) &&
+                            !is_null($<ast_node>4->type_entryy) && 
+                            !compare_type($<ast_node>1->type_entryy, $<ast_node>4->type_entryy)
+                        ){
                             fprintf(stderr,"Error[==]: Type Mismatch\n");
                             exit(1);
                         }

@@ -1,19 +1,44 @@
 decl
-    tuple student (str name, int roll_no, str branchname, int year_of_admission) a, b, c;
+    tuple node (int id, str name) a, b;
+    int swap(str* p, str* q);
 enddecl
+
+int swap(str* p, str* q)
+{
+    decl
+        str t;
+    enddecl
+    begin
+        t = *p;
+        *p = *q;
+        *q = t;
+        return 1;
+    end
+}
 
 int main()
 {
     decl
-        tuple faculty (str name, int employee_id, str dept) x, y, z, *ftr, l;
         int ans;
+        str * p; 
+        str *q;
     enddecl
 
     begin
-        ftr = &x;
-        breakpoint;
-        x.name = "hiran";
-        write((*ftr).name);
+        read(a.id);
+        read(b.id);
+        read(a.name);
+        read(b.name);
+        if (a.id == b.id) then
+            p = &(a.name);
+            q = &(b.name);
+            swap(p, q);
+        else
+            write("Different");
+        endif;
+        write(a.name);
+        write(b.name);
+        return 0;
     end
 }
 
