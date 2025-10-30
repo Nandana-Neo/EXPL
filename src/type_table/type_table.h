@@ -22,6 +22,7 @@ typedef struct FieldList{
   char *name;              //name of the field
   int field_id;          //the position of the field in the field list
   struct TypeTable *type;  //pointer to type table entry of the field's type
+  struct ClassTable *c_type;  // pointer to class containing field
   struct FieldList *next;  //pointer to the next field
 }FieldList;
 

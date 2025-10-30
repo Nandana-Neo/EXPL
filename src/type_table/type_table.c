@@ -132,6 +132,7 @@ FieldList* field_create(char* name, TypeTable* type){
     curr->field_id = 0;
     curr->type = type;
     curr->next = NULL;
+    curr->c_type =  NULL;
     return curr;
 }
 
@@ -155,7 +156,14 @@ FieldList* field_list_join(FieldList* f1, FieldList* f2){
     while(f_end->next != NULL)
         f_end = f_end->next;
     f_end->next = f2;
-    f2->field_id = f_end->field_id+1;
+    // f2->field_id = f_end->field_id+1;
+
+    // f_end = f2;
+    while(f_end->next != NULL){
+        f_end->next->field_id = f_end->field_id+1;
+        f_end = f_end->next;
+    }
+
     return f1;
 }
 

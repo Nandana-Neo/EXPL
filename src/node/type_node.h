@@ -152,4 +152,32 @@ VarType variable_type(VarType ptr_type);
  */
 int is_pointer_type(VarType type);
 
+
+/*************************************************************************** */
+/*                              Classes and Objects                          */
+/*************************************************************************** */
+
+// Class Table -- Compile Time Data Structure
+typedef struct ClassTable{
+    char* name;             // name of class
+    int class_id;           // position of class in VFT
+    int field_cnt;          // count of the fields
+    int method_cnt;         // count of methods
+    FieldList* fields;      // pointer to field list
+    MethodList* methods;    // pointer to method list
+    ClassTable* parent_ptr; // pointer to parent's class table
+
+    ClassTable* next;
+} ClassTable;
+
+typedef struct MethodList{
+    char* name;     // name of member function
+    int func_id;    // pos of func in class table
+    int f_label;    // label for starting address of method's code in memory
+    TypeTable *type;    // pointer to Type table
+    parameter* param_list;  // stores the type and name of the parameters of the function
+    MethodList* next;
+} MethodList;
+ 
+
 #endif
