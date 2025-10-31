@@ -5,39 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum {
-    TYPE_NONE = -1,   // not ID node
-    TYPE_INT  = 0,
-    TYPE_CHAR = 1,
-    TYPE_BOOL = 2,
-    TYPE_STR = 3,
-    TYPE_INT_PTR,
-    TYPE_CHAR_PTR,
-    TYPE_VOID,
-    TYPE_NULL,
-    TYPE_CUSTOM
-} VarType;
-
-typedef struct FieldList{
-  char *name;              //name of the field
-  int field_id;          //the position of the field in the field list
-  struct TypeTable *type;  //pointer to type table entry of the field's type
-  struct ClassTable *c_type;  // pointer to class containing field
-  struct FieldList *next;  //pointer to the next field
-}FieldList;
-
-typedef struct TypeTable{
-    char *name;                 //type name
-    int size;                   //size of the type
-    struct FieldList *fields;   //pointer to the head of fields list -- if struct
-    struct TypeTable *next;     // pointer to the next type table entry
-} TypeTable;
-
-// wrapper around type table entry with pointer type info
-typedef struct Type{
-  TypeTable* type_table;
-  int ptr;            // 1 if pointer, else 0
-}Type;
+#include "../node/type_node.h"
 
 extern TypeTable* type_table;
 
@@ -119,6 +87,9 @@ FieldList* field_list_add(FieldList* field_list, char* name, TypeTable* type);
 FieldList* field_list_join(FieldList* f1, FieldList* f2);
 
 Type* create_type(TypeTable* type_table, int ptr);
+
+Type* create_type_class(ClassTable* c);
+
 /**
  * Compare the types of the nodes
  * Returns 1 if same 
@@ -126,6 +97,10 @@ Type* create_type(TypeTable* type_table, int ptr);
  */
 int compare_type(Type* t1, Type* t2);
 
+/**
+ * Checks if the l class can hold r class object
+ */
+int compare_class_type(Type* l, Type* r);
 
 /**
  * Compare the typetable pointers of the nodes

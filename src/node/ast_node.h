@@ -58,7 +58,7 @@ tnode* make_break_node(void);
 tnode* make_continue_node(void);
 tnode* make_array_node(Type* type, tnode* l, tnode* r);
 tnode* make_index_node(tnode* l, tnode* r);
-
+tnode* make_self_node(ClassTable* cptr);
 
 // unary operator
 tnode* make_address_of_node(tnode* e);
@@ -66,6 +66,7 @@ tnode* make_value_at_node(tnode* e);
 
 // represents parent.child with type given (is type of child)
 tnode* make_member_of_node(tnode* parent, Type* type, tnode* child);
+tnode* make_method_of_node(tnode* parent, char* fn_name, Type* type, tnode* arg);
 
 tnode* make_fn_node(char* name, tnode* arg);
 tnode* make_return_node(tnode* e);
@@ -74,6 +75,10 @@ tnode* make_null_node();
 tnode* make_initialize_node();
 tnode* make_alloc_node();
 tnode* make_free_node(tnode* ptr);
+
+tnode* make_new_node(ClassTable* c);
+tnode* make_del_node(tnode* id);
+
 tnode* add_node_to_arglist(tnode* arg, tnode* node);
 tnode* make_breakpoint_node();
 

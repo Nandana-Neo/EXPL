@@ -20,8 +20,12 @@ NodeType node_type(char* type){
 
 tnode* create_tree(node_val val, Type* type, char* varname, NodeType nodetype, Gsymbol *gst_entry, Lsymbol* lst_entry, tnode *l, tnode *m, tnode *r, tnode* nxt){
     tnode * curr = (tnode*)malloc(sizeof(tnode));
-    if(type)
-        curr->type_entryy = create_type(type->type_table, type->ptr);
+    if(type){
+        if(type->c_type)
+            curr->type_entryy = create_type_class(type->c_type);
+        else
+            curr->type_entryy = create_type(type->type_table, type->ptr);
+    }
     else
         curr->type_entryy = NULL;
     if(is_int(type) == 1)
@@ -71,6 +75,16 @@ tnode* make_continue_node(void){
     node_val val;
     val.int_val = 0;
     tnode* curr = create_tree(val, NULL, NULL, NODE_CONTINUE, NULL, NULL,NULL, NULL, NULL, NULL);
+    return curr;
+}
+
+tnode* make_self_node(ClassTable* cptr){
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type_class(cptr);
+    tnode* curr = create_tree(val, type, NULL, NODE_SELF, NULL, NULL, NULL, NULL, NULL, NULL);
+    free(type);
+    // curr->c_type = cptr;
     return curr;
 }
 
@@ -126,6 +140,15 @@ tnode* make_member_of_node(tnode* parent, Type* type, tnode* child){
     return node;
 }
 
+
+tnode* make_method_of_node(tnode* parent, char* fn_name, Type* type, tnode* arg){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, type, fn_name, NODE_METHOD_OF, NULL, NULL, parent, arg, NULL, NULL);
+    node->varname = fn_name;
+    return node;
+}
+
 tnode* make_fn_node(char* name, tnode* arg){
     node_val val;
     val.int_val = 0;
@@ -177,6 +200,23 @@ tnode* make_free_node(tnode* ptr){
     Type* type = create_type(type_table_get("int"),0);
     tnode* node = create_tree(val, type, NULL, NODE_FREE, NULL, NULL, ptr, NULL, NULL, NULL);
     free(type);
+    return node;
+}
+
+
+tnode* make_new_node(ClassTable* c){
+    node_val val;
+    val.int_val = 0;
+    Type* type = create_type_class(c);
+    tnode* node = create_tree(val, type, NULL, NODE_NEW, NULL, NULL, NULL, NULL, NULL, NULL);
+    free(type);
+    return node;
+}
+
+tnode* make_del_node(tnode* id){
+    node_val val;
+    val.int_val = 0;
+    tnode* node = create_tree(val, NULL, NULL, NODE_DEL, NULL, NULL, id, NULL, NULL, NULL);
     return node;
 }
 

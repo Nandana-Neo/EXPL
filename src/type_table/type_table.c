@@ -171,6 +171,15 @@ Type* create_type(TypeTable* type_table, int ptr){
     Type* curr = (Type*)malloc(sizeof(Type));
     curr->ptr = ptr;
     curr->type_table = type_table;
+    curr->c_type = NULL;
+    return curr;
+}
+
+Type* create_type_class(ClassTable* c){
+    Type* curr = (Type*)malloc(sizeof(Type));
+    curr->ptr = 0;
+    curr->type_table = NULL;
+    curr->c_type = c;
     return curr;
 }
 
@@ -179,13 +188,22 @@ int compare_type(Type* t1, Type* t2){
         return 0;
     if(t1->ptr != t2->ptr)
         return 0;
-    TypeTable* tt1 = t1->type_table;
-    TypeTable* tt2 = t2->type_table;
-    return compare_type_table(t1->type_table, t2->type_table);
+    if(t1->c_type != t2->c_type)
+        return 0;
+    if(t1->type_table != t2->type_table)
+        return 0;
+    return 1;
 }
 int compare_type_table(TypeTable* t1, TypeTable* t2){
     if(t1==t2)
         return 1;
+    return 0;
+}
+
+int compare_class_type(Type* l, Type* r){
+    if(!l->c_type || !r->c_type)
+        return 0;
+    // inherited return 1
     return 0;
 }
 

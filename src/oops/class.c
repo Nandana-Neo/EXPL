@@ -1,7 +1,7 @@
 #include "class.h"
 
 static ClassTable* g_class_table = NULL;
-
+ClassTable* curr_class = NULL;
 
 ClassTable* ct_install(char* name, char* parent_class_name){
     if(ct_get(name) != NULL){
@@ -34,6 +34,8 @@ ClassTable* ct_install(char* name, char* parent_class_name){
 }
 
 ClassTable* ct_get(char* name){
+    if(name == NULL)
+        return NULL;
     ClassTable* curr = g_class_table;
     while(curr != NULL){
         if(strcmp(curr->name,name)==0){
@@ -43,13 +45,15 @@ ClassTable* ct_get(char* name){
     return NULL;
 }
 
-void class_f_install(ClassTable* cptr, TypeTable* type, char* name){
-    if(cptr == NULL){
+void class_f_install(ClassTable* curr, ClassTable* cptr, TypeTable* type, char* name){
+    if(curr == NULL){
         fprintf(stderr,"ERROR(class_f_install): Classptr is null\n");
         return;
     }
-    cptr->fields = field_list_add(cptr->fields, name, type);
-    cptr->field_cnt++;
+    curr->fields = field_list_add(curr->fields, name, type);
+    curr->field_cnt++;
+    FieldList* f = class_f_get(curr, name);
+    f->c_type = cptr;
 }
 
 void class_m_install(ClassTable* cptr, char* name, TypeTable* type, parameter* param_list){

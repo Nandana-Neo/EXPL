@@ -6,6 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+/**
+ * Variable used for understanding which class def currently in
+ */
+extern ClassTable* curr_class;
+
 /**
  * FN: ct_install()
  * --------------
@@ -29,7 +35,7 @@ ClassTable* ct_get(char* name);
  * -----------------------
  * Installs the field into the given class table entry
  */
-void class_f_install(ClassTable* cptr, TypeTable* type, char* name);
+void class_f_install(ClassTable* curr, ClassTable* cptr, TypeTable* type, char* name);
 
 /**
  * class_m_install()
