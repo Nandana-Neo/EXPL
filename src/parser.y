@@ -44,6 +44,7 @@
 %left '+' '-';
 %left '*' '/' '%';
 %left '.';
+%left '(' ')';
 %%
 ///////////////                              Main program                                       /////////////////////////
 
@@ -118,22 +119,26 @@ FieldList       :   FieldList FID   {}
                 |
                 ;
 
-FID             :   ID ID ';'       {
-                                        TypeTable* type = type_table_get($<id_name>1);
-                                        ClassTable* c_type = ct_get($<id_name>1);
+FID             :   Type ID ';'       {
+                                        TypeTable* type = $1->type_table;
+                                        ClassTable* c_type = $1->c_type;
                                         class_f_install(curr_class, c_type, type, $<id_name>2);
+                                        free($1);
 
                                     }
                 ;
 
 MethodDecl      :   MethodDecl  MDecl   {}
                 |   MDecl               {}
+                |
                 ;
 
-MDecl           :   ID ID '(' ParamList ')' ';'     {
-                                                        TypeTable* type = type_table_get($<id_name>1);
+
+MDecl           :   Type ID '(' ParamList ')' ';'     {
+                                                        TypeTable* type = $1->type_table;
                                                         // ClassTable* c_type = ct_get($<id_name>1);
                                                         class_m_install(curr_class, $<id_name>2, type, $4);
+                                                        free($1);
                                                         
                                                     }
                 ;   
@@ -406,6 +411,10 @@ FDef        :   PointerType ID ParamListBracs '{' LDeclBlock Body '}'   {
             ;
 ParamListBracs  :   '(' ParamList ')'   {   
                                             curr_lsymbol = add_paramlist_lsymbol($2, NULL,-3);
+                                            if(curr_class != NULL){
+                                                //add self to local symbol table
+                                                curr_lsymbol = add_self_lsymbol(curr_lsymbol, curr_class);
+                                            }
                                             $$ = $2;    
                                         }
                 ;
@@ -545,8 +554,10 @@ ReturnStmt  :   RETURN_STMT E                       {
                                                         $<ast_node>$ = make_return_node($<ast_node>2);
                                                     }
             ;
-L_VAL   :   SELF     { //class
-                        $<ast_node>$ = make_self_node(curr_class);
+L_VAL   :   SELF     { //class -- will always have LST entry
+                        char* name = "self";
+                        Lsymbol* lst_entry = get_variable_lst(name, curr_lsymbol);
+                        $<ast_node>$ = make_self_node(curr_class, lst_entry);
                     }
         |   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
                     node_val val;

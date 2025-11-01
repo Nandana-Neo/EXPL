@@ -6,6 +6,7 @@
 #include "../node/type_node.h"
 #include "../node/ast_node.h"
 #include "../symbol_table/symbol_table.h"
+#include "../oops/class.h"
 
 /**
  * Function: get_reg
@@ -251,9 +252,17 @@ loc_and_val* code_gen_VAL_AT(tnode* node, FILE* fp);
 
 loc_and_val* code_gen_null_node(tnode* node, FILE* fp);
 loc_and_val* code_gen_MEMBER_OF(tnode* node, FILE* fp);
+
+// obj.fn(args) -> return
+loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_label);
+
+loc_and_val* code_gen_SELF_NODE(tnode* node, FILE* fp);
+
 loc_and_val* code_gen_initialize(tnode* node, FILE* fp);
 loc_and_val* code_gen_alloc(tnode* node, FILE* fp);
+loc_and_val* code_gen_new(tnode* node, FILE* fp);
 loc_and_val* code_gen_free(tnode* node, FILE* fp);
+loc_and_val* code_gen_del(tnode* node, FILE* fp);
 
 void code_gen_final(FILE * fp);
 

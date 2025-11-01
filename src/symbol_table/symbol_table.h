@@ -180,6 +180,7 @@ Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding);
  * else returns NULL
  */
 Lsymbol* lst_if_repeated(Lsymbol* lst);
+Lsymbol* add_self_lsymbol(Lsymbol* lst, ClassTable* cptr);
 
 FieldList* paraml_to_fieldl(parameter* param_ls);
 

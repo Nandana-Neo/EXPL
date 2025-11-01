@@ -173,7 +173,10 @@ Lsymbol* create_lsymbol(char* varname, Type* type, int binding, Lsymbol* next){
     // printf("[DEBUG] Lsymbol created:%s\n", varname);
     Lsymbol* node = (Lsymbol*)malloc(sizeof(Lsymbol));
     node->varname = strdup(varname);
-    node->type_entryy = create_type(type->type_table, type->ptr);
+    if(type->c_type)
+        node->type_entryy = create_type_class(type->c_type);
+    else
+        node->type_entryy = create_type(type->type_table, type->ptr);
     node->binding = binding;
     node->next = next;
     node->size = 1;
@@ -256,6 +259,22 @@ Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding){
     return tb;
 }
 
+
+Lsymbol* add_self_lsymbol(Lsymbol* lst, ClassTable* cptr){
+    // find lowest binding
+    int binding = -1;
+    Lsymbol* curr = lst;
+    while(curr){
+        binding = min(binding, curr->binding);
+        curr = curr->next;
+    }
+    binding-=2;
+    Type* type = create_type_class(cptr);
+    char * name = "self";
+    lst = create_lsymbol(name, type, binding, lst);
+    return lst;
+}
+
 Lsymbol* lst_if_repeated(Lsymbol* lst){
     Lsymbol* curr = lst;
     while(curr != NULL){
@@ -286,7 +305,15 @@ void print_lsymbol(){
     printf("|Name\t|Type\t|Binding\t|\n");
     printf("---------------------------------\n");
     while(curr!=NULL){
-        printf("|%s\t|%s\t|%d\t\t|\n",curr->varname,curr->type_entryy->type_table->name,curr->binding);
+        Type* type = curr->type_entryy;
+        char* tname = NULL;
+        if(type->c_type){
+            tname = type->c_type->name;
+        }
+        else{
+            tname = type->type_table->name;
+        }
+        printf("|%s\t|%s\t|%d\t\t|\n",curr->varname, tname, curr->binding);
         curr = curr->next;
     }
     printf("---------------------------------\n");

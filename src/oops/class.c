@@ -41,6 +41,7 @@ ClassTable* ct_get(char* name){
         if(strcmp(curr->name,name)==0){
             return curr;
         }
+        curr = curr->next;
     }
     return NULL;
 }
@@ -109,6 +110,10 @@ MethodList* method_list_join(MethodList* m1, MethodList* m2){
 }
 
 MethodList* class_m_get(ClassTable* cptr, char* f_name){
+    if(cptr == NULL){
+        printf("WARNING: Empty class tried to access\n");
+        return NULL;
+    }
     MethodList* m = cptr->methods;
     while(m!=NULL){
         if(strcmp(m->name, f_name) == 0){
@@ -120,6 +125,10 @@ MethodList* class_m_get(ClassTable* cptr, char* f_name){
 }
 
 FieldList* class_f_get(ClassTable* cptr, char* v_name){
+    if(cptr == NULL){
+        printf("WARNING: Empty class tried to access\n");
+        return NULL;
+    }
     FieldList* f = cptr->fields;
     while(f){
         if(strcmp(f->name, v_name) == 0){

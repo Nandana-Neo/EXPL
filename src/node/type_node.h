@@ -225,4 +225,6 @@ typedef struct ClassTable{
 } ClassTable;
 
 
+int min(int a, int b);
+
 #endif

@@ -78,11 +78,11 @@ tnode* make_continue_node(void){
     return curr;
 }
 
-tnode* make_self_node(ClassTable* cptr){
+tnode* make_self_node(ClassTable* cptr, Lsymbol* lst_entry){
     node_val val;
     val.int_val = 0;
     Type* type = create_type_class(cptr);
-    tnode* curr = create_tree(val, type, NULL, NODE_SELF, NULL, NULL, NULL, NULL, NULL, NULL);
+    tnode* curr = create_tree(val, type, NULL, NODE_SELF, NULL, lst_entry, NULL, NULL, NULL, NULL);
     free(type);
     // curr->c_type = cptr;
     return curr;
@@ -145,7 +145,7 @@ tnode* make_method_of_node(tnode* parent, char* fn_name, Type* type, tnode* arg)
     node_val val;
     val.int_val = 0;
     tnode* node = create_tree(val, type, fn_name, NODE_METHOD_OF, NULL, NULL, parent, arg, NULL, NULL);
-    node->varname = fn_name;
+    node->varname = strdup(fn_name);
     return node;
 }
 

@@ -58,7 +58,7 @@ tnode* make_break_node(void);
 tnode* make_continue_node(void);
 tnode* make_array_node(Type* type, tnode* l, tnode* r);
 tnode* make_index_node(tnode* l, tnode* r);
-tnode* make_self_node(ClassTable* cptr);
+tnode* make_self_node(ClassTable* cptr, Lsymbol* lst_entry);
 
 // unary operator
 tnode* make_address_of_node(tnode* e);
