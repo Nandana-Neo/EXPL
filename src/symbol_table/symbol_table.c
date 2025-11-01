@@ -87,7 +87,12 @@ void print_st(){
     printf("|Name\t\t|Size\t\t|Binding\t|Type-ptr\t|\n");
     printf("-------------------------------------------------------------------\n");
     while(curr != NULL){
-        printf("|%s\t\t|%d\t\t|%d\t\t|%s-%d\t\t|\n",curr->name,curr->size,curr->binding,curr->type_entryy->type_table->name, curr->type_entryy->ptr);
+        char* tname = NULL;
+        if(curr->type_entryy->c_type)
+            tname = curr->type_entryy->c_type->name;
+        else
+            tname = curr->type_entryy->type_table->name;
+        printf("|%s\t\t|%d\t\t|%d\t\t|%s-%d\t\t|\n",curr->name,curr->size,curr->binding,tname, curr->type_entryy->ptr);
         print_array_int(curr->size_array);
         curr = curr->next;
     }
@@ -200,6 +205,7 @@ Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type){
     Lsymbol* curr = lst;
     while(curr!=NULL){
         curr->type_entryy->type_table = type->type_table;
+        curr->type_entryy->c_type = type->c_type;
         curr->type_entryy->ptr = curr->type_entryy->ptr || type->ptr;
         curr = curr->next;
     }
@@ -262,13 +268,13 @@ Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding){
 
 Lsymbol* add_self_lsymbol(Lsymbol* lst, ClassTable* cptr){
     // find lowest binding
-    int binding = -1;
+    int binding = -2;
     Lsymbol* curr = lst;
     while(curr){
         binding = min(binding, curr->binding);
         curr = curr->next;
     }
-    binding-=2;
+    binding-=1; //TODO: Change acc to inheritance stack
     Type* type = create_type_class(cptr);
     char * name = "self";
     lst = create_lsymbol(name, type, binding, lst);

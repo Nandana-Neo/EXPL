@@ -37,6 +37,7 @@ void update_type_decl(decl_node* node, Type* type){
     decl_node* curr = node;
     while(curr != NULL){
         curr->symbol_table_entry->type_entryy->type_table = type->type_table;
+        curr->symbol_table_entry->type_entryy->c_type = type->c_type;
         curr->symbol_table_entry->type_entryy->ptr = curr->symbol_table_entry->type_entryy->ptr || type->ptr;
         decl_node* prev = curr;
         curr = curr->next;

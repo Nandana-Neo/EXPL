@@ -151,15 +151,9 @@ MethodDef       :   MethodDef FDef              {}
 
 GDeclBlock  :   DECL GDeclList ENDDECL  {   
                                             print_st();
-                                            code_gen_SP_init(output_file);
-                                            fprintf(output_file, "JMP _F0\n");
                                         }
-            |   DECL ENDDECL            {   code_gen_SP_init(output_file);
-                                            fprintf(output_file, "JMP _F0\n");
-                                        }
-            |   /*empty*/               {   code_gen_SP_init(output_file);
-                                            fprintf(output_file, "JMP _F0\n");
-                                        }
+            |   DECL ENDDECL            {}
+            |   /*empty*/               {}
             ;
 
 GDeclList   :   GDeclList GDecl {}
@@ -444,6 +438,7 @@ Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }
 ////////////                                   Main Block                                                       /////////////////
 
 MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
+                                                                code_gen_SP_init(output_file);
                                                                 if(curr_lsymbol != $5){
                                                                     fprintf(stderr,"ERROR in implementation of fn: main");
                                                                     exit(1);
@@ -459,6 +454,7 @@ MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
                                                                 fprintf(output_file, "PUSH R0\n");  // return value for main
                                                                 fprintf(output_file, "MOV R0, _L0\n");  // Push return address 
                                                                 fprintf(output_file, "PUSH R0\n"); 
+
                                                                 code_gen_fn_begin(output_file);
                                                                 code_gen($<ast_node>6, output_file, -1, -1);
                                                                 code_gen_final(output_file);
@@ -653,6 +649,9 @@ LHS   :   LHS  '.' ID   {
                                 if(!field->c_type){
                                     type = create_type(field->type,0);
                                 }
+                                else{
+                                    type = create_type_class(c_type);
+                                }
                                 type->c_type = c_type;
                                 node_val val;
                                 val.int_val = 0;
@@ -688,6 +687,9 @@ LHS   :   LHS  '.' ID   {
                                 ClassTable* c_type = field->c_type;
                                 if(!field->c_type){
                                     type = create_type(field->type,0);
+                                }
+                                else{
+                                    type = create_type_class(c_type);
                                 }
                                 type->c_type = c_type;
                                 node_val val;
@@ -941,7 +943,22 @@ E   :   E '<' E     {
                             }
     ;
 
-FieldFn :   LHS '.' ID '(' ArgList ')'  { // LHS can be SELF, ID, ID.ID -- definitely fn
+FieldFn :   L_VAL '.' ID '(' ArgList ')'  { // LHS can be SELF, ID, ID.ID -- definitely fn
+                                            MethodList* fn = class_m_get($<ast_node>1->type_entryy->c_type, $<id_name>3);
+                                            if(fn == NULL){
+                                                printf("No declaration found for fn: %s",$<id_name>3);
+                                                exit(1);
+                                            }
+
+                                            if(compare_arg_param($<ast_node>5, fn->param_list) == 0){
+                                                printf("Mismatching type for function:%s\n",$<id_name>3);
+                                                exit(1);
+                                            }
+                                            Type* type = create_type(fn->type, 0);
+                                            $<ast_node>$ = make_method_of_node($<ast_node>1, $<id_name>3, type, $<ast_node>5);
+
+                                        }
+        |   LHS '.' ID '(' ArgList ')'  { // LHS can be SELF, ID, ID.ID -- definitely fn
                                             MethodList* fn = class_m_get($<ast_node>1->type_entryy->c_type, $<id_name>3);
                                             if(fn == NULL){
                                                 printf("No declaration found for fn: %s",$<id_name>3);
@@ -1044,6 +1061,7 @@ int main(int argc, char* argv[]){
     type_table_init();
 
     code_gen_start(output_file);
+    fprintf(output_file, "JMP _F0\n");
     yyparse();
     return 1;
 }

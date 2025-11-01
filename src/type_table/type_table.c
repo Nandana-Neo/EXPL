@@ -275,7 +275,7 @@ int is_void(Type* type){
 }
 
 int is_tuple(Type* type){
-    if(!type || strncmp("tuple-",type->type_table->name,6)!=0)
+    if(!type || (type->c_type) || strncmp("tuple-",type->type_table->name,6)!=0)
         return 0;
     return 1;
 }

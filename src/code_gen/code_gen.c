@@ -317,7 +317,7 @@ loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_
         l->loc = -1;
     }
     fprintf(fp, "PUSH R%d\n", l->val);
-    fprintf(fp, "PUSH R%d\n", l->val); // TODO: Inheritance
+    // fprintf(fp, "PUSH R%d\n", l->val); // TODO: Inheritance
     free_gen_node(l);
 
     // push args
@@ -340,7 +340,7 @@ loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_
         curr = curr->next;
     }
     fprintf(fp, "POP R%d\n", dummy_reg); // pop obj
-    fprintf(fp, "POP R%d\n", dummy_reg); // [TODO] Inheritance
+    // fprintf(fp, "POP R%d\n", dummy_reg); // [TODO] Inheritance
 
     i--;
     while(i>=0){
