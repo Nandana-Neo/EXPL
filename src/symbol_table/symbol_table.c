@@ -119,7 +119,10 @@ array* add_array_node(array* arr,int val){
 parameter* create_parameter(char* name, Type* type){
     parameter* node = (parameter *)malloc(sizeof(parameter));
     node->name = name;
-    node->type_entryy = create_type(type->type_table, type->ptr);
+    if(type->c_type)
+        node->type_entryy = create_type_class(type->c_type);
+    else
+        node->type_entryy = create_type(type->type_table, type->ptr);
     node->next = NULL;
     return node;
 }
