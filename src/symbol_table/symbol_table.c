@@ -17,8 +17,8 @@ Gsymbol* add_variable_to_symbol(char* name, int size, Type* type, FILE* fp){
     node->name = strdup(name);
     // duplicate the type
     node->type_entryy = create_type(type->type_table, type->ptr);
-    node->size = size;
     node->binding = SP;
+    node->cbinding = SP;
     SP+=size;
     if(type->c_type){
         fprintf(fp, "MOV [%d], %d\n",SP,type->c_type->class_id);
@@ -26,6 +26,7 @@ Gsymbol* add_variable_to_symbol(char* name, int size, Type* type, FILE* fp){
         size++;
         SP++;
     }
+    node->size = size;
     node->symbol_type = SYMBOL_VAR;
     node->next = symbol_table;
     node->size_array = NULL;
@@ -88,21 +89,24 @@ Gsymbol* add_array_to_symbol(FILE* fp, char* varname,array* array_sz, Type* type
 
 void print_st(){
     Gsymbol * curr = symbol_table;
-    printf("Printing GST\n");
-    printf("--------------------------------------------------------------------\n");
-    printf("|Name\t\t|Size\t\t|Binding\t|Type-ptr\t|\n");
-    printf("-------------------------------------------------------------------\n");
+    printf("\n\n");
+    printf("|*************************************************************************************************************************|\n");
+    printf("|*********************************************  Printing GST  ************************************************************|\n");
+    printf("|*************************************************************************************************************************|\n");
+    printf("----------------------------------------------------------------------------------\n");
+    printf("|Name\t\t|Size\t\t|Binding\t|Type-ptr\t|CBinding\t|\n");
+    printf("----------------------------------------------------------------------------------\n");
     while(curr != NULL){
         char* tname = NULL;
         if(curr->type_entryy->c_type)
             tname = curr->type_entryy->c_type->name;
         else
             tname = curr->type_entryy->type_table->name;
-        printf("|%s\t\t|%d\t\t|%d\t\t|%s-%d\t\t|\n",curr->name,curr->size,curr->binding,tname, curr->type_entryy->ptr);
+        printf("|%s\t\t|%d\t\t|%d\t\t|%s-%d\t|%d\t\t|\n",curr->name,curr->size,curr->binding,tname, curr->type_entryy->ptr, curr->cbinding);
         print_array_int(curr->size_array);
         curr = curr->next;
     }
-    printf("--------------------------------------------------------------------\n\n");
+    printf("----------------------------------------------------------------------------------\n\n");
 }
 
 void print_array_int(array * arr){
@@ -229,11 +233,19 @@ Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type){
 }
 
 Lsymbol* update_size_lsymbol_tb(Lsymbol* lst, Type* type){
-    update_type_size(type->type_table);
-    int sz = type->type_table->size;
+    int sz = 0;
+    if(type->c_type){
+        sz = 2;
+    }
+    else{
+        update_type_size(type->type_table);
+        sz = type->type_table->size;
+    }
+    
     Lsymbol* curr = lst;
     lst_binding = curr->binding;
     while(curr != NULL){
+        curr->size = sz;
         if(curr->type_entryy->ptr == 1){
             curr->binding = lst_binding;
             curr->size = 1;
@@ -242,11 +254,9 @@ Lsymbol* update_size_lsymbol_tb(Lsymbol* lst, Type* type){
         else{
             curr->binding = lst_binding;
             if(curr->type_entryy->c_type){
-                sz++;
                 curr->cbinding = curr->binding+sz-1;
             }
             lst_binding+=sz;
-            curr->size = sz;
         }
         curr = curr->next;
     }
@@ -326,10 +336,13 @@ FieldList* paraml_to_fieldl(parameter* param_ls){
 
 void print_lsymbol(){
     Lsymbol* curr = curr_lsymbol;
-    printf("\nPrinting LST\n");
-    printf("---------------------------------\n");
-    printf("|Name\t|Type\t|Binding\t|\n");
-    printf("---------------------------------\n");
+
+    printf("|*************************************************************************************************************************|\n");
+    printf("|*********************************************  Printing LST  ************************************************************|\n");
+    printf("|*************************************************************************************************************************|\n");
+    printf("--------------------------------------------------\n");
+    printf("|Name\t|Type\t|Binding\t| CurrBinding\t|\n");
+    printf("--------------------------------------------------\n");
     while(curr!=NULL){
         Type* type = curr->type_entryy;
         char* tname = NULL;
@@ -339,8 +352,9 @@ void print_lsymbol(){
         else{
             tname = type->type_table->name;
         }
-        printf("|%s\t|%s\t|%d\t\t|\n",curr->varname, tname, curr->binding);
+        printf("|%s\t|%s\t|%d\t\t|%d\t\t|\n",curr->varname, tname, curr->binding, curr->cbinding);
         curr = curr->next;
     }
-    printf("---------------------------------\n");
+    printf("---------------------------------------------------\n\n");
+
 }

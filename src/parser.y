@@ -92,7 +92,7 @@ TypeName     : INT      {   $$ = strdup("int");     }
 
 ////////////////                               Class Block                                        ///////////////////////
 
-ClassDefBlock   :   CLASS ClassDefList ENDCLASS     {   code_gen_class_vft(output_file);    }
+ClassDefBlock   :   CLASS ClassDefList ENDCLASS     {   code_gen_SP_init(output_file);    }
                 |                                   {}
                 ;
 
@@ -191,7 +191,7 @@ GDeclList   :   GDeclList GDecl {}
 GDecl       :   Type GIdList ';'    {   
                                         update_type_decl($<decl_node>2, $1);  
                                         // print_st(); 
-                                        if(is_tuple($1)){
+                                        if(1){
                                             update_size_decl($<decl_node>2, $1, output_file);
                                         }
                                         // print_st();
@@ -466,7 +466,13 @@ Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }
 ////////////                                   Main Block                                                       /////////////////
 
 MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
-                                                                code_gen_SP_init(output_file);
+
+                                                                fprintf(output_file, "_F0:\n");
+                                                                vft_base = code_gen_SP_init(output_file) + 1;
+                                                                code_gen_class_vft(output_file);
+                                                                fprintf(output_file, "PUSH R0\n");  // return value for main
+                                                                fprintf(output_file, "MOV R0, _L0\n");  // Push return address 
+                                                                fprintf(output_file, "PUSH R0\n"); 
                                                                 if(curr_lsymbol != $5){
                                                                     fprintf(stderr,"ERROR in implementation of fn: main");
                                                                     exit(1);
@@ -478,10 +484,6 @@ MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
                                                                 }
                                                                 print_lsymbol();
 
-                                                                fprintf(output_file, "_F0:\n");
-                                                                fprintf(output_file, "PUSH R0\n");  // return value for main
-                                                                fprintf(output_file, "MOV R0, _L0\n");  // Push return address 
-                                                                fprintf(output_file, "PUSH R0\n"); 
 
                                                                 code_gen_fn_begin(output_file);
                                                                 code_gen($<ast_node>6, output_file, -1, -1);

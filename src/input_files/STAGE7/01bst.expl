@@ -20,6 +20,7 @@ class
         enddecl
         int init(){
             begin
+                write("hi");
                 self.root=null;
                 return 1;
             end
@@ -113,10 +114,11 @@ int main(){
         int x,in,val;
     enddecl
     begin
-        breakpoint;
         x=initialize();
         obj = new(bstclass);
+        breakpoint;
         x=obj.init();
+        write(x);
         read(val);
         Root = obj.getroot();
         while(val!=0) do
@@ -126,10 +128,6 @@ int main(){
         x = obj.setroot(Root);
         write("IN");
         in = obj.inOrder_fun(obj.getroot());
-        write("PRE");
-        in = obj.preOrder_fun(obj.getroot());
-        write("POST");
-        in = obj.postOrder_fun(obj.getroot());
         return 0;
     end
 }

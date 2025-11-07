@@ -47,8 +47,14 @@ void update_type_decl(decl_node* node, Type* type){
 
 
 void update_size_decl(decl_node* node, Type* type, FILE* fp){
-    update_type_size(type->type_table);
-    int sz = type->type_table->size;
+    int sz = 0;
+    if(type->c_type){
+        sz = 2;
+    }
+    else{
+        update_type_size(type->type_table);
+        sz = type->type_table->size;
+    }
     
     decl_node* curr = node;
     while(curr!=NULL){  // first arg is at the end
@@ -58,6 +64,7 @@ void update_size_decl(decl_node* node, Type* type, FILE* fp){
     curr = node;
     while(curr != NULL){
         // printf("%s\n",curr->symbol_table_entry->name);
+        curr->symbol_table_entry->size = sz;
         if(curr->symbol_table_entry->type_entryy->ptr == 1){
             curr->symbol_table_entry->size = 1;
             curr->symbol_table_entry->binding = SP;
@@ -66,11 +73,10 @@ void update_size_decl(decl_node* node, Type* type, FILE* fp){
         else{
             curr->symbol_table_entry->binding = SP;
             if(curr->symbol_table_entry->type_entryy->c_type){
-                sz++;
                 curr->symbol_table_entry->cbinding = SP + sz - 1;
+                printf("HERE\n");
                 fprintf(fp, "MOV [%d], %d\n", SP+sz-1, curr->symbol_table_entry->type_entryy->c_type->class_id); // POSSIBLE ERROR
             }
-            curr->symbol_table_entry->size = sz;
             SP += sz;
         }
         decl_node* prev = curr;

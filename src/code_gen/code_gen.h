@@ -8,6 +8,8 @@
 #include "../symbol_table/symbol_table.h"
 #include "../oops/class.h"
 
+extern int vft_base;
+
 /**
  * Function: get_reg
  * -----------------
@@ -100,6 +102,8 @@ void code_gen_fn_end(FILE* fp);
  * Generates code for the function from callee side
  */
 loc_and_val* code_gen_fn(tnode* node, FILE* fp);
+
+void code_gen_class_vft(FILE* fp);
 
 /**
  * Function: code_gen_RET
@@ -267,11 +271,11 @@ loc_and_val* code_gen_del(tnode* node, FILE* fp);
 void code_gen_final(FILE * fp);
 
 void code_gen_start(FILE * fp);
-void code_gen_SP_init(FILE* fp);
+int code_gen_SP_init(FILE* fp);
 
 int evaluate(tnode* node);
 
-loc_and_val* create_gen_node(int loc, int val);
+loc_and_val* create_gen_node(int loc, int val, int cl);
 
 void free_gen_node(loc_and_val* node);
 

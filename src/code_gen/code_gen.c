@@ -3,6 +3,7 @@
 
 static int regNum = 0;
 static int label = 1;   // 0 used for end of main fn
+int vft_base = 0;
 
 int get_reg(){
     if(regNum==20){
@@ -361,10 +362,6 @@ loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_
     
     // push obj instance of self
     loc_and_val* l = code_gen(node->left, fp, start_label, end_label);
-    if(l->loc != -1){
-        free_reg();
-        l->loc = -1;
-    }
     fprintf(fp, "PUSH R%d\n", l->val);
     fprintf(fp, "PUSH R%d\n", l->cl); // Inheritance
     // push args
@@ -374,12 +371,10 @@ loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_
 
     int fn_id = (class_m_get(node->left->type_entryy->c_type, node->varname))->func_id;
     // get actual f_label incase overriding occured
-    int n_reg = get_reg();
-    fprintf(fp,"MOV R%d, 8\n", n_reg);
-    fprintf(fp, "MUL R%d, R%d\n", n_reg, l->cl);
-    fprintf(fp, "MOV R%d, %d\n", l->cl, fn_id);
-    fprintf(fp, "ADD R%d, R%d\n", l->cl, n_reg);
-    free_reg();
+    fprintf(fp, "MUL R%d, 8\n", l->cl);
+    fprintf(fp, "ADD R%d, %d\n", l->cl, vft_base);
+    fprintf(fp, "ADD R%d, %d\n", l->cl, fn_id);
+    fprintf(fp, "MOV R%d, [R%d]\n", l->cl, l->cl);
     fprintf(fp, "CALL R%d\n",l->cl);
     free_gen_node(l);
 
@@ -396,7 +391,7 @@ loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_
         curr = curr->next;
     }
     fprintf(fp, "POP R%d\n", dummy_reg); // pop obj
-    // fprintf(fp, "POP R%d\n", dummy_reg); // [TODO] Inheritance
+    fprintf(fp, "POP R%d\n", dummy_reg); // [TODO] Inheritance
 
     i--;
     while(i>=0){
@@ -424,7 +419,7 @@ loc_and_val* code_gen_SELF_NODE(tnode* node, FILE* fp){
     fprintf(fp,"MOV R%d, [R%d]\n",reg_val, reg_loc);
     fprintf(fp,"MOV R%d, 1\n", reg_cl);
     fprintf(fp,"ADD R%d, R%d\n", reg_cl, reg_loc);
-    fprintf(fp,"MOV R%d, [R%d]", reg_cl, reg_cl);
+    fprintf(fp,"MOV R%d, [R%d]\n", reg_cl, reg_cl);
     ans->loc = reg_loc;
     ans->val = reg_val;
     ans->cl = reg_cl;
@@ -647,8 +642,8 @@ loc_and_val* code_gen_OP(tnode* node, FILE* fp){
                 // update left position to j->cl only if left has lst or gst => node_ID
                 if(node->left->nodetype == NODE_LEAF) {
                     int reg_cl = get_reg();
-                    Lsymbol* lst_entry = node->lst_entry;
-                    Gsymbol* gst_entry = node->gst_entry;
+                    Lsymbol* lst_entry = node->left->lst_entry;
+                    Gsymbol* gst_entry = node->left->gst_entry;
                     Type* type = NULL;
                     if(lst_entry != NULL){
                         int cloc = lst_entry->cbinding;
@@ -966,8 +961,9 @@ void code_gen_start(FILE* fp){
     fprintf(fp,"0\n2056\n0\n0\n0\n0\n0\n0\n");
 }
 
-void code_gen_SP_init(FILE* fp){
+int code_gen_SP_init(FILE* fp){
     fprintf(fp,"MOV SP, %d\n",SP-1);
+    return SP-1;
 }
 
 void code_gen_final(FILE* fp){
