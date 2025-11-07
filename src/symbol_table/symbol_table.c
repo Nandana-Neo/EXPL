@@ -8,7 +8,7 @@ int get_f_label(){
     return f_label++;
 }
 
-Gsymbol* add_variable_to_symbol(char* name, int size, Type* type){
+Gsymbol* add_variable_to_symbol(char* name, int size, Type* type, FILE* fp){
     if(get_variable_gst(name)!=NULL){
         fprintf(stderr,"Variable redeclared:%s\n",name);
         exit(1);
@@ -20,6 +20,12 @@ Gsymbol* add_variable_to_symbol(char* name, int size, Type* type){
     node->size = size;
     node->binding = SP;
     SP+=size;
+    if(type->c_type){
+        fprintf(fp, "MOV [%d], %d\n",SP,type->c_type->class_id);
+        node->cbinding = SP;
+        size++;
+        SP++;
+    }
     node->symbol_type = SYMBOL_VAR;
     node->next = symbol_table;
     node->size_array = NULL;
@@ -73,7 +79,7 @@ Lsymbol* get_variable_lst(char* name, Lsymbol* lst){
 Gsymbol* add_array_to_symbol(FILE* fp, char* varname,array* array_sz, Type* type, int sz){
     type->ptr = 1;
     sz+=1;  // first mem stores the arr variable which points to the nxt location
-    Gsymbol* node = add_variable_to_symbol(varname, sz, type);
+    Gsymbol* node = add_variable_to_symbol(varname, sz, type, fp);
     fprintf(fp,"MOV [%d],%d\n",node->binding,node->binding+1);
     node->size_array = array_sz;
     node->symbol_type = SYMBOL_ARR;
@@ -173,21 +179,24 @@ void free_param_list(parameter* ls){
 
 /***********************Local Symbol Table Fns*********************/ 
 
-Lsymbol* create_lsymbol(char* varname, Type* type, int binding, Lsymbol* next){
+Lsymbol* create_lsymbol(char* varname, Type* type, int binding, int cbinding, Lsymbol* next){
     if(get_variable_lst(varname, curr_lsymbol) != NULL){
         fprintf(stderr,"Variable redeclared:%s\n",varname);
         exit(1);
     }
     // printf("[DEBUG] Lsymbol created:%s\n", varname);
     Lsymbol* node = (Lsymbol*)malloc(sizeof(Lsymbol));
+    node->size = 1;
     node->varname = strdup(varname);
-    if(type->c_type)
+    node->cbinding = cbinding;
+    if(type->c_type){
         node->type_entryy = create_type_class(type->c_type);
+        node->size+=1;
+    }
     else
         node->type_entryy = create_type(type->type_table, type->ptr);
     node->binding = binding;
     node->next = next;
-    node->size = 1;
     return node;
 }
 
@@ -209,6 +218,10 @@ Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type){
     while(curr!=NULL){
         curr->type_entryy->type_table = type->type_table;
         curr->type_entryy->c_type = type->c_type;
+        curr->cbinding = -1;
+        if(type->c_type){
+            curr->cbinding = lst_binding++;
+        }
         curr->type_entryy->ptr = curr->type_entryy->ptr || type->ptr;
         curr = curr->next;
     }
@@ -228,6 +241,10 @@ Lsymbol* update_size_lsymbol_tb(Lsymbol* lst, Type* type){
         }
         else{
             curr->binding = lst_binding;
+            if(curr->type_entryy->c_type){
+                sz++;
+                curr->cbinding = curr->binding+sz-1;
+            }
             lst_binding+=sz;
             curr->size = sz;
         }
@@ -264,7 +281,7 @@ Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding){
     if(param_ls == NULL)
         return tb;
     tb = add_paramlist_lsymbol(param_ls->next, tb, binding-1);
-    tb = create_lsymbol(param_ls->name, param_ls->type_entryy, binding, tb);
+    tb = create_lsymbol(param_ls->name, param_ls->type_entryy, binding, binding, tb);
     return tb;
 }
 
@@ -277,10 +294,10 @@ Lsymbol* add_self_lsymbol(Lsymbol* lst, ClassTable* cptr){
         binding = min(binding, curr->binding);
         curr = curr->next;
     }
-    binding-=1; //TODO: Change acc to inheritance stack
+    binding-=2; //TODO: Change acc to inheritance stack
     Type* type = create_type_class(cptr);
     char * name = "self";
-    lst = create_lsymbol(name, type, binding, lst);
+    lst = create_lsymbol(name, type, binding,  binding+1, lst);
     return lst;
 }
 

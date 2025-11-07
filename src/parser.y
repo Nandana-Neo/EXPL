@@ -92,7 +92,7 @@ TypeName     : INT      {   $$ = strdup("int");     }
 
 ////////////////                               Class Block                                        ///////////////////////
 
-ClassDefBlock   :   CLASS ClassDefList ENDCLASS     {   }
+ClassDefBlock   :   CLASS ClassDefList ENDCLASS     {   code_gen_class_vft(output_file);    }
                 |                                   {}
                 ;
 
@@ -111,6 +111,8 @@ Cname           :   ID              {
                                     }
                 |   ID EXTENDS ID   {   
                                         ClassTable* cptr = ct_install($<id_name>1, $<id_name>3); 
+                                        // install parent fields and methods
+                                        ct_install_inherited(cptr);
                                         curr_class = cptr;
                                     }
                 ;
@@ -137,7 +139,33 @@ MethodDecl      :   MethodDecl  MDecl   {}
 MDecl           :   Type ID '(' ParamList ')' ';'     {
                                                         TypeTable* type = $1->type_table;
                                                         // ClassTable* c_type = ct_get($<id_name>1);
-                                                        class_m_install(curr_class, $<id_name>2, type, $4);
+                                                        if(class_m_get(curr_class, $<id_name>2) != NULL){
+                                                            // Method already declared, we are just redefining
+                                                            if(class_m_get(curr_class->parent_ptr, $<id_name>2) == NULL){
+                                                                // not inherited method, error
+                                                                fprintf(stderr, "ERROR: Method redeclared:%s\n",$<id_name>2);
+                                                                exit(1);
+                                                            }
+                                                            else{
+                                                                MethodList* parent_method = class_m_get(curr_class, $<id_name>2);
+                                                                // Check type and arglist
+                                                                if(compare_type_table(parent_method->type, type) == 0){
+                                                                    fprintf(stderr,"ERROR: Mismatching method definition:%s",$<id_name>2);
+                                                                    exit(1);
+                                                                }
+
+                                                                if(same_parameter_list(parent_method->param_list, $4) == 0){
+                                                                    fprintf(stderr,"ERROR: Mismatching method definition:%s",$<id_name>2);
+                                                                    exit(1);
+                                                                }
+
+                                                                parent_method->f_label = get_f_label();
+                                                            }
+                                                        }
+                                                        else{
+                                                            class_m_install(curr_class, $<id_name>2, type, $4, get_f_label());
+                                                        }
+
                                                         free($1);
                                                         
                                                     }
@@ -164,7 +192,7 @@ GDecl       :   Type GIdList ';'    {
                                         update_type_decl($<decl_node>2, $1);  
                                         // print_st(); 
                                         if(is_tuple($1)){
-                                            update_size_decl($<decl_node>2, $1);
+                                            update_size_decl($<decl_node>2, $1, output_file);
                                         }
                                         // print_st();
                                         free($1);
@@ -205,13 +233,13 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
 
             | ID                {   
                                     Type * dummy_type = create_type(type_table_get("int"), 0);
-                                    $<decl_node>$ = create_decl_node($<id_name>1,1,dummy_type);
+                                    $<decl_node>$ = create_decl_node($<id_name>1,1,dummy_type, output_file);
                                     free(dummy_type);
                                     free($<id_name>1);                      
                                 }
             | '*' ID            {   
                                     Type * dummy_type = create_type(type_table_get("int"), 1);
-                                    $<decl_node>$ = create_decl_node($<id_name>2,1,dummy_type);
+                                    $<decl_node>$ = create_decl_node($<id_name>2,1,dummy_type, output_file);
                                     free(dummy_type);
                                     free($<id_name>2);
                                 }
@@ -309,13 +337,13 @@ LIdList     : LIdList ',' LIdDecl   {
 
 LIdDecl     : ID                {
                                     Type * dummy_type = create_type(type_table_get("int"), 0);
-                                    $$ = create_lsymbol($<id_name>1,dummy_type,lst_binding++,NULL);
+                                    $$ = create_lsymbol($<id_name>1,dummy_type,lst_binding++,-1,NULL);
                                     free(dummy_type);
                                     free($<id_name>1);                      
                                 }
             | '*' ID            {   
                                     Type * dummy_type = create_type(type_table_get("int"), 1);
-                                    $$ = create_lsymbol($<id_name>2,dummy_type,lst_binding++,NULL);
+                                    $$ = create_lsymbol($<id_name>2,dummy_type,lst_binding++,-1,NULL);
                                     free(dummy_type);
                                     free($<id_name>2);
                                 }
@@ -1061,6 +1089,7 @@ int main(int argc, char* argv[]){
     type_table_init();
 
     code_gen_start(output_file);
+    fprintf(output_file, "MOV SP, %d\n", SP-1);
     fprintf(output_file, "JMP _F0\n");
     yyparse();
     return 1;

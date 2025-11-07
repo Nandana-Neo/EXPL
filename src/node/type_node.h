@@ -145,15 +145,23 @@ typedef struct Gsymbol {
     array* size_array;       // stores the length of multidim array
     int size;               // size of the type of the variable - default(1)
     int binding;            // stores the static memory address allocated to the variable
+    int cbinding;           // stores the static memory address allocated to the cptr of the variable
     parameter* param_list;  // stores the type and name of the parameters of the function
     int f_label;            // the label for identifying the start address of fn code -1 for non fn node
     struct Gsymbol *next;
 } Gsymbol;
 
-// loc > val so that when called free_reg(), loc is freed first
+/**
+ * loc > val so that when called free_reg(), loc is freed first
+ * cl > loc
+ * So freed in the order, first cl, loc and val registers
+ * If any is -1, that means register is not assigned
+ *  */ 
+
 typedef struct loc_and_val{
     int val;    // reg no holding the val -> -1 if no register
     int loc;    // reg no holding the location -> -1 if no register
+    int cl;     // reg no holding the addr to class ptr if it is a class -> -1 if no register
 } loc_and_val;
 
 /**
@@ -163,6 +171,7 @@ typedef struct Lsymbol{
     char* varname;
     Type* type_entryy;
     int binding;
+    int cbinding;
     int size;
     struct Lsymbol* next;
 } Lsymbol;

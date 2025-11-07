@@ -99,6 +99,8 @@ void update_field_types(TypeTable* type){
 }
 
 void update_type_size(TypeTable* type){
+    if(type == NULL)
+        return;
     int cnt = 0;
     FieldList* f = type->fields;
     while(f){
@@ -204,6 +206,13 @@ int compare_class_type(Type* l, Type* r){
     if(!l->c_type || !r->c_type)
         return 0;
     // inherited return 1
+    ClassTable* child = r->c_type;
+    // Check if l->c_type is in the parent chain of r->c_type
+    while(child){
+        if(child== l->c_type)
+            return 1;
+        child = child->parent_ptr;
+    }
     return 0;
 }
 

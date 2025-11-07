@@ -13,6 +13,11 @@
 extern ClassTable* curr_class;
 
 /**
+ * Returns the global class table starting pointer
+ */
+ClassTable* get_global_ct();
+
+/**
  * FN: ct_install()
  * --------------
  * Input:
@@ -22,6 +27,14 @@ extern ClassTable* curr_class;
  * Creates a class table entry of given 'name' and extends the fields and the methods of parent class and returns a pointer to the newly created class entry.
  */
 ClassTable* ct_install(char* name, char* parent_class_name);
+
+
+/**
+ * FN: ct_install_inherited()
+ * --------------------------
+ * Installs the fields and methods of the parent class into the given class table entry 'cptr'
+ */
+void ct_install_inherited(ClassTable* cptr);
 
 /**
  * FN: ct_get()
@@ -42,7 +55,7 @@ void class_f_install(ClassTable* curr, ClassTable* cptr, TypeTable* type, char* 
  * -------------------
  * Installs the method into the given class table entry
  */
-void class_m_install(ClassTable* cptr, char* name, TypeTable* type, parameter* param_list);
+void class_m_install(ClassTable* cptr, char* name, TypeTable* type, parameter* param_list, int f_label);
 
 /**
  * create_method()
@@ -80,5 +93,16 @@ MethodList* class_m_get(ClassTable* cptr, char* f_name);
  * Return NULL if entry is not found
  */
 FieldList* class_f_get(ClassTable* cptr, char* v_name);
+
+/**
+ * get_class_vft_baseptr
+ * ------------------
+ * Returns the address of the vft pointing to the class specified by index
+ * That is,
+ * Return 8*index + SP
+ * 
+ * - index starts from 0
+ */
+int get_class_vft_baseptr(int index);
 
 #endif

@@ -1,9 +1,9 @@
 #include "decl_node.h"
 
 
-decl_node* create_decl_node(char* varname, int size, Type* type){
+decl_node* create_decl_node(char* varname, int size, Type* type, FILE* fp){
     decl_node * node = (decl_node *)malloc(sizeof(decl_node));
-    node->symbol_table_entry = add_variable_to_symbol(varname, size, type); 
+    node->symbol_table_entry = add_variable_to_symbol(varname, size, type, fp); 
     node->next = NULL;
     return node;
 }
@@ -46,7 +46,7 @@ void update_type_decl(decl_node* node, Type* type){
 }
 
 
-void update_size_decl(decl_node* node, Type* type){
+void update_size_decl(decl_node* node, Type* type, FILE* fp){
     update_type_size(type->type_table);
     int sz = type->type_table->size;
     
@@ -64,8 +64,13 @@ void update_size_decl(decl_node* node, Type* type){
             SP += 1;
         }
         else{
-            curr->symbol_table_entry->size = sz;
             curr->symbol_table_entry->binding = SP;
+            if(curr->symbol_table_entry->type_entryy->c_type){
+                sz++;
+                curr->symbol_table_entry->cbinding = SP + sz - 1;
+                fprintf(fp, "MOV [%d], %d\n", SP+sz-1, curr->symbol_table_entry->type_entryy->c_type->class_id); // POSSIBLE ERROR
+            }
+            curr->symbol_table_entry->size = sz;
             SP += sz;
         }
         decl_node* prev = curr;

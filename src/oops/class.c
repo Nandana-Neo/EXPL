@@ -33,6 +33,31 @@ ClassTable* ct_install(char* name, char* parent_class_name){
     return new_class;
 }
 
+ClassTable* get_global_ct(){
+    return g_class_table;
+}
+
+void ct_install_inherited(ClassTable* cptr){
+    ClassTable* parent = cptr->parent_ptr;
+    if(parent == NULL){
+        fprintf(stderr,"ERROR(ct_install_inherited): Parent class not found\n");
+        exit(1);
+    }
+    // copy fields
+    FieldList* parent_fields = parent->fields;
+    while(parent_fields != NULL){
+        class_f_install(cptr, parent_fields->c_type, parent_fields->type, parent_fields->name);
+        parent_fields = parent_fields->next;
+    }
+
+    // copy methods
+    MethodList* parent_methods = parent->methods;
+    while(parent_methods != NULL){
+        class_m_install(cptr, parent_methods->name, parent_methods->type, parent_methods->param_list, parent_methods->f_label);
+        parent_methods = parent_methods->next;
+    }
+}
+
 ClassTable* ct_get(char* name){
     if(name == NULL)
         return NULL;
@@ -53,17 +78,26 @@ void class_f_install(ClassTable* curr, ClassTable* cptr, TypeTable* type, char* 
     }
     curr->fields = field_list_add(curr->fields, name, type);
     curr->field_cnt++;
+    if(curr->field_cnt > 8){
+        fprintf(stderr, "ERROR: Class %s has more than 8 fields\n", curr->name);
+        exit(1);
+    }
     FieldList* f = class_f_get(curr, name);
     f->c_type = cptr;
 }
 
-void class_m_install(ClassTable* cptr, char* name, TypeTable* type, parameter* param_list){
+void class_m_install(ClassTable* cptr, char* name, TypeTable* type, parameter* param_list, int f_label){
     if(cptr == NULL){
         fprintf(stderr,"ERROR(class_m_install): Classptr is null\n");
         return;
     }
-    cptr->methods = method_list_add(cptr->methods, name, get_f_label(), type, param_list);
+    cptr->methods = method_list_add(cptr->methods, name, f_label, type, param_list);
     cptr->method_cnt++;
+
+    if(cptr->method_cnt > 8){
+        fprintf(stderr, "ERROR: Class %s has more than 8 methods\n", cptr->name);
+        exit(1);
+    }
     
 }
 
@@ -137,4 +171,9 @@ FieldList* class_f_get(ClassTable* cptr, char* v_name){
         f = f->next;
     }
     return NULL;
+}
+
+
+int get_class_vft_baseptr(int index){
+    return SP+(index*8);
 }

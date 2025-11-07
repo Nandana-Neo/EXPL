@@ -30,7 +30,7 @@ int get_f_label();
  * -------------------------------------------------------------------------------
  * - Type is duplicated, so Type can be freed
  */
-Gsymbol* add_variable_to_symbol(char* name, int size, Type* type);
+Gsymbol* add_variable_to_symbol(char* name, int size, Type* type, FILE* fp);
 
 /**
  * Function: add_fn
@@ -128,7 +128,7 @@ void print_param_list(parameter* ls);
  * The varname is re-assigned. Hence, can free the varname outside the fn
  * Type is duplicated, so Type can be freed
  */
-Lsymbol* create_lsymbol(char* varname, Type* type, int binding, Lsymbol* next);
+Lsymbol* create_lsymbol(char* varname, Type* type, int binding, int cbinding, Lsymbol* next);
 
 /**
  * Function: connect_lsymbol()
