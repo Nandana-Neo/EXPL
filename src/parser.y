@@ -93,7 +93,11 @@ TypeName     : INT      {   $$ = strdup("int");     }
 
 ////////////////                               Class Block                                        ///////////////////////
 
-ClassDefBlock   :   CLASS ClassDefList ENDCLASS     {}
+ClassDefBlock   :   CLASS ClassDefList ENDCLASS     {
+                                                        fprintf(output_file, "_F0:\n");
+                                                        code_gen_class_vft(output_file);
+                                                        fprintf(output_file,"JMP _F1\n");
+                                                    }
                 |                                   {}
                 ;
 
@@ -468,9 +472,8 @@ Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }
 
 MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
 
-                                                                fprintf(output_file, "_F0:\n");
+                                                                fprintf(output_file, "_F1:\n");
                                                                 code_gen_SP_init(output_file);
-                                                                code_gen_class_vft(output_file);
                                                                 code_gen_global(output_file); // global var decl
                                                                 fprintf(output_file, "PUSH R0\n");  // return value for main
                                                                 fprintf(output_file, "MOV R0, _L0\n");  // Push return address 

@@ -3,7 +3,7 @@
 
 static int regNum = 0;
 static int label = 1;   // 0 used for end of main fn
-int vft_base = 4098;
+int vft_base = 4096;
 
 int get_reg(){
     if(regNum==20){
@@ -159,6 +159,7 @@ void code_gen_class_vft(FILE* fp){
         }
         for(;i<8;i++){
             fprintf(fp, "PUSH R0\n");
+            SP++;
         }
 
         start_ct = start_ct->next;
@@ -348,6 +349,10 @@ loc_and_val* code_gen_MEMBER_OF(tnode* node, FILE* fp){
         free_reg();
         l->cl = -1;
     }
+    if(node->type_entryy->c_type){
+        l->cl = get_reg();
+        fprintf(fp, "MOV R%d, %d\n", l->cl, node->type_entryy->c_type->class_id);
+    }
     return l;
 }
 
@@ -363,6 +368,11 @@ loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_
     // push obj instance of self
     loc_and_val* l = code_gen(node->left, fp, start_label, end_label);
     fprintf(fp, "PUSH R%d\n", l->val);
+    if(l->cl<0){
+        int cl_r = get_reg();
+        fprintf(fp, "MOV R%d, %d\n", cl_r, node->left->type_entryy->c_type->class_id);
+        l->cl = cl_r;
+    }
     fprintf(fp, "PUSH R%d\n", l->cl); // Inheritance
     // push args
     code_gen_ARG(node->middle, fp, start_label, end_label);
@@ -724,21 +734,21 @@ loc_and_val* code_gen_READ(tnode* node, FILE* fp){
     fprintf(fp,"PUSH R0\n");
     fprintf(fp,"PUSH R0\n");
     fprintf(fp,"CALL 0\n");
+    fprintf(fp,"POP R%d\n",dupl);    //return value of read not needed [TODO]: READ if ever if we need return val of read anytime
+    fprintf(fp,"POP R%d\n",dupl);
+    fprintf(fp,"POP R%d\n",dupl);
+    fprintf(fp,"POP R%d\n",dupl);
+    fprintf(fp,"POP R%d\n",dupl);
+    for(int i=location-1;i>=0;i--){
+        fprintf(fp,"POP R%d\n",i);
+    }
     if(l_gen_node->loc != -1){ // array
         // free location reg, use val reg for storage of return value
         free_reg();
         l_gen_node->loc = -1;
         location = l_gen_node->val;
     }
-    fprintf(fp,"POP R%d\n",location);    //return value
-    fprintf(fp,"POP R%d\n",dupl);
-    fprintf(fp,"POP R%d\n",dupl);
-    fprintf(fp,"POP R%d\n",dupl);
-    fprintf(fp,"POP R%d\n",dupl);
 
-    for(int i=location-1;i>=0;i--){
-        fprintf(fp,"POP R%d\n",i);
-    }
     return l_gen_node;
 }
 
