@@ -112,6 +112,9 @@ void update_type_size(TypeTable* type){
         exit(1);
     }
     type->size = cnt;
+    if(cnt==0){
+        type->size = 1;
+    }
 }
 
 int get_type_size(TypeTable* type){

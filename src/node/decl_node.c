@@ -81,6 +81,7 @@ void update_size_decl(decl_node* node, Type* type, FILE* fp){
         }
         decl_node* prev = curr;
         curr = curr->next;
+        printf("[DEBUG]: ");
         free(prev);
     }
 }
