@@ -12,6 +12,7 @@
     int yylex();
     extern FILE* yyin;
     FILE * output_file;
+    FILE * temp_file;
 %}
 %union 
 {
@@ -92,7 +93,7 @@ TypeName     : INT      {   $$ = strdup("int");     }
 
 ////////////////                               Class Block                                        ///////////////////////
 
-ClassDefBlock   :   CLASS ClassDefList ENDCLASS     {   code_gen_SP_init(output_file);    }
+ClassDefBlock   :   CLASS ClassDefList ENDCLASS     {}
                 |                                   {}
                 ;
 
@@ -192,7 +193,7 @@ GDecl       :   Type GIdList ';'    {
                                         update_type_decl($<decl_node>2, $1);  
                                         // print_st(); 
                                         if(1){
-                                            update_size_decl($<decl_node>2, $1, output_file);
+                                            update_size_decl($<decl_node>2, $1, temp_file);
                                         }
                                         // print_st();
                                         free($1);
@@ -210,7 +211,7 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                                     free(ast_node);
                                                     array* arr_sz = add_array_node(NULL, sz);
                                                     Type * dummy_type = create_type(type_table_get("int"), 0);
-                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, output_file);
+                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, temp_file);
                                                     free(dummy_type);
                                                     free($<id_name>1);
                                                 }
@@ -226,20 +227,20 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                                     arr_sz = add_array_node(arr_sz, sz2);
                                                     
                                                     Type * dummy_type = create_type(type_table_get("int"), 0);
-                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, output_file);
+                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, temp_file);
                                                     free(dummy_type);
                                                     free($<id_name>1);
                                                 }
 
             | ID                {   
                                     Type * dummy_type = create_type(type_table_get("int"), 0);
-                                    $<decl_node>$ = create_decl_node($<id_name>1,1,dummy_type, output_file);
+                                    $<decl_node>$ = create_decl_node($<id_name>1,1,dummy_type, temp_file);
                                     free(dummy_type);
                                     free($<id_name>1);                      
                                 }
             | '*' ID            {   
                                     Type * dummy_type = create_type(type_table_get("int"), 1);
-                                    $<decl_node>$ = create_decl_node($<id_name>2,1,dummy_type, output_file);
+                                    $<decl_node>$ = create_decl_node($<id_name>2,1,dummy_type, temp_file);
                                     free(dummy_type);
                                     free($<id_name>2);
                                 }
@@ -468,8 +469,9 @@ Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }
 MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
 
                                                                 fprintf(output_file, "_F0:\n");
-                                                                vft_base = code_gen_SP_init(output_file) + 1;
+                                                                code_gen_SP_init(output_file);
                                                                 code_gen_class_vft(output_file);
+                                                                code_gen_global(output_file); // global var decl
                                                                 fprintf(output_file, "PUSH R0\n");  // return value for main
                                                                 fprintf(output_file, "MOV R0, _L0\n");  // Push return address 
                                                                 fprintf(output_file, "PUSH R0\n"); 
@@ -1085,6 +1087,7 @@ int main(int argc, char* argv[]){
     }
     curr_lsymbol = NULL;
     lst_binding = 1;
+    temp_file = fopen("temp_f.xsm","w");
 
     // initialise type table entries
     type_table = NULL;
@@ -1094,5 +1097,6 @@ int main(int argc, char* argv[]){
     fprintf(output_file, "MOV SP, %d\n", SP-1);
     fprintf(output_file, "JMP _F0\n");
     yyparse();
+    remove("temp_f.xsm");
     return 1;
 }

@@ -3,7 +3,7 @@
 
 static int regNum = 0;
 static int label = 1;   // 0 used for end of main fn
-int vft_base = 0;
+int vft_base = 4098;
 
 int get_reg(){
     if(regNum==20){
@@ -638,7 +638,7 @@ loc_and_val* code_gen_OP(tnode* node, FILE* fp){
             break;
         case NODE_ASGN:
             fprintf(fp, "MOV [R%d], R%d\n",i->loc,j->val);
-            if(i->cl != -1 && j->cl != -1){ // checking j also so that null is excluded here
+            if(node->left->type_entryy->c_type && node->right->type_entryy->c_type){ // checking j also so that null is excluded here
                 // update left position to j->cl only if left has lst or gst => node_ID
                 if(node->left->nodetype == NODE_LEAF) {
                     int reg_cl = get_reg();
@@ -706,7 +706,7 @@ loc_and_val* code_gen_READ(tnode* node, FILE* fp){
         }
         l_gen_node = create_gen_node(-1, location, -1);
     }
-    for(int i=0;i < l_gen_node->val; i++){ // the val has the register number that stores the return value
+    for(int i=0;i < location; i++){ // the val has the register number that stores the return value
         fprintf(fp,"PUSH R%d\n",i);
     }
     int dupl = 0;
@@ -977,6 +977,17 @@ void code_gen_final(FILE* fp){
     fprintf(fp,"CALL 0");
 }
 
+
+void code_gen_global(FILE* dest){
+    //read from temp_file and write to output_file
+    FILE* src = fopen("temp_f.xsm", "r");
+    char buffer[512];
+    while (fgets(buffer, sizeof(buffer), src)) {
+        fputs(buffer, dest);
+    }
+
+    fclose(src);
+}
 
 // Only for the evaluator excercise
 int storage[26];

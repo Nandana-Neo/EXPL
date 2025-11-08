@@ -278,5 +278,5 @@ int evaluate(tnode* node);
 loc_and_val* create_gen_node(int loc, int val, int cl);
 
 void free_gen_node(loc_and_val* node);
-
+void code_gen_global(FILE* dest);
 #endif
