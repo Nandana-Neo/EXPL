@@ -59,9 +59,7 @@ int main() {
         else
             obj = new(Square);
         endif;
-        write(obj);
         x = obj.set_dimensions();
-        write(obj);
         write(obj.area());
         return 0;
     end
