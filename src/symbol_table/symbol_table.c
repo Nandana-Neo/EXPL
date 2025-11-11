@@ -206,6 +206,7 @@ Lsymbol* create_lsymbol(char* varname, Type* type, int binding, int cbinding, Ls
     return node;
 }
 
+
 Lsymbol* connect_lsymbol(Lsymbol* lst1, Lsymbol* lst2){
     if(lst1 == NULL)
         return lst2;
@@ -229,6 +230,27 @@ Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type){
             curr->cbinding = lst_binding++;
         }
         curr->type_entryy->ptr = curr->type_entryy->ptr || type->ptr;
+        curr = curr->next;
+    }
+    return lst;
+}
+
+Lsymbol* correct_lsymbol_table(Lsymbol* lst){
+    int req_binding = -3;
+    Lsymbol* curr = lst;
+    while(curr!=NULL){
+        if(curr->binding < 0){
+            int b = curr->binding;
+            int bc = curr->cbinding;
+            if(bc == b+1){
+                curr->cbinding = req_binding--;
+                curr->binding = req_binding--; 
+            }
+            else{
+                curr->binding = req_binding--;
+                curr->cbinding = curr->binding;
+            }
+        }
         curr = curr->next;
     }
     return lst;
@@ -292,8 +314,13 @@ void free_lsymbol(Lsymbol* ls){
 Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding){
     if(param_ls == NULL)
         return tb;
+    int cbinding = binding;
+    if(param_ls->type_entryy->c_type){
+        binding--;
+        cbinding = binding+1;
+    }
     tb = add_paramlist_lsymbol(param_ls->next, tb, binding-1);
-    tb = create_lsymbol(param_ls->name, param_ls->type_entryy, binding, binding, tb);
+    tb = create_lsymbol(param_ls->name, param_ls->type_entryy, binding, cbinding, tb);
     return tb;
 }
 
@@ -343,7 +370,7 @@ void print_lsymbol(){
     printf("|*********************************************  Printing LST  ************************************************************|\n");
     printf("|*************************************************************************************************************************|\n");
     printf("--------------------------------------------------\n");
-    printf("|Name\t|Type\t|Binding\t| CurrBinding\t|\n");
+    printf("|Name\t|Type\t|Size\t|Binding\t| CurrBinding\t|\n");
     printf("--------------------------------------------------\n");
     while(curr!=NULL){
         Type* type = curr->type_entryy;
@@ -354,7 +381,7 @@ void print_lsymbol(){
         else{
             tname = type->type_table->name;
         }
-        printf("|%s\t|%s\t|%d\t\t|%d\t\t|\n",curr->varname, tname, curr->binding, curr->cbinding);
+        printf("|%s\t|%s\t|%d\t|%d\t\t|%d\t\t|\n",curr->varname, tname, curr->size, curr->binding, curr->cbinding);
         curr = curr->next;
     }
     printf("---------------------------------------------------\n\n");

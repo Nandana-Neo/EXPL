@@ -155,6 +155,7 @@ Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type);
 
 Lsymbol* update_size_lsymbol_tb(Lsymbol* lst, Type* type);
 
+Lsymbol* correct_lsymbol_table(Lsymbol* lst);
 /**
  * Function: free_lsymbol
  * ------------------------

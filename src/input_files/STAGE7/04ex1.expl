@@ -20,8 +20,8 @@ class
     }
 endclass
 decl
-fact obj;
-int find_ans(fact f,int k);
+    fact obj;
+    int find_ans(fact f,int k);
 enddecl
 
 int find_ans(fact f, int k){
@@ -29,6 +29,7 @@ int find_ans(fact f, int k){
         int n;
     enddecl
     begin
+        breakpoint;
         n = f.findfactorial(k);
         return n;
     end

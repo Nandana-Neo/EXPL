@@ -198,7 +198,7 @@ GDeclList   :   GDeclList GDecl {}
 GDecl       :   Type GIdList ';'    {   
                                         update_type_decl($<decl_node>2, $1);  
                                         // print_st(); 
-                                        if(1){
+                                        if($<decl_node>2->symbol_table_entry->symbol_type != SYMBOL_FN){
                                             update_size_decl($<decl_node>2, $1, temp_file);
                                         }
                                         // print_st();
@@ -439,11 +439,13 @@ FDef        :   PointerType ID ParamListBracs '{' LDeclBlock Body '}'   {
                                                                     }
             ;
 ParamListBracs  :   '(' ParamList ')'   {   
+                                            curr_lsymbol = correct_lsymbol_table(curr_lsymbol);
                                             curr_lsymbol = add_paramlist_lsymbol($2, NULL,-3);
                                             if(curr_class != NULL){
                                                 //add self to local symbol table
                                                 curr_lsymbol = add_self_lsymbol(curr_lsymbol, curr_class);
                                             }
+                                            
                                             $$ = $2;    
                                         }
                 ;

@@ -59,6 +59,7 @@ loc_and_val* code_gen_ARG(tnode* node, FILE* fp, int start_label, int end_label)
     if(gen_node->cl != -1){
         fprintf(fp, "PUSH R%d\n", gen_node->cl);
     }
+    printf("[DEBUG] Pushed for %s\n",node->varname);
     free_gen_node(gen_node);
     return NULL;
 }
@@ -98,7 +99,7 @@ void push_local_decl(Lsymbol* lst, FILE* fp){
     if(lst == NULL)
         return;
     if(lst->binding > 0){    // local decl
-        if(lst->cbinding!=-1){
+        if(lst->type_entryy->c_type != NULL){
             fprintf(fp, "MOV R0, %d\n",lst->type_entryy->c_type->class_id);
         }
         for(int i=0;i<lst->size;i++){
