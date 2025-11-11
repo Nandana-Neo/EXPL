@@ -7,10 +7,12 @@
     #include "node/ast_node.h"
     #include "node/decl_node.h"
     #include "code_gen/code_gen.h"
+    #include "oops/class.h"
     int yyerror();   
     int yylex();
     extern FILE* yyin;
     FILE * output_file;
+    FILE * temp_file;
 %}
 %union 
 {
@@ -33,6 +35,7 @@
 %token NULL_VAL;
 %token TUPLE;
 %token BREAK_POINT;
+%token CLASS ENDCLASS EXTENDS SELF NEW DELETE;
 %type<decl_type> Type PointerType;
 %type<param_list> Param ParamList ParamListBracs;
 %type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
@@ -42,11 +45,17 @@
 %left '+' '-';
 %left '*' '/' '%';
 %left '.';
+%left '(' ')';
 %%
-Program     :   TypeDefBlock GDeclBlock FDefBlock MainBlock  {   
+///////////////                              Main program                                       /////////////////////////
+
+Program     :   TypeDefBlock ClassDefBlock GDeclBlock FDefBlock MainBlock  {   
                                                     exit(0);
                                                 }
             ;
+
+
+///////////////                                     TYPE                                          /////////////////////
 
 TypeDefBlock  : TYPE TypeDefList ENDTYPE    { // type table creation completed
                                                 print_type_table();
@@ -82,18 +91,106 @@ TypeName     : INT      {   $$ = strdup("int");     }
              | ID       {   $$ = $<id_name>1;       }//TypeName for user-defined types
              ;
 
+////////////////                               Class Block                                        ///////////////////////
+
+ClassDefBlock   :   CLASS ClassDefList ENDCLASS     {
+                                                        fprintf(output_file, "_F0:\n");
+                                                        code_gen_class_vft(output_file);
+                                                        fprintf(output_file,"JMP _F1\n");
+                                                    }
+                |                                   {}
+                ;
+
+ClassDefList    :   ClassDefList ClassDef   {}
+                |   ClassDef                {}
+                ;
+
+ClassDef        :   Cname '{' DECL FieldList MethodDecl ENDDECL MethodDef '}'   {
+                                                                                    curr_class = NULL;
+                                                                                }
+                ;
+
+Cname           :   ID              {   
+                                        ClassTable* cptr = ct_install($<id_name>1, NULL); 
+                                        curr_class = cptr;
+                                    }
+                |   ID EXTENDS ID   {   
+                                        ClassTable* cptr = ct_install($<id_name>1, $<id_name>3); 
+                                        // install parent fields and methods
+                                        ct_install_inherited(cptr);
+                                        curr_class = cptr;
+                                    }
+                ;
+
+FieldList       :   FieldList FID   {}
+                |
+                ;
+
+FID             :   Type ID ';'       {
+                                        TypeTable* type = $1->type_table;
+                                        ClassTable* c_type = $1->c_type;
+                                        class_f_install(curr_class, c_type, type, $<id_name>2);
+                                        free($1);
+
+                                    }
+                ;
+
+MethodDecl      :   MethodDecl  MDecl   {}
+                |   MDecl               {}
+                |
+                ;
+
+
+MDecl           :   Type ID '(' ParamList ')' ';'     {
+                                                        TypeTable* type = $1->type_table;
+                                                        // ClassTable* c_type = ct_get($<id_name>1);
+                                                        MethodList* existing_methods = class_m_get(curr_class, $<id_name>2, $4);
+                                                        if(existing_methods!=NULL){
+                                                            // Method already declared, we are just redefining
+
+                                                            if(class_m_get(curr_class->parent_ptr, $<id_name>2, $4) == NULL){
+                                                                // not inherited method, error
+                                                                fprintf(stderr, "ERROR: Method redeclared:%s\n",$<id_name>2);
+                                                                exit(1);
+                                                            }
+                                                            else{
+                                                                MethodList* parent_method = class_m_get(curr_class, $<id_name>2, $4);
+                                                                // Check type and arglist
+                                                                if(compare_type_table(parent_method->type, type) == 0){
+                                                                    fprintf(stderr,"ERROR: Mismatching method definition:%s",$<id_name>2);
+                                                                    exit(1);
+                                                                }
+
+                                                                // if(same_parameter_list(parent_method->param_list, $4) == 0){
+                                                                //     fprintf(stderr,"ERROR: Mismatching method definition:%s",$<id_name>2);
+                                                                //     exit(1);
+                                                                // }
+
+                                                                parent_method->f_label = get_f_label();
+                                                            }
+                                                        }
+                                                        else{
+                                                            class_m_install(curr_class, $<id_name>2, type, $4, get_f_label());
+                                                        }
+
+                                                        free($1);
+                                                        
+                                                    }
+                ;   
+
+MethodDef       :   MethodDef FDef              {}
+                |   FDef                        {}
+                |                               {}
+                ;
+
+////////////////                                GDeclBlock                                        ///////////////////////
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 GDeclBlock  :   DECL GDeclList ENDDECL  {   
                                             print_st();
-                                            code_gen_SP_init(output_file);
-                                            fprintf(output_file, "JMP _F0\n");
                                         }
-            |   DECL ENDDECL            {   code_gen_SP_init(output_file);
-                                            fprintf(output_file, "JMP _F0\n");
-                                        }
-            |   /*empty*/               {   code_gen_SP_init(output_file);
-                                            fprintf(output_file, "JMP _F0\n");
-                                        }
+            |   DECL ENDDECL            {}
+            |   /*empty*/               {}
             ;
 
 GDeclList   :   GDeclList GDecl {}
@@ -103,8 +200,8 @@ GDeclList   :   GDeclList GDecl {}
 GDecl       :   Type GIdList ';'    {   
                                         update_type_decl($<decl_node>2, $1);  
                                         // print_st(); 
-                                        if(is_tuple($1)){
-                                            update_size_decl($<decl_node>2, $1);
+                                        if($<decl_node>2->symbol_table_entry->symbol_type != SYMBOL_FN){
+                                            update_size_decl($<decl_node>2, $1, temp_file);
                                         }
                                         // print_st();
                                         free($1);
@@ -122,7 +219,7 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                                     free(ast_node);
                                                     array* arr_sz = add_array_node(NULL, sz);
                                                     Type * dummy_type = create_type(type_table_get("int"), 0);
-                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, output_file);
+                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, temp_file);
                                                     free(dummy_type);
                                                     free($<id_name>1);
                                                 }
@@ -138,20 +235,20 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                                     arr_sz = add_array_node(arr_sz, sz2);
                                                     
                                                     Type * dummy_type = create_type(type_table_get("int"), 0);
-                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, output_file);
+                                                    $<decl_node>$ = create_decl_node_arr($<id_name>1, sz, dummy_type, arr_sz, temp_file);
                                                     free(dummy_type);
                                                     free($<id_name>1);
                                                 }
 
             | ID                {   
                                     Type * dummy_type = create_type(type_table_get("int"), 0);
-                                    $<decl_node>$ = create_decl_node($<id_name>1,1,dummy_type);
+                                    $<decl_node>$ = create_decl_node($<id_name>1,1,dummy_type, temp_file);
                                     free(dummy_type);
                                     free($<id_name>1);                      
                                 }
             | '*' ID            {   
                                     Type * dummy_type = create_type(type_table_get("int"), 1);
-                                    $<decl_node>$ = create_decl_node($<id_name>2,1,dummy_type);
+                                    $<decl_node>$ = create_decl_node($<id_name>2,1,dummy_type, temp_file);
                                     free(dummy_type);
                                     free($<id_name>2);
                                 }
@@ -172,7 +269,8 @@ GIdDecl      : ID '[' NUM_VAL ']'                {
                                             free($<id_name>2);
                                         }
             ;
-///////////////////////////////////////////////////////////////////////////////////////
+///////////////                                            LDeclBlock                                            ////////////////////
+
 LDeclBlock      : DECL LDeclList ENDDECL    {   curr_lsymbol = $$ = connect_lsymbol(curr_lsymbol, $2);    }
                 | DECL ENDDECL              {   $$ = curr_lsymbol; }
                 | /*empty*/                 {   $$ = curr_lsymbol; }
@@ -183,7 +281,7 @@ LDeclList   : LDeclList LDecl     {     $$ = connect_lsymbol($1,$2);   }
             ;
 
 LDecl       : Type LIdList ';'  {   $$ = update_type_lsymbol_tb($2, $1); 
-                                    if(is_tuple($1)){
+                                    if($1->c_type!=NULL || is_tuple($1)){
                                         $$ = update_size_lsymbol_tb($2,$1);
                                     }
                                     free($1);          
@@ -211,10 +309,19 @@ Type        : INT           {   TypeTable* type_table_entry = type_table_get("in
                             }
             | ID            {   TypeTable* type_table_entry = type_table_get($<id_name>1);
                                 if(type_table_entry == NULL){
-                                    fprintf(stderr, "Undefined type used:%s\n",$<id_name>1);
-                                    exit(1);
+                                    // could be a class
+                                    ClassTable* cptr = ct_get($<id_name>1);
+                                    if(cptr){
+                                        $$ = create_type_class(cptr);
+                                    }
+                                    else{
+                                        fprintf(stderr, "Undefined type used:%s\n",$<id_name>1);
+                                        exit(1);
+                                    }
                                 }
-                                $$ = create_type(type_table_entry,0);
+                                else{
+                                    $$ = create_type(type_table_entry,0);
+                                }
                             }
             | TUPLE ID '(' ParamList ')'   {
                                             char name[50];
@@ -239,18 +346,18 @@ LIdList     : LIdList ',' LIdDecl   {
 
 LIdDecl     : ID                {
                                     Type * dummy_type = create_type(type_table_get("int"), 0);
-                                    $$ = create_lsymbol($<id_name>1,dummy_type,lst_binding++,NULL);
+                                    $$ = create_lsymbol($<id_name>1,dummy_type,lst_binding++,-1,NULL);
                                     free(dummy_type);
                                     free($<id_name>1);                      
                                 }
             | '*' ID            {   
                                     Type * dummy_type = create_type(type_table_get("int"), 1);
-                                    $$ = create_lsymbol($<id_name>2,dummy_type,lst_binding++,NULL);
+                                    $$ = create_lsymbol($<id_name>2,dummy_type,lst_binding++,-1,NULL);
                                     free(dummy_type);
                                     free($<id_name>2);
                                 }
             ;
-///////////////////////////////////////////////////////////////////////////////////////////////
+/////////////                                       Fn Defintions                                             ///////////////
 FDefBlock   :   FDefBlock FDef  {}
             |   FDef            {}
             |
@@ -258,42 +365,89 @@ FDefBlock   :   FDefBlock FDef  {}
 
 FDef        :   PointerType ID ParamListBracs '{' LDeclBlock Body '}'   {
                                                                         Gsymbol* fn_decl = get_variable_gst($<id_name>2);
-                                                                        if(fn_decl == NULL){
-                                                                            fprintf(stderr,"ERROR: Function declaration not found:%s",$<id_name>2);
-                                                                            exit(1);
-                                                                        }
-                                                                        if( compare_type(fn_decl->type_entryy, $1) == 0){
-                                                                            fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
-                                                                            exit(1);
-                                                                        }
-                                                                        free($1);
-                                                                        if(same_parameter_list(fn_decl->param_list,$3)!=1){
-                                                                            fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
-                                                                            exit(1);
-                                                                        }
-                                                                        if(curr_lsymbol != $5){
-                                                                            fprintf(stderr,"ERROR in implementation of fn:%s",$<id_name>2);
-                                                                            exit(1);
-                                                                        }
-                                                                        Lsymbol* repeated_node = lst_if_repeated(curr_lsymbol);
-                                                                        if(repeated_node){
-                                                                            fprintf(stderr,"Variable redeclared:%s\n",repeated_node->varname);
-                                                                            exit(1);
-                                                                        }
-                                                                        free_param_list($3);
-                                                                        print_lsymbol();
+                                                                        MethodList* method = NULL;
 
-                                                                        fprintf(output_file,"_F%d:\n",fn_decl->f_label);
+                                                                        if(fn_decl){    // global fn def
+                                                                            if(compare_type(fn_decl->type_entryy, $1) == 0){
+                                                                                fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
+                                                                                exit(1);
+                                                                            }
+                                                                            free($1);
+                                                                            if(same_parameter_list(fn_decl->param_list,$3)!=1){
+                                                                                fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
+                                                                                exit(1);
+                                                                            }
+                                                                            if(curr_lsymbol != $5){
+                                                                                fprintf(stderr,"ERROR in implementation of fn:%s",$<id_name>2);
+                                                                                exit(1);
+                                                                            }
+                                                                            Lsymbol* repeated_node = lst_if_repeated(curr_lsymbol);
+                                                                            if(repeated_node){
+                                                                                fprintf(stderr,"Variable redeclared:%s\n",repeated_node->varname);
+                                                                                exit(1);
+                                                                            }
+                                                                            free_param_list($3);
+                                                                            print_lsymbol();
+    
+                                                                            fprintf(output_file,"_F%d:\n",fn_decl->f_label);
+    
+                                                                            code_gen_fn($<ast_node>6, output_file);
+                                                                            free_tree($<ast_node>6);
+                                                                            free_lsymbol(curr_lsymbol);
+                                                                            curr_lsymbol = NULL;
+                                                                            lst_binding = 1;
 
-                                                                        code_gen_fn($<ast_node>6, output_file);
-                                                                        free_tree($<ast_node>6);
-                                                                        free_lsymbol(curr_lsymbol);
-                                                                        curr_lsymbol = NULL;
-                                                                        lst_binding = 1;
+                                                                        }
+                                                                        else{
+                                                                            method = class_m_get(curr_class, $<id_name>2, $3);
+                                                                            if(method){ // in class
+                                                                                if(compare_type_table(method->type, $1->type_table) == 0){
+                                                                                    fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
+                                                                                    exit(1);
+                                                                                }
+                                                                                free($1);
+                                                                                if(same_parameter_list(method->param_list,$3)!=1){
+                                                                                    fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
+                                                                                    exit(1);
+                                                                                }
+                                                                                if(curr_lsymbol != $5){
+                                                                                    fprintf(stderr,"ERROR in implementation of fn:%s",$<id_name>2);
+                                                                                    exit(1);
+                                                                                }
+                                                                                Lsymbol* repeated_node = lst_if_repeated(curr_lsymbol);
+                                                                                if(repeated_node){
+                                                                                    fprintf(stderr,"Variable redeclared:%s\n",repeated_node->varname);
+                                                                                    exit(1);
+                                                                                }
+                                                                                free_param_list($3);
+                                                                                print_lsymbol();
+        
+                                                                                fprintf(output_file,"_F%d:\n",method->f_label);
+        
+                                                                                code_gen_fn($<ast_node>6, output_file);
+                                                                                free_tree($<ast_node>6);
+                                                                                free_lsymbol(curr_lsymbol);
+                                                                                curr_lsymbol = NULL;
+                                                                                lst_binding = 1;
+                                                          
+                                                                            }
+                                                                            else{
+                                                                                fprintf(stderr,"ERROR: Function declaration not found:%s",$<id_name>2);
+                                                                                exit(1);
+                                                                            }
+                                                                        }
+
+
                                                                     }
             ;
 ParamListBracs  :   '(' ParamList ')'   {   
+                                            curr_lsymbol = correct_lsymbol_table(curr_lsymbol);
                                             curr_lsymbol = add_paramlist_lsymbol($2, NULL,-3);
+                                            if(curr_class != NULL){
+                                                //add self to local symbol table
+                                                curr_lsymbol = add_self_lsymbol(curr_lsymbol, curr_class);
+                                            }
+                                            
                                             $$ = $2;    
                                         }
                 ;
@@ -318,8 +472,18 @@ Body        :   P_BEGIN Slist P_END      {   $<ast_node>$ = $<ast_node>2;    }
             |   /* empty */ {   $<ast_node>$ = NULL;    }
             |   P_BEGIN P_END   {   $<ast_node>$ = NULL;    }
             ;
-///////////////////////////////////////////////////////////////////////////////////////
+
+
+////////////                                   Main Block                                                       /////////////////
+
 MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
+
+                                                                fprintf(output_file, "_F1:\n");
+                                                                code_gen_SP_init(output_file);
+                                                                code_gen_global(output_file); // global var decl
+                                                                fprintf(output_file, "PUSH R0\n");  // return value for main
+                                                                fprintf(output_file, "MOV R0, _L0\n");  // Push return address 
+                                                                fprintf(output_file, "PUSH R0\n"); 
                                                                 if(curr_lsymbol != $5){
                                                                     fprintf(stderr,"ERROR in implementation of fn: main");
                                                                     exit(1);
@@ -331,10 +495,7 @@ MainBlock   :   MAIN_DEF '(' ')' '{' LDeclBlock Body '}'    {
                                                                 }
                                                                 print_lsymbol();
 
-                                                                fprintf(output_file, "_F0:\n");
-                                                                fprintf(output_file, "PUSH R0\n");  // return value for main
-                                                                fprintf(output_file, "MOV R0, _L0\n");  // Push return address 
-                                                                fprintf(output_file, "PUSH R0\n"); 
+
                                                                 code_gen_fn_begin(output_file);
                                                                 code_gen($<ast_node>6, output_file, -1, -1);
                                                                 code_gen_final(output_file);
@@ -430,7 +591,12 @@ ReturnStmt  :   RETURN_STMT E                       {
                                                         $<ast_node>$ = make_return_node($<ast_node>2);
                                                     }
             ;
-L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
+L_VAL   :   SELF     { //class -- will always have LST entry
+                        char* name = "self";
+                        Lsymbol* lst_entry = get_variable_lst(name, curr_lsymbol);
+                        $<ast_node>$ = make_self_node(curr_class, lst_entry);
+                    }
+        |   ID  {   // can be str or int - doesn't matter. Symbol table holds the binding to which value is added
                     node_val val;
                     val.int_val = 0;
                     Lsymbol* lst_entry = get_variable_lst($<id_name>1, curr_lsymbol);
@@ -494,37 +660,79 @@ L_VAL   :   ID  {   // can be str or int - doesn't matter. Symbol table holds th
         /* | Field     {   $<ast_node>$ = $<ast_node>1; } */
         ;
 
-LHS   :   LHS  '.' ID   {
-
-                                if(!$<ast_node>1->type_entryy || !$<ast_node>1->type_entryy->type_table){
-                                    fprintf(stderr,"Error[.]: Type Error\n");
-                                    exit(1);
+LHS   :   LHS  '.' ID   {   
+                                tnode* l_node = $<ast_node>1;
+                                FieldList* field;
+                                if(!l_node->type_entryy) {
+                                        fprintf(stderr,"Error[.]: Type Error\n");
+                                        exit(1);
                                 }
-                                FieldList* field = field_list_get($<id_name>3, $<ast_node>1->type_entryy->type_table);
+
+                                if(l_node->type_entryy->c_type){
+                                    // field of class
+                                    field = class_f_get(l_node->type_entryy->c_type, $<id_name>3);
+                                }
+                                else{
+                                    if(!l_node->type_entryy->type_table){
+                                        fprintf(stderr,"Error[.]: Type Error\n");
+                                        exit(1);
+                                    }
+                                    field = field_list_get($<id_name>3, l_node->type_entryy->type_table);
+                                }
+
                                 if(field == NULL){
                                     fprintf(stderr,"Error[.]: Field %s does not exist\n",$<id_name>3);
                                     exit(1);
                                 }
-                                Type* type = create_type(field->type,0);
+                                // field can be class
+                                Type* type = NULL;
+                                ClassTable* c_type = field->c_type;
+                                if(!field->c_type){
+                                    type = create_type(field->type,0);
+                                }
+                                else{
+                                    type = create_type_class(c_type);
+                                }
+                                type->c_type = c_type;
                                 node_val val;
                                 val.int_val = 0;
                                 tnode* r_node = make_leaf_node(val, type, $<id_name>3, NULL, NULL);
-                                $<ast_node>$ = make_member_of_node($<ast_node>1, type, r_node);
-                                free(type);
+                                $<ast_node>$ = make_member_of_node(l_node, type, r_node);
+                                free(type);   
                             }
         |   L_VAL '.' ID       {   
                                 tnode* l_node = $<ast_node>1;
-                                
-                                if(!l_node->type_entryy || !l_node->type_entryy->type_table){
+                                FieldList* field;
+                                if(!l_node->type_entryy) {
                                     fprintf(stderr,"Error[.]: Type Error\n");
                                     exit(1);
                                 }
-                                FieldList* field = field_list_get($<id_name>3, l_node->type_entryy->type_table);
+                                if(l_node->type_entryy->c_type){
+                                    // field of class
+                                    field = class_f_get(l_node->type_entryy->c_type, $<id_name>3);
+                                }
+                                else{
+                                    if(!l_node->type_entryy->type_table){
+                                        fprintf(stderr,"Error[.]: Type Error\n");
+                                        exit(1);
+                                    }
+                                    field = field_list_get($<id_name>3, l_node->type_entryy->type_table);
+                                }
+
                                 if(field == NULL){
                                     fprintf(stderr,"Error[.]: Field %s does not exist\n",$<id_name>3);
                                     exit(1);
                                 }
-                                Type* type = create_type(field->type,0);
+                                // field can be class
+                                Type* type = NULL;
+                                ClassTable* c_type = field->c_type;
+                                if(!field->c_type){
+                                    type = create_type(field->type,0);
+                                }
+                                else{
+                                    type = create_type_class(c_type);
+                                }
+                                type->c_type = c_type;
                                 node_val val;
                                 val.int_val = 0;
                                 tnode* r_node = make_leaf_node(val, type, $<id_name>3, NULL, NULL);
@@ -582,8 +790,11 @@ LHS   :   LHS  '.' ID   {
 
 AsgStmt     : LHS '=' E  {    
                             if(!compare_type($<ast_node>1->type_entryy, $<ast_node>3->type_entryy) && !is_null($<ast_node>3->type_entryy)){
-                                fprintf(stderr,"Error[=]: Type Mismatch\n");
-                                exit(1);
+                                // if class, then extra check
+                                if(!compare_class_type($<ast_node>1->type_entryy, $<ast_node>3->type_entryy)){
+                                    fprintf(stderr,"Error[=]: Type Mismatch\n");
+                                    exit(1);
+                                }
                             } 
                             $<ast_node>$ = make_operator_node(NULL, NODE_ASGN, $<ast_node>1, $<ast_node>3);
                         }
@@ -751,9 +962,63 @@ E   :   E '<' E     {
                         $<ast_node>$ = make_address_of_node($<ast_node>2);
                     }
     |   FnCall      {   $<ast_node>$ = $<ast_node>1; }
+    |   FieldFn     {   $<ast_node>$ = $<ast_node>1; }
     |   MemFn       {   $<ast_node>$ = $<ast_node>1; }
     | NULL_VAL      {   $<ast_node>$ = make_null_node(); }
+    | NEW '(' ID ')'    {   
+                            ClassTable* cptr = ct_get($<id_name>3);    
+                            if(cptr == NULL){
+                                fprintf(stderr, "[ERROR] Class not found:%s\n",$<id_name>3);
+                                exit(1);
+                            }
+                            $<ast_node>$ = make_new_node(cptr);
+                        }
+    | DELETE '(' LHS ')'    {
+                                // lhs should have type as class
+                                ClassTable* cptr = $<ast_node>3->type_entryy->c_type;
+                                if(cptr == NULL){
+                                    fprintf(stderr, "[ERROR] Class not found:%s\n",$<id_name>3);
+                                    exit(1);
+                                }
+                                $<ast_node>$ = make_del_node($<ast_node>3);
+                            }
     ;
+
+FieldFn :   L_VAL '.' ID '(' ArgList ')'  { // LHS can be SELF, ID, ID.ID -- definitely fn
+                                            parameter* list_of_type = create_param_list_from_arglist($<ast_node>5);
+                                            ListOfMethods* methods_lst = class_m_get_lst($<ast_node>1->type_entryy->c_type, $<id_name>3);
+                                            MethodList* fn = class_m_get_from_list_and_type(methods_lst, list_of_type);
+                                            if(fn == NULL){
+                                                printf("No declaration found for fn: %s",$<id_name>3);
+                                                exit(1);
+                                            }
+
+                                            if(compare_arg_param($<ast_node>5, fn->param_list) == 0){
+                                                printf("Mismatching type for function:%s\n",$<id_name>3);
+                                                exit(1);
+                                            }
+                                            Type* type = create_type(fn->type, 0);
+                                            $<ast_node>$ = make_method_of_node($<ast_node>1, $<id_name>3, type, $<ast_node>5);
+
+                                        }
+        |   LHS '.' ID '(' ArgList ')'  { // LHS can be SELF, ID, ID.ID -- definitely fn
+                                            parameter* list_of_type = create_param_list_from_arglist($<ast_node>5);
+                                            ListOfMethods* methods_lst = class_m_get_lst($<ast_node>1->type_entryy->c_type, $<id_name>3);
+                                            MethodList* fn = class_m_get_from_list_and_type(methods_lst, list_of_type);
+                                            if(fn == NULL){
+                                                printf("No declaration found for fn: %s",$<id_name>3);
+                                                exit(1);
+                                            }
+
+                                            if(compare_arg_param($<ast_node>5, fn->param_list) == 0){
+                                                printf("Mismatching type for function:%s\n",$<id_name>3);
+                                                exit(1);
+                                            }
+                                            Type* type = create_type(fn->type, 0);
+                                            $<ast_node>$ = make_method_of_node($<ast_node>1, $<id_name>3, type, $<ast_node>5);
+
+                                        }
+        ;
 
 MemFn   :   INITIALIZE '('')'   {   $<ast_node>$ = make_initialize_node(); }
         |   ALLOC '(' E ')'     {   if(!is_int($<ast_node>3->type_entryy)){
@@ -835,12 +1100,16 @@ int main(int argc, char* argv[]){
     }
     curr_lsymbol = NULL;
     lst_binding = 1;
+    temp_file = fopen("temp_f.xsm","w");
 
     // initialise type table entries
     type_table = NULL;
     type_table_init();
 
     code_gen_start(output_file);
+    fprintf(output_file, "MOV SP, %d\n", SP-1);
+    fprintf(output_file, "JMP _F0\n");
     yyparse();
+    remove("temp_f.xsm");
     return 1;
 }

@@ -9,7 +9,16 @@
 %}
 label   _L[0-9]+
 flabel  _F[0-9]+
+%x SKIP_MODE
 %%
+"POP BP"\n"RET"\n"POP BP"\n"RET"\n    {
+                                        if(label_transl_step==1){
+                                            fprintf(output_file,"POP BP\nRET\n");
+                                        }
+                                        else{
+                                            lines+=4;
+                                        }
+                                    }
 {label}:\n         { 
                         if(label_transl_step==1){
                             //no printing

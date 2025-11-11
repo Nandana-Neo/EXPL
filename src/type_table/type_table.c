@@ -99,6 +99,8 @@ void update_field_types(TypeTable* type){
 }
 
 void update_type_size(TypeTable* type){
+    if(type == NULL)
+        return;
     int cnt = 0;
     FieldList* f = type->fields;
     while(f){
@@ -110,6 +112,9 @@ void update_type_size(TypeTable* type){
         exit(1);
     }
     type->size = cnt;
+    if(cnt==0){
+        type->size = 1;
+    }
 }
 
 int get_type_size(TypeTable* type){
@@ -132,6 +137,7 @@ FieldList* field_create(char* name, TypeTable* type){
     curr->field_id = 0;
     curr->type = type;
     curr->next = NULL;
+    curr->c_type =  NULL;
     return curr;
 }
 
@@ -155,7 +161,14 @@ FieldList* field_list_join(FieldList* f1, FieldList* f2){
     while(f_end->next != NULL)
         f_end = f_end->next;
     f_end->next = f2;
-    f2->field_id = f_end->field_id+1;
+    // f2->field_id = f_end->field_id+1;
+
+    // f_end = f2;
+    while(f_end->next != NULL){
+        f_end->next->field_id = f_end->field_id+1;
+        f_end = f_end->next;
+    }
+
     return f1;
 }
 
@@ -163,6 +176,15 @@ Type* create_type(TypeTable* type_table, int ptr){
     Type* curr = (Type*)malloc(sizeof(Type));
     curr->ptr = ptr;
     curr->type_table = type_table;
+    curr->c_type = NULL;
+    return curr;
+}
+
+Type* create_type_class(ClassTable* c){
+    Type* curr = (Type*)malloc(sizeof(Type));
+    curr->ptr = 0;
+    curr->type_table = NULL;
+    curr->c_type = c;
     return curr;
 }
 
@@ -171,13 +193,29 @@ int compare_type(Type* t1, Type* t2){
         return 0;
     if(t1->ptr != t2->ptr)
         return 0;
-    TypeTable* tt1 = t1->type_table;
-    TypeTable* tt2 = t2->type_table;
-    return compare_type_table(t1->type_table, t2->type_table);
+    if(t1->c_type != t2->c_type)
+        return 0;
+    if(t1->type_table != t2->type_table)
+        return 0;
+    return 1;
 }
 int compare_type_table(TypeTable* t1, TypeTable* t2){
     if(t1==t2)
         return 1;
+    return 0;
+}
+
+int compare_class_type(Type* l, Type* r){
+    if(!l->c_type || !r->c_type)
+        return 0;
+    // inherited return 1
+    ClassTable* child = r->c_type;
+    // Check if l->c_type is in the parent chain of r->c_type
+    while(child){
+        if(child== l->c_type)
+            return 1;
+        child = child->parent_ptr;
+    }
     return 0;
 }
 
@@ -249,7 +287,7 @@ int is_void(Type* type){
 }
 
 int is_tuple(Type* type){
-    if(!type || strncmp("tuple-",type->type_table->name,6)!=0)
+    if(!type || (type->c_type) || strncmp("tuple-",type->type_table->name,6)!=0)
         return 0;
     return 1;
 }

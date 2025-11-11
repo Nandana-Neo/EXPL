@@ -30,7 +30,7 @@ int get_f_label();
  * -------------------------------------------------------------------------------
  * - Type is duplicated, so Type can be freed
  */
-Gsymbol* add_variable_to_symbol(char* name, int size, Type* type);
+Gsymbol* add_variable_to_symbol(char* name, int size, Type* type, FILE* fp);
 
 /**
  * Function: add_fn
@@ -128,7 +128,7 @@ void print_param_list(parameter* ls);
  * The varname is re-assigned. Hence, can free the varname outside the fn
  * Type is duplicated, so Type can be freed
  */
-Lsymbol* create_lsymbol(char* varname, Type* type, int binding, Lsymbol* next);
+Lsymbol* create_lsymbol(char* varname, Type* type, int binding, int cbinding, Lsymbol* next);
 
 /**
  * Function: connect_lsymbol()
@@ -155,6 +155,7 @@ Lsymbol* update_type_lsymbol_tb(Lsymbol* lst, Type* type);
 
 Lsymbol* update_size_lsymbol_tb(Lsymbol* lst, Type* type);
 
+Lsymbol* correct_lsymbol_table(Lsymbol* lst);
 /**
  * Function: free_lsymbol
  * ------------------------
@@ -180,6 +181,9 @@ Lsymbol* add_paramlist_lsymbol(parameter* param_ls, Lsymbol* tb, int binding);
  * else returns NULL
  */
 Lsymbol* lst_if_repeated(Lsymbol* lst);
+Lsymbol* add_self_lsymbol(Lsymbol* lst, ClassTable* cptr);
+
+FieldList* paraml_to_fieldl(parameter* param_ls);
 
 FieldList* paraml_to_fieldl(parameter* param_ls);
 

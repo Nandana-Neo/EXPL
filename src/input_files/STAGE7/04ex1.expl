@@ -1,0 +1,48 @@
+class
+    fact{
+        decl
+            int x;
+            int findfactorial(int n);
+        enddecl
+        int findfactorial(int n){
+            decl
+                int p;
+            enddecl
+            begin
+                if(n<=1)then
+                    p=1;
+                else
+                    p=n*self.findfactorial(n-1);
+                endif;
+            return p;
+        end
+        }
+    }
+endclass
+decl
+    fact obj;
+    int find_ans(fact f,int k);
+enddecl
+
+int find_ans(fact f, int k){
+    decl
+        int n;
+    enddecl
+    begin
+        breakpoint;
+        n = f.findfactorial(k);
+        return n;
+    end
+}
+int main(){
+    decl
+        int x,n;
+    enddecl
+    begin
+        obj=new(fact);
+        read(n);
+        x = find_ans(obj, n);
+        write(x);
+        return 1;
+    end
+}

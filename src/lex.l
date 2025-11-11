@@ -57,8 +57,13 @@
 "alloc"     {   return ALLOC;   }
 "free"      {   return FREE;    }
 "null"      {   return NULL_VAL;    }
-"tuple"     {   return TUPLE;   }
-"breakpoint"   {   return BREAK_POINT;}
+"tuple"     {   return TUPLE;       }
+"breakpoint"   {   return BREAK_POINT;  }
+"class"         {   return CLASS;       }
+"endclass"      {   return ENDCLASS;    }
+"extends"       {   return EXTENDS;     }
+"self"          {   return  SELF;       }
+"new"           {   return NEW;         }
 
 [a-zA-Z]+[0-9a-zA-Z_]*   {
     char* variable = strdup(yytext);

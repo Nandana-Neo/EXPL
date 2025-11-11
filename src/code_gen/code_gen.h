@@ -6,6 +6,9 @@
 #include "../node/type_node.h"
 #include "../node/ast_node.h"
 #include "../symbol_table/symbol_table.h"
+#include "../oops/class.h"
+
+extern int vft_base;
 
 /**
  * Function: get_reg
@@ -58,7 +61,7 @@ loc_and_val* code_gen(tnode* node, FILE * fp, int start_label, int end_label);
  * --------------------------
  * Generate code for the arguments to a function as well as push the value of the argument into the stack
  */
-loc_and_val* code_gen_ARG(tnode* node, FILE* fp, int start_label, int end_label);
+int code_gen_ARG(tnode* node, FILE* fp, int start_label, int end_label);
 
 /**Function: code_gen_FN_CALL
  * -------------------------------
@@ -99,6 +102,8 @@ void code_gen_fn_end(FILE* fp);
  * Generates code for the function from callee side
  */
 loc_and_val* code_gen_fn(tnode* node, FILE* fp);
+
+void code_gen_class_vft(FILE* fp);
 
 /**
  * Function: code_gen_RET
@@ -251,19 +256,27 @@ loc_and_val* code_gen_VAL_AT(tnode* node, FILE* fp);
 
 loc_and_val* code_gen_null_node(tnode* node, FILE* fp);
 loc_and_val* code_gen_MEMBER_OF(tnode* node, FILE* fp);
+
+// obj.fn(args) -> return
+loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_label);
+
+loc_and_val* code_gen_SELF_NODE(tnode* node, FILE* fp);
+
 loc_and_val* code_gen_initialize(tnode* node, FILE* fp);
 loc_and_val* code_gen_alloc(tnode* node, FILE* fp);
+loc_and_val* code_gen_new(tnode* node, FILE* fp);
 loc_and_val* code_gen_free(tnode* node, FILE* fp);
+loc_and_val* code_gen_del(tnode* node, FILE* fp);
 
 void code_gen_final(FILE * fp);
 
 void code_gen_start(FILE * fp);
-void code_gen_SP_init(FILE* fp);
+int code_gen_SP_init(FILE* fp);
 
 int evaluate(tnode* node);
 
-loc_and_val* create_gen_node(int loc, int val);
+loc_and_val* create_gen_node(int loc, int val, int cl);
 
 void free_gen_node(loc_and_val* node);
-
+void code_gen_global(FILE* dest);
 #endif
