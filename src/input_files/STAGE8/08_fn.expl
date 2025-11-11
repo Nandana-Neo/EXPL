@@ -87,11 +87,12 @@ int main(){
     enddecl
     begin
         n = initialize();
-        first=new(Person);
-        temp = first.createPerson("Rogers", 37);
         second=new(Student);
         temp = second.createStudent("Mathew", 35, 999, "CS");
+        n = second.printDetails();
         second.createPerson("Banner");
+        n = second.printDetails();
+        second.createPerson("Tony", 22);
         n = second.printDetails();
         return 0;
     end
