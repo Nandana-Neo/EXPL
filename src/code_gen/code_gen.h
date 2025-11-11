@@ -61,7 +61,7 @@ loc_and_val* code_gen(tnode* node, FILE * fp, int start_label, int end_label);
  * --------------------------
  * Generate code for the arguments to a function as well as push the value of the argument into the stack
  */
-loc_and_val* code_gen_ARG(tnode* node, FILE* fp, int start_label, int end_label);
+int code_gen_ARG(tnode* node, FILE* fp, int start_label, int end_label);
 
 /**Function: code_gen_FN_CALL
  * -------------------------------

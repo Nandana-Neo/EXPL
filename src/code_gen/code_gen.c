@@ -50,18 +50,21 @@ void free_gen_node(loc_and_val* node){
     free(node);
 }
 
-loc_and_val* code_gen_ARG(tnode* node, FILE* fp, int start_label, int end_label){
+int code_gen_ARG(tnode* node, FILE* fp, int start_label, int end_label){
     if(node == NULL)
-        return NULL;
-    code_gen_ARG(node->next, fp, start_label, end_label);   // last aeg to be pushed first
+        return 0;
+    int cnt = 0;
+    cnt += code_gen_ARG(node->next, fp, start_label, end_label);   // last aeg to be pushed first
     loc_and_val* gen_node = code_gen(node, fp, start_label, end_label);
     fprintf(fp, "PUSH R%d\n", gen_node->val);
+    cnt++;
     if(gen_node->cl != -1){
         fprintf(fp, "PUSH R%d\n", gen_node->cl);
+        cnt++;
     }
     printf("[DEBUG] Pushed for %s\n",node->varname);
     free_gen_node(gen_node);
-    return NULL;
+    return cnt;
 }
 
 loc_and_val* code_gen_FN_CALL(tnode* node, FILE* fp, int start_label, int end_label){
@@ -72,7 +75,7 @@ loc_and_val* code_gen_FN_CALL(tnode* node, FILE* fp, int start_label, int end_la
     }
     regNum = 0; // reset registers
 
-    code_gen_ARG(node->left, fp, start_label, end_label);
+    int arg_cnt = code_gen_ARG(node->left, fp, start_label, end_label);
     fprintf(fp, "PUSH R0\n");   // empty space for return register
     fprintf(fp, "CALL _F%d\n",node->gst_entry->f_label);
 
@@ -82,9 +85,9 @@ loc_and_val* code_gen_FN_CALL(tnode* node, FILE* fp, int start_label, int end_la
 
     fprintf(fp,"POP R%d\n",return_reg);     //return value
     tnode* curr = node->left;               // POP arglist
-    while(curr != NULL){
+    while(arg_cnt>0){
         fprintf(fp,"POP R%d\n",dummy_reg);
-        curr = curr->next;
+        arg_cnt--;
     }
 
     i--;
@@ -115,6 +118,9 @@ void pop_local_decl(Lsymbol* lst, FILE* fp){
     if(lst->binding > 0){    // local decl
         int dummy_reg = get_reg();
         fprintf(fp,"POP R%d\n",dummy_reg);
+        if(lst->type_entryy->c_type != NULL){
+            fprintf(fp,"POP R%d\n",dummy_reg);
+        }
         free_reg();
     }
     pop_local_decl(lst->next, fp);
@@ -376,7 +382,7 @@ loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_
     }
     fprintf(fp, "PUSH R%d\n", l->cl); // Inheritance
     // push args
-    code_gen_ARG(node->middle, fp, start_label, end_label);
+    int arg_cnt = code_gen_ARG(node->middle, fp, start_label, end_label);
 
     fprintf(fp, "PUSH R0\n");   // empty space for return register
 
@@ -400,10 +406,9 @@ loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_
 
     fprintf(fp,"POP R%d\n",return_reg);     //return value
 
-    tnode* curr = node->middle;               // pop arglist
-    while(curr != NULL){
+    while(arg_cnt>0){
         fprintf(fp,"POP R%d\n",dummy_reg);
-        curr = curr->next;
+        arg_cnt--;
     }
     fprintf(fp, "POP R%d\n", dummy_reg); // pop obj
     fprintf(fp, "POP R%d\n", dummy_reg); // [TODO] Inheritance
@@ -673,6 +678,9 @@ loc_and_val* code_gen_OP(tnode* node, FILE* fp){
                     fprintf(fp, "MOV [R%d], R%d\n", reg_cl, j->cl);
                     free_reg();
                 }
+                // else{
+                //     printf("not edited %s\n\n", node->left->right->varname);
+                // }
             }
             break;
     }

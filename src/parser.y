@@ -280,7 +280,7 @@ LDeclList   : LDeclList LDecl     {     $$ = connect_lsymbol($1,$2);   }
             ;
 
 LDecl       : Type LIdList ';'  {   $$ = update_type_lsymbol_tb($2, $1); 
-                                    if(is_tuple($1)){
+                                    if($1->c_type!=NULL || is_tuple($1)){
                                         $$ = update_size_lsymbol_tb($2,$1);
                                     }
                                     free($1);          

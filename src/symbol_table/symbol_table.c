@@ -263,7 +263,6 @@ Lsymbol* update_size_lsymbol_tb(Lsymbol* lst, Type* type){
     }
     else{
         update_type_size(type->type_table);
-        sz = type->type_table->size;
     }
     
     Lsymbol* curr = lst;

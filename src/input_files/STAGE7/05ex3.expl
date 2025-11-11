@@ -54,6 +54,7 @@ int main(){
         obj1 = obj;
         read(n);
         write(obj1.testfun(n));
+        breakpoint;
         return 1;
     end
 }
