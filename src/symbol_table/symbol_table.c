@@ -151,6 +151,8 @@ parameter* add_parameter_to_list(parameter* lst, parameter* curr){
 int same_parameter_list(parameter* l1, parameter* l2){
     parameter* n1 = l1;
     parameter* n2 = l2;
+    if(n1==NULL && n2==NULL)
+        return 1;
     while(n1!=NULL && n2!=NULL){
         if(!n1->type_entryy && !n2->type_entryy && compare_type(n1->type_entryy, n2->type_entryy) == 0)
             return 0;

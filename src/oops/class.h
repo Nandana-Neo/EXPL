@@ -83,9 +83,24 @@ MethodList* method_list_join(MethodList* m1, MethodList* m2);
  * ---------------
  * Search through the methods MethodList of the class using cptr that is being parsed and return pointer to the entry in the list with function name as f_name. 
  * Return NULL if entry not found
+ * 
+ * Returns list of methods having the name f_name
  */
-MethodList* class_m_get(ClassTable* cptr, char* f_name);
+MethodList* class_m_get(ClassTable* cptr, char* f_name, parameter* param_list);
 
+ListOfMethods* class_m_get_lst(ClassTable* cptr, char* f_name);
+
+/**
+ * class_m_get_single()
+ * ---------------------
+ * From the list of methods lm, return the method which has the same parameter list as param_list
+ * Return NULL if no such method found
+ */
+MethodList* class_m_get_single(ListOfMethods* lm, parameter* param_list);
+
+int same_type_parameter_list(parameter* l1, parameter* l2);
+
+MethodList* class_m_get_from_list_and_type(ListOfMethods* lm, parameter* param_lst_type);
 /**
  * class_f_get()
  * --------------
@@ -104,5 +119,14 @@ FieldList* class_f_get(ClassTable* cptr, char* v_name);
  * - index starts from 0
  */
 int get_class_vft_baseptr(int index);
+
+/**
+ * list_methods_add
+ * -----------------
+ * Adds method m to the end of ListMethods lm
+ */
+ListOfMethods* list_methods_add(ListOfMethods* lm, MethodList* m);
+
+void free_list_of_methods(ListOfMethods* lm);
 
 #endif

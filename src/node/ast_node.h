@@ -94,4 +94,13 @@ void print_arg_ls(tnode* node);
 
 /* Fress the tree node and all its children and values allocated */
 void free_tree(tnode* n);
+
+/**
+ * Function: create_param_list_from_arglist
+ * --------------------------------------
+ * Create parameter list from the argument list given in the function call
+ * Only copies the type entries
+ */
+parameter* create_param_list_from_arglist(tnode* arg_ls);
+
 #endif

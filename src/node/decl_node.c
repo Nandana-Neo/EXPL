@@ -74,14 +74,13 @@ void update_size_decl(decl_node* node, Type* type, FILE* fp){
             curr->symbol_table_entry->binding = SP;
             if(curr->symbol_table_entry->type_entryy->c_type){
                 curr->symbol_table_entry->cbinding = SP + sz - 1;
-                printf("HERE\n");
+                printf("%d\n", curr->symbol_table_entry->cbinding);
                 fprintf(fp, "MOV [%d], %d\n", SP+sz-1, curr->symbol_table_entry->type_entryy->c_type->class_id); // POSSIBLE ERROR
             }
             SP += sz;
         }
         decl_node* prev = curr;
         curr = curr->next;
-        printf("[DEBUG]: ");
         free(prev);
     }
 }

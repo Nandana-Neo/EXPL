@@ -144,25 +144,27 @@ MethodDecl      :   MethodDecl  MDecl   {}
 MDecl           :   Type ID '(' ParamList ')' ';'     {
                                                         TypeTable* type = $1->type_table;
                                                         // ClassTable* c_type = ct_get($<id_name>1);
-                                                        if(class_m_get(curr_class, $<id_name>2) != NULL){
+                                                        MethodList* existing_methods = class_m_get(curr_class, $<id_name>2, $4);
+                                                        if(existing_methods!=NULL){
                                                             // Method already declared, we are just redefining
-                                                            if(class_m_get(curr_class->parent_ptr, $<id_name>2) == NULL){
+
+                                                            if(class_m_get(curr_class->parent_ptr, $<id_name>2, $4) == NULL){
                                                                 // not inherited method, error
                                                                 fprintf(stderr, "ERROR: Method redeclared:%s\n",$<id_name>2);
                                                                 exit(1);
                                                             }
                                                             else{
-                                                                MethodList* parent_method = class_m_get(curr_class, $<id_name>2);
+                                                                MethodList* parent_method = class_m_get(curr_class, $<id_name>2, $4);
                                                                 // Check type and arglist
                                                                 if(compare_type_table(parent_method->type, type) == 0){
                                                                     fprintf(stderr,"ERROR: Mismatching method definition:%s",$<id_name>2);
                                                                     exit(1);
                                                                 }
 
-                                                                if(same_parameter_list(parent_method->param_list, $4) == 0){
-                                                                    fprintf(stderr,"ERROR: Mismatching method definition:%s",$<id_name>2);
-                                                                    exit(1);
-                                                                }
+                                                                // if(same_parameter_list(parent_method->param_list, $4) == 0){
+                                                                //     fprintf(stderr,"ERROR: Mismatching method definition:%s",$<id_name>2);
+                                                                //     exit(1);
+                                                                // }
 
                                                                 parent_method->f_label = get_f_label();
                                                             }
@@ -395,7 +397,7 @@ FDef        :   PointerType ID ParamListBracs '{' LDeclBlock Body '}'   {
 
                                                                         }
                                                                         else{
-                                                                            method = class_m_get(curr_class, $<id_name>2);
+                                                                            method = class_m_get(curr_class, $<id_name>2, $3);
                                                                             if(method){ // in class
                                                                                 if(compare_type_table(method->type, $1->type_table) == 0){
                                                                                     fprintf(stderr,"ERROR: Mismatching function definition:%s",$<id_name>2);
@@ -979,7 +981,9 @@ E   :   E '<' E     {
     ;
 
 FieldFn :   L_VAL '.' ID '(' ArgList ')'  { // LHS can be SELF, ID, ID.ID -- definitely fn
-                                            MethodList* fn = class_m_get($<ast_node>1->type_entryy->c_type, $<id_name>3);
+                                            parameter* list_of_type = create_param_list_from_arglist($<ast_node>5);
+                                            ListOfMethods* methods_lst = class_m_get_lst($<ast_node>1->type_entryy->c_type, $<id_name>3);
+                                            MethodList* fn = class_m_get_from_list_and_type(methods_lst, list_of_type);
                                             if(fn == NULL){
                                                 printf("No declaration found for fn: %s",$<id_name>3);
                                                 exit(1);
@@ -994,7 +998,9 @@ FieldFn :   L_VAL '.' ID '(' ArgList ')'  { // LHS can be SELF, ID, ID.ID -- def
 
                                         }
         |   LHS '.' ID '(' ArgList ')'  { // LHS can be SELF, ID, ID.ID -- definitely fn
-                                            MethodList* fn = class_m_get($<ast_node>1->type_entryy->c_type, $<id_name>3);
+                                            parameter* list_of_type = create_param_list_from_arglist($<ast_node>5);
+                                            ListOfMethods* methods_lst = class_m_get_lst($<ast_node>1->type_entryy->c_type, $<id_name>3);
+                                            MethodList* fn = class_m_get_from_list_and_type(methods_lst, list_of_type);
                                             if(fn == NULL){
                                                 printf("No declaration found for fn: %s",$<id_name>3);
                                                 exit(1);

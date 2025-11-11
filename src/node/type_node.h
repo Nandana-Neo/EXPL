@@ -233,6 +233,10 @@ typedef struct ClassTable{
     struct ClassTable* next;
 } ClassTable;
 
+typedef struct ListOfMethods{
+    struct MethodList* method;
+    struct ListOfMethods* next;
+} ListOfMethods;
 
 int min(int a, int b);
 

@@ -304,3 +304,14 @@ void free_tree(tnode* n){
         free(n->type_entryy);
     free(n);
 }
+
+parameter* create_param_list_from_arglist(tnode* arg_ls){
+    parameter* start = NULL;
+    tnode* arg = arg_ls;
+    while(arg != NULL){
+        parameter* n_p = create_parameter(NULL, arg->type_entryy);
+        start = add_parameter_to_list(start, n_p);
+        arg = arg->next;
+    }
+    return start;
+}

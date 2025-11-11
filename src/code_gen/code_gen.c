@@ -379,7 +379,11 @@ loc_and_val* code_gen_METHOD_OF(tnode* node, FILE* fp, int start_label, int end_
 
     fprintf(fp, "PUSH R0\n");   // empty space for return register
 
-    int fn_id = (class_m_get(node->left->type_entryy->c_type, node->varname))->func_id;
+
+    parameter* list_of_type = create_param_list_from_arglist(node->middle);
+    ListOfMethods* methods_lst = class_m_get_lst(node->left->type_entryy->c_type, node->varname);
+    MethodList* fn = class_m_get_from_list_and_type(methods_lst, list_of_type);
+    int fn_id = fn->func_id;
     // get actual f_label incase overriding occured
     fprintf(fp, "MUL R%d, 8\n", l->cl);
     fprintf(fp, "ADD R%d, %d\n", l->cl, vft_base);

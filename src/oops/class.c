@@ -143,7 +143,8 @@ MethodList* method_list_join(MethodList* m1, MethodList* m2){
     return m1;
 }
 
-MethodList* class_m_get(ClassTable* cptr, char* f_name){
+
+MethodList* class_m_get(ClassTable* cptr, char* f_name, parameter* param_list){
     if(cptr == NULL){
         printf("WARNING: Empty class tried to access\n");
         return NULL;
@@ -151,9 +152,65 @@ MethodList* class_m_get(ClassTable* cptr, char* f_name){
     MethodList* m = cptr->methods;
     while(m!=NULL){
         if(strcmp(m->name, f_name) == 0){
-            return m;
+            printf("Checked:%s\n", f_name);
+            print_param_list(m->param_list);
+            print_param_list(param_list);
+            if(same_parameter_list(m->param_list, param_list) == 1){
+                return m;
+            }
         }
         m = m->next;
+    }
+    return NULL;
+}
+
+ListOfMethods* class_m_get_lst(ClassTable* cptr, char* f_name){
+    ListOfMethods* lm = NULL;
+    if(cptr == NULL){
+        printf("WARNING: Empty class tried to access\n");
+        return lm;
+    }
+    MethodList* m = cptr->methods;
+    while(m!=NULL){
+        if(strcmp(m->name, f_name) == 0){
+            lm = list_methods_add(lm, m);
+        }
+        m = m->next;
+    }
+    return lm;
+}
+
+MethodList* class_m_get_single(ListOfMethods* lm, parameter* param_list){
+    ListOfMethods* curr = lm;
+    while(curr != NULL){
+        MethodList* m = curr->method;
+        if(same_parameter_list(m->param_list, param_list) == 1){
+            return m;
+        }
+        curr = curr->next;
+    }
+    return NULL;
+    
+}
+
+int same_type_parameter_list(parameter* l1, parameter* l2){
+    if(l1 == NULL && l2 == NULL)
+        return 1;
+    if(l1==NULL || l2 == NULL)
+        return 0;
+    if(compare_type(l1->type_entryy, l2->type_entryy) != 1)
+        return 0;
+    return same_type_parameter_list(l1->next, l2->next);
+}
+
+MethodList* class_m_get_from_list_and_type(ListOfMethods* lm, parameter* param_lst_type){
+    ListOfMethods* curr = lm;
+    while(curr != NULL){
+        MethodList* m = curr->method;
+        if(same_type_parameter_list(m->param_list, param_lst_type) == 1){
+            return m;
+        }
+        curr = curr->next;
     }
     return NULL;
 }
@@ -176,4 +233,28 @@ FieldList* class_f_get(ClassTable* cptr, char* v_name){
 
 int get_class_vft_baseptr(int index){
     return SP+(index*8);
+}
+
+ListOfMethods* list_methods_add(ListOfMethods* lm, MethodList* m){
+    ListOfMethods* new_lm = (ListOfMethods*)malloc(sizeof(ListOfMethods));
+    new_lm->method = m;
+    new_lm->next = NULL;
+    if(lm == NULL){
+        return new_lm;
+    }
+    ListOfMethods* curr = lm;
+    while(curr->next != NULL){
+        curr = curr->next;
+    }
+    curr->next = new_lm;
+    return lm;
+}
+
+void free_list_of_methods(ListOfMethods* lm){
+    ListOfMethods* curr = lm;
+    while(curr != NULL){
+        ListOfMethods* temp = curr;
+        curr = curr->next;
+        free(temp);
+    }
 }
