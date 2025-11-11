@@ -180,6 +180,7 @@ MDecl           :   Type ID '(' ParamList ')' ';'     {
 
 MethodDef       :   MethodDef FDef              {}
                 |   FDef                        {}
+                |                               {}
                 ;
 
 ////////////////                                GDeclBlock                                        ///////////////////////
