@@ -46,7 +46,10 @@ void ct_install_inherited(ClassTable* cptr){
     // copy fields
     FieldList* parent_fields = parent->fields;
     while(parent_fields != NULL){
-        class_f_install(cptr, parent_fields->c_type, parent_fields->type, parent_fields->name);
+        if(parent_fields->private!=1){
+            // install only if it is not private field
+            class_f_install(cptr, parent_fields->c_type, parent_fields->type, parent_fields->name);
+        }
         parent_fields = parent_fields->next;
     }
 
@@ -71,10 +74,10 @@ ClassTable* ct_get(char* name){
     return NULL;
 }
 
-void class_f_install(ClassTable* curr, ClassTable* cptr, TypeTable* type, char* name){
+FieldList* class_f_install(ClassTable* curr, ClassTable* cptr, TypeTable* type, char* name){
     if(curr == NULL){
         fprintf(stderr,"ERROR(class_f_install): Classptr is null\n");
-        return;
+        return NULL;
     }
     curr->fields = field_list_add(curr->fields, name, type);
     curr->field_cnt++;
@@ -84,6 +87,7 @@ void class_f_install(ClassTable* curr, ClassTable* cptr, TypeTable* type, char* 
     }
     FieldList* f = class_f_get(curr, name);
     f->c_type = cptr;
+    return f;
 }
 
 void class_m_install(ClassTable* cptr, char* name, TypeTable* type, parameter* param_list, int f_label){

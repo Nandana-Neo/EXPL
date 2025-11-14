@@ -83,6 +83,7 @@ typedef union node_val {
 
 typedef struct FieldList{
   char *name;              //name of the field
+  int private;              // set as 1 if field is private to class
   int field_id;          //the position of the field in the field list
   struct TypeTable *type;  //pointer to type table entry of the field's type
   struct ClassTable *c_type;  // pointer to class containing field

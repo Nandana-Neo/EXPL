@@ -138,6 +138,7 @@ FieldList* field_create(char* name, TypeTable* type){
     curr->type = type;
     curr->next = NULL;
     curr->c_type =  NULL;
+    curr->private = 0;
     return curr;
 }
 

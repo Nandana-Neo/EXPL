@@ -64,6 +64,7 @@
 "extends"       {   return EXTENDS;     }
 "self"          {   return  SELF;       }
 "new"           {   return NEW;         }
+"private:"      {   return PRIVATE_NODE;     }
 
 [a-zA-Z]+[0-9a-zA-Z_]*   {
     char* variable = strdup(yytext);

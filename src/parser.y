@@ -36,6 +36,7 @@
 %token TUPLE;
 %token BREAK_POINT;
 %token CLASS ENDCLASS EXTENDS SELF NEW DELETE;
+%token PRIVATE_NODE;
 %type<decl_type> Type PointerType;
 %type<param_list> Param ParamList ParamListBracs;
 %type<lsymbol_entry> LIdDecl LIdList LDecl LDeclList LDeclBlock;
@@ -131,6 +132,14 @@ FID             :   Type ID ';'       {
                                         ClassTable* c_type = $1->c_type;
                                         class_f_install(curr_class, c_type, type, $<id_name>2);
                                         free($1);
+
+                                    }
+                |   PRIVATE_NODE Type ID ';'     {
+                                        TypeTable* type = $2->type_table;
+                                        ClassTable* c_type = $2->c_type;
+                                        FieldList* f = class_f_install(curr_class, c_type, type, $<id_name>3);
+                                        f->private = 1;
+                                        free($2);
 
                                     }
                 ;

@@ -1,0 +1,31 @@
+class
+    A{
+        decl
+            int n;
+            private: int pr;
+            int c;
+        enddecl
+    }
+    B extends A{
+        decl
+        enddecl
+    }
+    C extends A{
+        decl
+        enddecl
+    }
+endclass
+decl
+enddecl
+int main(){
+    decl
+    A a;
+    B b;
+    C c;
+    enddecl
+    begin
+        b = new(B);
+        b.n = 1;
+        b.pr = 1;
+    end
+}

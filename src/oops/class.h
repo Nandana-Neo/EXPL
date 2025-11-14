@@ -48,7 +48,7 @@ ClassTable* ct_get(char* name);
  * -----------------------
  * Installs the field into the given class table entry
  */
-void class_f_install(ClassTable* curr, ClassTable* cptr, TypeTable* type, char* name);
+FieldList* class_f_install(ClassTable* curr, ClassTable* cptr, TypeTable* type, char* name);
 
 /**
  * class_m_install()
